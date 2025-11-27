@@ -836,8 +836,8 @@ function drawPlatformSection(x1, x2, y, levelConfig) {
     
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.roundRect(x1, y, x2 - x1, tower.platformHeight, 3);
-    ctx.fill();
+    // Use fillRect for better browser compatibility
+    ctx.fillRect(x1, y, x2 - x1, tower.platformHeight);
     
     // Top highlight
     ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
@@ -854,9 +854,9 @@ function adjustBrightness(color, factor) {
     let r, g, b;
     if (color.startsWith("#")) {
         const hex = color.slice(1);
-        r = parseInt(hex.substr(0, 2), 16);
-        g = parseInt(hex.substr(2, 2), 16);
-        b = parseInt(hex.substr(4, 2), 16);
+        r = parseInt(hex.slice(0, 2), 16);
+        g = parseInt(hex.slice(2, 4), 16);
+        b = parseInt(hex.slice(4, 6), 16);
     } else {
         return color;
     }
