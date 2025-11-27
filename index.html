@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helix Jump - The Fruit Crave</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <h1>🍌 Helix Jump 🍎</h1>
+            <h2>The Fruit Crave</h2>
+            <div class="instructions">
+                <p>Navigate the ball through the helix tower!</p>
+                <p>Collect fruits for power-ups:</p>
+                <ul>
+                    <li>🍌 Banana - Speed Boost</li>
+                    <li>🍎 Apple - Extra Life</li>
+                    <li>🍫 Chocolate - +5 Seconds</li>
+                </ul>
+                <p>Use <strong>LEFT/RIGHT</strong> arrows or <strong>A/D</strong> to rotate</p>
+            </div>
+            <button id="start-btn" class="game-btn">Start Game</button>
+        </div>
+        
+        <!-- Level Select Screen -->
+        <div id="level-select-screen" class="screen hidden">
+            <h1>Select Level</h1>
+            <div class="level-buttons">
+                <button class="level-btn" data-level="1">Level 1<br><span>Sunny Meadow</span></button>
+                <button class="level-btn locked" data-level="2">Level 2<br><span>Ocean Breeze</span></button>
+                <button class="level-btn locked" data-level="3">Level 3<br><span>Forest Dream</span></button>
+                <button class="level-btn locked" data-level="4">Level 4<br><span>Desert Sunset</span></button>
+                <button class="level-btn locked" data-level="5">Level 5<br><span>Space Journey</span></button>
+            </div>
+            <button id="back-btn" class="game-btn">Back</button>
+        </div>
+        
+        <!-- Game UI Overlay -->
+        <div id="game-ui" class="hidden">
+            <div id="ui-top">
+                <div id="lives-display">
+                    <span id="lives-hearts">❤️ ❤️ ❤️</span>
+                </div>
+                <div id="timer-display">
+                    <span id="timer">60</span>s
+                </div>
+                <div id="score-display">
+                    Score: <span id="score">0</span>
+                </div>
+            </div>
+            <div id="level-info">
+                <span id="current-level">Level 1</span>
+                <span id="floor-info">Floor: <span id="current-floor">1</span>/<span id="total-floors">10</span></span>
+            </div>
+            <div id="powerup-display">
+                <span id="speed-boost" class="powerup hidden">🍌 Speed Boost!</span>
+            </div>
+        </div>
+        
+        <!-- Level Complete Screen -->
+        <div id="level-complete-screen" class="screen hidden">
+            <h1>🎉 Level Complete! 🎉</h1>
+            <div class="stats">
+                <p>Score: <span id="final-score">0</span></p>
+                <p>Time Bonus: <span id="time-bonus">0</span></p>
+            </div>
+            <button id="next-level-btn" class="game-btn">Next Level</button>
+            <button id="menu-btn" class="game-btn">Main Menu</button>
+        </div>
+        
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="screen hidden">
+            <h1>Game Over</h1>
+            <p>Your Score: <span id="game-over-score">0</span></p>
+            <button id="retry-btn" class="game-btn">Try Again</button>
+            <button id="game-over-menu-btn" class="game-btn">Main Menu</button>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
