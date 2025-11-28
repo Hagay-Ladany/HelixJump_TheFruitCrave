@@ -44,7 +44,45 @@
 
         /* Overlays */
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; pointer-events: auto; transition: opacity 0.3s; }
-        #start-screen { background-color: #2c3e50; background-image: url('images/start_screen.jpg'); background-position: center; background-size: cover; background-color: rgba(0,0,0,0.3); }
+        #start-screen { 
+            background-color: #2c3e50; 
+            background-position: center; 
+            background-size: cover; 
+            background-color: rgba(0,0,0,0.3); 
+        }
+        
+        /* Portrait orientation */
+        @media (orientation: portrait) {
+            #start-screen { 
+                background-image: url('images/start_screen_portrait.jpg'); 
+            }
+            #start-content .stat-box {
+                margin-top: 15vh !important;
+                backdrop-filter: none !important;
+            }
+            #start-content .btn-start {
+                margin-top: 8vh !important;
+            }
+        }
+        
+        /* Landscape orientation */
+        @media (orientation: landscape) {
+            #start-screen { 
+                background-image: url('images/start_screen_Landscape.png'); 
+            }
+            #start-content .stat-box {
+                margin-top: 10vh !important;
+                backdrop-filter: none !important;
+            }
+            #start-content .btn-start {
+                margin-top: 5vh !important;
+            }
+        }
+        
+        /* Remove blur from start screen stat-box */
+        #start-content .stat-box {
+            backdrop-filter: none !important;
+        }
         .hidden { opacity: 0; pointer-events: none; }
         h1 { color: white; font-size: 3rem; margin: 0 0 20px 0; text-transform: uppercase; text-shadow: none; font-weight: 900; letter-spacing: 2px; }
         .big-emoji { font-size: 6rem; margin: 10px 0; }
@@ -55,7 +93,7 @@
         .animate-pop { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 0; }
         .animate-pulse { animation: pulse 1s infinite; }
 
-        .stat-box { background: rgba(255,255,255,0.15); padding: 20px; border-radius: 10px; width: 300px; margin: 20px; text-align: center; color: white; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .stat-box { background: rgba(255,255,255,0.15); padding: 20px; border-radius: 10px; width: 300px; margin: 20px; text-align: center; color: white; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .stat-row { display: flex; align-items: center; justify-content: space-between; margin: 8px 0; font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; }
         .stat-label { width: 70px; text-align: left; font-size: 0.9rem; opacity: 0.8; }
         .stat-val { width: 50px; text-align: right; font-weight: bold; }
@@ -125,12 +163,12 @@
         <p id="loading-text" style="color: white; margin-top: 10px; font-size: 0.9rem;">Preparing game assets...</p>
     </div>
     <div id="start-content">
-        <div class="stat-box" style="margin-top: 200px;">
+        <div class="stat-box">
             <p>🍎 Life | 🍌 Speed</p>
             <p>🍫 +5s Time | 💎 Drill</p>
             <p style="color:#ff4500; font-weight:bold;">Level 5: THE END</p>
         </div>
-        <button class="btn btn-start" id="btn-start" style="margin-top: 100px;">TAP TO START</button>
+        <button class="btn btn-start" id="btn-start">TAP TO START</button>
     </div>
 </div>
 
@@ -155,6 +193,21 @@
         <div class="stat-row animate-pop" style="animation-delay: 0.4s;"><span class="stat-label">Score:</span><span class="stat-val" id="win-score">0</span></div>
     </div>
     <button class="btn btn-start" id="btn-next">NEXT LEVEL</button>
+</div>
+
+<div id="pacman-minigame-screen" class="overlay hidden">
+    <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: white; font-size: 2rem; font-weight: bold; text-shadow: 2px 2px 0 #000; z-index: 25;">
+        <div>Time: <span id="pacman-timer">10</span>s</div>
+        <div style="font-size: 1.5rem; margin-top: 10px;">🍎 Collected: <span id="pacman-score">0</span></div>
+    </div>
+    <canvas id="pacman-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+    <div id="pacman-result" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 30;">
+        <h1 style="color: white; font-size: 3rem; margin-bottom: 20px;">MINI-GAME COMPLETE!</h1>
+        <div class="stat-box">
+            <p style="font-size: 1.5rem; margin-bottom: 10px;">🍎 Apples Collected: <span id="pacman-final-score">0</span></p>
+        </div>
+        <button class="btn btn-start" id="btn-pacman-continue" style="margin-top: 20px;">CONTINUE TO LEVEL 3</button>
+    </div>
 </div>
 
 <script>
@@ -417,11 +470,28 @@ class Game {
             }
             setTimeout(() => {
                 if(this.level >= 5) this.restart(true); 
-                else { this.level++; this.restart(false); }
+                else if(this.level === 2) {
+                    // Show Pacman mini-game after level 2
+                    this.startPacmanMiniGame();
+                } else {
+                    this.level++; 
+                    this.restart(false);
+                }
             }, 100);
+        };
+        
+        document.getElementById('btn-pacman-continue').onclick = () => {
+            this.level = 3;
+            this.restart(false);
         };
         document.getElementById('audio-btn').onclick = () => this.audio.toggleMute();
         document.getElementById('music-btn').onclick = () => this.audio.toggleMusic();
+        
+        document.getElementById('btn-pacman-continue').onclick = () => {
+            document.getElementById('pacman-minigame-screen').classList.add('hidden');
+            this.level = 3;
+            this.restart(false);
+        };
     }
 
     start() {
@@ -1048,6 +1118,224 @@ class Game {
         let rating = "Good"; let ratingVal = 50; if(fruitPct > 80 && timeTaken < this.maxTime*0.5) { rating="Perfect!"; ratingVal=100; } else if(fruitPct > 50) { rating="Great"; ratingVal=75; }
         updateText('win-rating', rating); updateText('win-score', this.score); if(this.level !== 5) updateText('win-emoji', ratingVal===100?"👑":"🎉");
         setTimeout(() => { updateBar('bar-time', ((this.maxTime - timeTaken) / this.maxTime) * 100); updateBar('bar-fruit', fruitPct); updateBar('bar-rating', ratingVal); }, 100);
+    }
+    
+    startPacmanMiniGame() {
+        document.getElementById('level-complete-screen').classList.add('hidden');
+        document.getElementById('pacman-minigame-screen').classList.remove('hidden');
+        document.getElementById('pacman-result').style.display = 'none';
+        
+        const canvas = document.getElementById('pacman-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // Game state
+        const gameState = {
+            player: { x: canvas.width / 2, y: canvas.height / 2, size: 30, dir: { x: 0, y: 0 }, speed: 5 },
+            apples: [],
+            score: 0,
+            timeLeft: 10,
+            keys: {},
+            walls: this.generateMaze(canvas.width, canvas.height)
+        };
+        
+        // Generate apples
+        for(let i = 0; i < 30; i++) {
+            let x, y, valid = false, attempts = 0;
+            while(!valid && attempts < 50) {
+                x = Math.random() * (canvas.width - 60) + 30;
+                y = Math.random() * (canvas.height - 200) + 100;
+                valid = !this.isWallCollision(x, y, 20, gameState.walls);
+                attempts++;
+            }
+            if(valid) gameState.apples.push({ x, y, size: 20, collected: false });
+        }
+        
+        // Input handling
+        const handleKeyDown = (e) => {
+            const key = e.key.toLowerCase();
+            if(['arrowup', 'w'].includes(key)) { gameState.keys.up = true; e.preventDefault(); }
+            if(['arrowdown', 's'].includes(key)) { gameState.keys.down = true; e.preventDefault(); }
+            if(['arrowleft', 'a'].includes(key)) { gameState.keys.left = true; e.preventDefault(); }
+            if(['arrowright', 'd'].includes(key)) { gameState.keys.right = true; e.preventDefault(); }
+        };
+        const handleKeyUp = (e) => {
+            const key = e.key.toLowerCase();
+            if(['arrowup', 'w'].includes(key)) gameState.keys.up = false;
+            if(['arrowdown', 's'].includes(key)) gameState.keys.down = false;
+            if(['arrowleft', 'a'].includes(key)) gameState.keys.left = false;
+            if(['arrowright', 'd'].includes(key)) gameState.keys.right = false;
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        
+        // Touch controls
+        let touchStart = null;
+        const handleTouchStart = (e) => {
+            e.preventDefault();
+            touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        };
+        const handleTouchMove = (e) => {
+            e.preventDefault();
+            if(!touchStart) return;
+            const dx = e.touches[0].clientX - touchStart.x;
+            const dy = e.touches[0].clientY - touchStart.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if(dist > 10) {
+                gameState.keys.up = dy < -10;
+                gameState.keys.down = dy > 10;
+                gameState.keys.left = dx < -10;
+                gameState.keys.right = dx > 10;
+            }
+        };
+        const handleTouchEnd = () => {
+            gameState.keys.up = gameState.keys.down = gameState.keys.left = gameState.keys.right = false;
+            touchStart = null;
+        };
+        canvas.addEventListener('touchstart', handleTouchStart);
+        canvas.addEventListener('touchmove', handleTouchMove);
+        canvas.addEventListener('touchend', handleTouchEnd);
+        
+        // Game loop
+        const startTime = Date.now();
+        let animationId = null;
+        const gameLoop = () => {
+            if(document.getElementById('pacman-minigame-screen').classList.contains('hidden')) {
+                window.removeEventListener('keydown', handleKeyDown);
+                window.removeEventListener('keyup', handleKeyUp);
+                canvas.removeEventListener('touchstart', handleTouchStart);
+                canvas.removeEventListener('touchmove', handleTouchMove);
+                canvas.removeEventListener('touchend', handleTouchEnd);
+                if(animationId) cancelAnimationFrame(animationId);
+                return;
+            }
+            
+            // Update time
+            const elapsed = (Date.now() - startTime) / 1000;
+            gameState.timeLeft = Math.max(0, 10 - elapsed);
+            updateText('pacman-timer', Math.ceil(gameState.timeLeft));
+            
+            // Update player direction
+            if(gameState.keys.up) { gameState.player.dir.x = 0; gameState.player.dir.y = -1; }
+            else if(gameState.keys.down) { gameState.player.dir.x = 0; gameState.player.dir.y = 1; }
+            else if(gameState.keys.left) { gameState.player.dir.x = -1; gameState.player.dir.y = 0; }
+            else if(gameState.keys.right) { gameState.player.dir.x = 1; gameState.player.dir.y = 0; }
+            
+            // Move player
+            const newX = gameState.player.x + gameState.player.dir.x * gameState.player.speed;
+            const newY = gameState.player.y + gameState.player.dir.y * gameState.player.speed;
+            
+            if(!this.isWallCollision(newX, newY, gameState.player.size, gameState.walls)) {
+                gameState.player.x = Math.max(gameState.player.size, Math.min(canvas.width - gameState.player.size, newX));
+                gameState.player.y = Math.max(gameState.player.size + 100, Math.min(canvas.height - gameState.player.size, newY));
+            }
+            
+            // Check apple collection
+            gameState.apples.forEach(apple => {
+                if(!apple.collected) {
+                    const dist = Math.sqrt((apple.x - gameState.player.x)**2 + (apple.y - gameState.player.y)**2);
+                    if(dist < (gameState.player.size + apple.size) / 2) {
+                        apple.collected = true;
+                        gameState.score++;
+                        this.audio.playSFX('collect');
+                        updateText('pacman-score', gameState.score);
+                    }
+                }
+            });
+            
+            // Draw
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw walls
+            ctx.fillStyle = '#0f3460';
+            gameState.walls.forEach(wall => {
+                ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+            });
+            
+            // Draw apples
+            gameState.apples.forEach(apple => {
+                if(!apple.collected) {
+                    ctx.fillStyle = '#ff4757';
+                    ctx.beginPath();
+                    ctx.arc(apple.x, apple.y, apple.size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Draw apple emoji
+                    ctx.font = `${apple.size}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('🍎', apple.x, apple.y);
+                }
+            });
+            
+            // Draw player (Pacman-like character)
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(gameState.player.x, gameState.player.y, gameState.player.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+            // Draw face
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(gameState.player.x - 8, gameState.player.y - 5, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(gameState.player.x + 8, gameState.player.y - 5, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Check game end
+            if(gameState.timeLeft <= 0) {
+                document.getElementById('pacman-result').style.display = 'block';
+                updateText('pacman-final-score', gameState.score);
+                // Remove event listeners
+                window.removeEventListener('keydown', handleKeyDown);
+                window.removeEventListener('keyup', handleKeyUp);
+                canvas.removeEventListener('touchstart', handleTouchStart);
+                canvas.removeEventListener('touchmove', handleTouchMove);
+                canvas.removeEventListener('touchend', handleTouchEnd);
+                if(animationId) cancelAnimationFrame(animationId);
+                return;
+            }
+            
+            animationId = requestAnimationFrame(gameLoop);
+        };
+        
+        animationId = requestAnimationFrame(gameLoop);
+    }
+    
+    generateMaze(width, height) {
+        const walls = [];
+        const cellSize = 80;
+        const cols = Math.floor(width / cellSize);
+        const rows = Math.floor((height - 100) / cellSize);
+        
+        // Create grid walls
+        for(let i = 0; i < rows; i++) {
+            for(let j = 0; j < cols; j++) {
+                if(Math.random() > 0.7 && !(i === 0 && j === 0)) {
+                    walls.push({
+                        x: j * cellSize,
+                        y: i * cellSize + 100,
+                        w: cellSize - 5,
+                        h: cellSize - 5
+                    });
+                }
+            }
+        }
+        
+        return walls;
+    }
+    
+    isWallCollision(x, y, size, walls) {
+        const radius = size / 2;
+        for(let wall of walls) {
+            const closestX = Math.max(wall.x, Math.min(x, wall.x + wall.w));
+            const closestY = Math.max(wall.y, Math.min(y, wall.y + wall.h));
+            const distX = x - closestX;
+            const distY = y - closestY;
+            if(Math.sqrt(distX*distX + distY*distY) < radius) return true;
+        }
+        return false;
     }
 }
 
