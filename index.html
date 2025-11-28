@@ -600,6 +600,11 @@ class Game {
                 const ghostChance = isBoss ? 0.6 : 0.2; 
                 if(i>0 && Math.random()<ghostChance) this.spawnMonster(grp, isBoss); 
             }
+            
+            // Add bats flying at upper part of floor (all levels except level 1)
+            if(this.level > 1 && i > 0 && Math.random() < 0.3) {
+                this.spawnBat(grp);
+            }
 
             if(this.level === 3 && i >= 10 && i <= 18) grp.rotation.y = 0; else grp.rotation.y = Math.random()*6;
             this.tower.add(grp); this.floors.push(grp);
@@ -699,6 +704,48 @@ class Game {
         const shadow = new THREE.Mesh(shadowGeo, shadowMat);
         shadow.rotation.x = -Math.PI / 2;
         shadow.position.y = -1.7;
+        g.add(shadow);
+        
+        parent.add(g); this.interactables.push(g);
+    }
+    
+    spawnBat(parent) {
+        const g = new THREE.Group();
+        // Bat body (small dark sphere)
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 12), new THREE.MeshBasicMaterial({color:0x1a1a1a}));
+        g.add(body);
+        
+        // Bat wings (two triangles)
+        const wingGeo = new THREE.ConeGeometry(0.2, 0.3, 3);
+        const wingMat = new THREE.MeshBasicMaterial({color:0x2a2a2a, side:THREE.DoubleSide});
+        const wingL = new THREE.Mesh(wingGeo, wingMat);
+        wingL.position.set(-0.2, 0, 0);
+        wingL.rotation.z = Math.PI / 4;
+        wingL.rotation.y = -Math.PI / 2;
+        const wingR = new THREE.Mesh(wingGeo, wingMat);
+        wingR.position.set(0.2, 0, 0);
+        wingR.rotation.z = -Math.PI / 4;
+        wingR.rotation.y = -Math.PI / 2;
+        g.add(wingL, wingR);
+        
+        // Bat eyes (small red dots)
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), new THREE.MeshBasicMaterial({color:0xff0000}));
+        eye.position.set(0.05, 0.05, 0.12);
+        const eye2 = eye.clone();
+        eye2.position.set(-0.05, 0.05, 0.12);
+        g.add(eye, eye2);
+        
+        const direction = Math.random() > 0.5 ? 1 : -1;
+        g.userData = { type: 'bat', angle: Math.random()*6, speed: 0.04, offset: Math.random()*3, baseColor: 0x1a1a1a, dir: direction, wingFlap: 0 };
+        // Position at upper part of floor (higher Y)
+        g.position.set(Math.cos(0)*2.5, 3.5, Math.sin(0)*2.5);
+        
+        // Add shadow on floor for bat
+        const shadowGeo = new THREE.CircleGeometry(0.25, 16);
+        const shadowMat = new THREE.MeshBasicMaterial({color: 0x000000, transparent: true, opacity: 0.2});
+        const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+        shadow.rotation.x = -Math.PI / 2;
+        shadow.position.y = -3.2;
         g.add(shadow);
         
         parent.add(g); this.interactables.push(g);
@@ -825,7 +872,7 @@ class Game {
                     // 1.5 (offset) + 0.4 (radius) = 1.9 approx distance to center
                     if(dist < 1.9 + Math.abs(this.velocity) && dist > 0) { 
                          const u = hitsMain[0].object.userData.type ? hitsMain[0].object.userData : (hitsMain[0].object.parent ? hitsMain[0].object.parent.userData : {});
-                         if(!['apple','banana','rotten','diamond','ghost','chocolate','white-ghost'].includes(u.type)) {
+                         if(!['apple','banana','rotten','diamond','ghost','chocolate','white-ghost','bat'].includes(u.type)) {
                             this.ballWrap.position.y = hitsMain[0].point.y + 0.4; 
                             if(u.type === 'safe') {
                                 this.velocity = jump; this.audio.playSFX('bounce'); this.currentScale.set(1.4, 0.6, 1.4);
@@ -885,23 +932,51 @@ class Game {
                         }
                     });
                 }
+                else if(o.userData.type === 'bat') {
+                    let dir = o.userData.dir || 1;
+                    o.userData.angle += o.userData.speed * dir;
+                    // Bats fly in circular pattern at upper part of floor
+                    const rad = 2.2 + Math.sin(Date.now() * 0.003 + o.userData.offset) * 0.8;
+                    o.position.x = Math.cos(o.userData.angle) * rad;
+                    o.position.z = Math.sin(o.userData.angle) * rad;
+                    // Keep bats at upper part (Y around 3-4)
+                    o.position.y = 3.5 + Math.sin(Date.now() * 0.004 + o.userData.offset) * 0.5;
+                    o.lookAt(pos);
+                    // Animate wing flapping
+                    o.userData.wingFlap += 0.3;
+                    o.children.forEach(child => {
+                        if(child.geometry && child.geometry.type === 'ConeGeometry') {
+                            child.rotation.x = Math.sin(o.userData.wingFlap) * 0.5;
+                        }
+                        // Update shadow position and scale based on height
+                        if(child.geometry && child.geometry.type === 'CircleGeometry') {
+                            const heightFactor = (o.position.y - 3.0) / 2.0;
+                            child.scale.setScalar(0.8 + heightFactor * 0.3);
+                            child.material.opacity = 0.2 - heightFactor * 0.1;
+                        }
+                    });
+                }
                 
                 const wPos = new THREE.Vector3(); o.getWorldPosition(wPos);
-                const dist = o.userData.type === 'white-ghost' ? 1.0 : 0.8;
+                const dist = o.userData.type === 'white-ghost' ? 1.0 : (o.userData.type === 'bat' ? 0.6 : 0.8);
                 
-                // Check if ghost is within floor area (radius ~2.5) before collision
+                // Check if ghost/bat is within floor area (radius ~2.5) before collision
                 const floorRadius = 2.5;
                 const distanceFromCenter = Math.sqrt(wPos.x * wPos.x + wPos.z * wPos.z);
                 const isWithinFloor = distanceFromCenter < floorRadius;
                 
-                if(wPos.distanceTo(pos) < dist && isWithinFloor) {
+                // For bats, also check if character is at similar height (upper part)
+                const heightDiff = Math.abs(wPos.y - pos.y);
+                const isBatCollision = o.userData.type === 'bat' ? (heightDiff < 1.5 && isWithinFloor) : isWithinFloor;
+                
+                if(wPos.distanceTo(pos) < dist && isBatCollision) {
                     const t = o.userData.type;
                     if(t==='apple') { this.lives=Math.min(5,this.lives+1); this.collected.apple++; this.levelCollected++; this.audio.playSFX('collect'); o.parent.remove(o); this.interactables.splice(i,1); }
                     else if(t==='banana') { this.fastTimer+=300; this.collected.banana++; this.levelCollected++; this.audio.playSFX('buff'); o.parent.remove(o); this.interactables.splice(i,1); }
                     else if(t==='rotten') { this.slowTimer+=150; this.audio.playSFX('damage'); this.collected.rotten++; o.parent.remove(o); this.interactables.splice(i,1); }
                     else if(t==='diamond') { this.drillFloors = 3; this.drillTimer = 300; this.audio.playSFX('buff'); this.collected.diamond++; o.parent.remove(o); this.interactables.splice(i,1); }
                     else if(t==='chocolate') { this.timeLeft += 5; this.collected.choco++; this.audio.playSFX('collect'); o.parent.remove(o); this.interactables.splice(i,1); }
-                    else if(t==='ghost' || t==='white-ghost') { if(this.drillFloors<=0) this.takeDamage(); else { o.parent.remove(o); this.interactables.splice(i,1); } }
+                    else if(t==='ghost' || t==='white-ghost' || t==='bat') { if(this.drillFloors<=0) this.takeDamage(); else { o.parent.remove(o); this.interactables.splice(i,1); } }
                 }
             }
             
