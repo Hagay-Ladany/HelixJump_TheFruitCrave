@@ -26,11 +26,11 @@
         #hearts { font-size: 1.2rem; margin-top: 5px; letter-spacing: 1px; }
         #buffs-display { font-size: 1rem; font-weight: bold; margin-top: 5px; text-shadow: 1px 1px 0 #000; min-height: 1.2em; }
         .buff-fast { color: #ffff00; } .buff-slow { color: #76ff03; font-style: italic; } .buff-drill { color: #00ffff; text-shadow: 0 0 5px cyan; }
-        .effect-bar-container { display: inline-block; margin-left: 8px; width: 60px; height: 4px; background: rgba(0,0,0,0.5); border-radius: 2px; overflow: hidden; vertical-align: middle; }
-        .effect-bar-fill { height: 100%; transition: width 0.1s linear; }
-        .effect-bar-fast { background: #ffff00; }
-        .effect-bar-slow { background: #76ff03; }
-        .effect-bar-drill { background: #00ffff; }
+        .effect-bar-container { display: inline-block; margin-left: 10px; width: 80px; height: 6px; background: rgba(0,0,0,0.6); border-radius: 3px; overflow: hidden; vertical-align: middle; border: 1px solid rgba(255,255,255,0.2); }
+        .effect-bar-fill { height: 100%; transition: width 0.1s linear; box-shadow: 0 0 4px rgba(255,255,255,0.5); }
+        .effect-bar-fast { background: linear-gradient(90deg, #ffff00, #ffaa00); }
+        .effect-bar-slow { background: linear-gradient(90deg, #76ff03, #4caf50); }
+        .effect-bar-drill { background: linear-gradient(90deg, #00ffff, #0099ff); }
         
         #item-counters { background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 20px; backdrop-filter: blur(4px); display: flex; gap: 15px; height: fit-content; border: 1px solid rgba(255,255,255,0.2); }
         .counter-item { font-size: 1.2rem; color: white; font-weight: bold; }
@@ -117,12 +117,21 @@
 </div>
 
 <div id="start-screen" class="overlay">
-    <div class="stat-box" style="margin-top: 200px;">
-        <p>🍎 Life | 🍌 Speed</p>
-        <p>🍫 +5s Time | 💎 Drill</p>
-        <p style="color:#ff4500; font-weight:bold;">Level 6: THE END</p>
+    <div id="loading-container" style="display: none;">
+        <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
+        <div style="width: 300px; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
+            <div id="loading-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #2ed573, #00ffff); transition: width 0.3s ease;"></div>
+        </div>
+        <p id="loading-text" style="color: white; margin-top: 10px; font-size: 0.9rem;">Preparing game assets...</p>
     </div>
-    <button class="btn btn-start" id="btn-start" style="margin-top: 100px;">TAP TO START</button>
+    <div id="start-content">
+        <div class="stat-box" style="margin-top: 200px;">
+            <p>🍎 Life | 🍌 Speed</p>
+            <p>🍫 +5s Time | 💎 Drill</p>
+            <p style="color:#ff4500; font-weight:bold;">Level 6: THE END</p>
+        </div>
+        <button class="btn btn-start" id="btn-start" style="margin-top: 100px;">TAP TO START</button>
+    </div>
 </div>
 
 <div id="game-over-screen" class="overlay hidden">
@@ -458,6 +467,15 @@ class Game {
         const armR = new THREE.Mesh(limbGeo, limbMat); armR.position.set(0.38, -0.1, 0); armR.rotation.z = -0.5; this.ballBody.add(armR);
         const legL = new THREE.Mesh(limbGeo, limbMat); legL.position.set(-0.15, -0.4, 0); this.ballBody.add(legL);
         const legR = new THREE.Mesh(limbGeo, limbMat); legR.position.set(0.15, -0.4, 0); this.ballBody.add(legR);
+        
+        // Add shadow on floor for character
+        const shadowGeo = new THREE.CircleGeometry(0.5, 16);
+        const shadowMat = new THREE.MeshBasicMaterial({color: 0x000000, transparent: true, opacity: 0.3});
+        this.ballShadow = new THREE.Mesh(shadowGeo, shadowMat);
+        this.ballShadow.rotation.x = -Math.PI / 2;
+        this.ballShadow.position.y = -1.8;
+        this.scene.add(this.ballShadow);
+        
         this.scene.add(this.ballWrap);
     }
 
@@ -531,13 +549,15 @@ class Game {
                 geo.rotateX(-Math.PI/2);
                 const mat = new THREE.MeshBasicMaterial({ color: isDanger ? dangerColor : col, map: matMap, transparent: isFinal, opacity: isFinal ? 0.9 : 1.0 });
                 const m = new THREE.Mesh(geo, mat);
-                // Add shadow effect with a darker material on the sides
-                const shadowGeo = new THREE.ExtrudeGeometry(shape, {depth:0.05, bevelEnabled:false});
-                shadowGeo.rotateX(-Math.PI/2);
-                shadowGeo.translate(0, -0.2, 0);
-                const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 });
-                const shadow = new THREE.Mesh(shadowGeo, shadowMat);
-                m.add(shadow); 
+                // Add shadow to floor sides for 3D look
+                const sideShadowGeo = new THREE.ExtrudeGeometry(shape, {depth:0.4, bevelEnabled:false});
+                sideShadowGeo.rotateX(-Math.PI/2);
+                const sideShadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.4 });
+                const sideShadow = new THREE.Mesh(sideShadowGeo, sideShadowMat);
+                sideShadow.position.y = -0.2;
+                // Only show shadow on the sides (not top/bottom)
+                sideShadow.scale.set(1, 0.1, 1);
+                grp.add(sideShadow); 
                 m.userData = { type: isDanger?'danger':'safe', color: isDanger?dangerColor:new THREE.Color(col).getHex() };
                 this.physicsMeshes.push(m); grp.add(m);
                 if(!isDanger && !isBoss && i>0 && i<floors-1 && Math.random()<0.1) this.spawnItem(grp, Math.cos(j*a+a/2)*2, Math.sin(j*a+a/2)*2);
@@ -602,6 +622,13 @@ class Game {
         const mouth = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.1), new THREE.MeshBasicMaterial({color:'black'})); mouth.position.set(0, -0.15, 0.31); mouth.rotation.y = 0;
         g.add(eyeL, eyeR, browL, browR, mouth);
         
+        // HORNS
+        const hornGeo = new THREE.ConeGeometry(0.08, 0.2, 8);
+        const hornMat = new THREE.MeshBasicMaterial({color: col});
+        const hornL = new THREE.Mesh(hornGeo, hornMat); hornL.position.set(-0.2, 0.35, 0.1); hornL.rotation.z = -0.3;
+        const hornR = new THREE.Mesh(hornGeo, hornMat); hornR.position.set(0.2, 0.35, 0.1); hornR.rotation.z = 0.3;
+        g.add(hornL, hornR);
+        
         // HANDS STICKING OUT FRONT
         const armGeo = new THREE.BoxGeometry(0.15, 0.15, 0.4); // Long in Z (forward)
         const armMat = new THREE.MeshBasicMaterial({color: 0x005500}); 
@@ -614,7 +641,15 @@ class Game {
         
         const direction = Math.random() > 0.5 ? 1 : -1;
         g.userData = { type:'ghost', angle:Math.random()*6, speed:0.02, baseColor: col, dir: direction };
-        g.position.y = 1.5; g.position.x = 2; 
+        g.position.y = 0.8; g.position.x = 2;
+        
+        // Add shadow on floor
+        const shadowGeo = new THREE.CircleGeometry(0.4, 16);
+        const shadowMat = new THREE.MeshBasicMaterial({color: 0x000000, transparent: true, opacity: 0.3});
+        const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+        shadow.rotation.x = -Math.PI / 2;
+        shadow.position.y = -0.3;
+        g.add(shadow); 
         // Rotate to face forward on floor plane (rotate around Y axis to face positive Z)
         g.rotation.set(0, 0, 0); 
         parent.add(g); this.interactables.push(g);
@@ -630,7 +665,17 @@ class Game {
         
         const direction = Math.random() > 0.5 ? 1 : -1;
         g.userData = { type: 'white-ghost', angle: Math.random()*6, speed: 0.03, offset: Math.random()*3, baseColor: 0xffffff, dir: direction };
-        g.position.set(Math.cos(0)*3, 2, Math.sin(0)*3); parent.add(g); this.interactables.push(g);
+        g.position.set(Math.cos(0)*3, 2, Math.sin(0)*3);
+        
+        // Add shadow on floor for flying ghost
+        const shadowGeo = new THREE.CircleGeometry(0.35, 16);
+        const shadowMat = new THREE.MeshBasicMaterial({color: 0x000000, transparent: true, opacity: 0.25});
+        const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+        shadow.rotation.x = -Math.PI / 2;
+        shadow.position.y = -1.7;
+        g.add(shadow);
+        
+        parent.add(g); this.interactables.push(g);
     }
 
     restart(full) {
@@ -805,7 +850,14 @@ class Game {
                     o.position.x = Math.cos(o.userData.angle) * rad; 
                     o.position.z = Math.sin(o.userData.angle) * rad; 
                     o.position.y = 2 + Math.sin(Date.now() * 0.002 + o.userData.offset) * 2; 
-                    o.lookAt(pos); 
+                    o.lookAt(pos);
+                    // Update shadow position and scale based on height
+                    o.children.forEach(child => {
+                        if(child.geometry && child.geometry.type === 'CircleGeometry') {
+                            const heightFactor = (o.position.y - 0.5) / 3.5;
+                            child.scale.setScalar(1 + heightFactor * 0.5);
+                        }
+                    });
                 }
                 
                 const wPos = new THREE.Vector3(); o.getWorldPosition(wPos);
@@ -830,6 +882,14 @@ class Game {
             const ty = pos.y + 8; 
             this.camera.position.y += (ty - this.camera.position.y) * 0.1;
             this.camera.lookAt(0, this.camera.position.y - 8, 0);
+            
+            // Update character shadow position
+            if(this.ballShadow) {
+                this.ballShadow.position.x = pos.x;
+                this.ballShadow.position.z = pos.z;
+                const shadowScale = 1 + Math.abs(this.velocity) * 0.3;
+                this.ballShadow.scale.setScalar(Math.max(0.5, Math.min(1.5, shadowScale)));
+            }
 
             this.renderer.render(this.scene, this.camera);
         } catch(e) { console.error("Loop Error:", e); }
