@@ -128,7 +128,7 @@
         <div class="stat-box" style="margin-top: 200px;">
             <p>🍎 Life | 🍌 Speed</p>
             <p>🍫 +5s Time | 💎 Drill</p>
-            <p style="color:#ff4500; font-weight:bold;">Level 6: THE END</p>
+            <p style="color:#ff4500; font-weight:bold;">Level 5: THE END</p>
         </div>
         <button class="btn btn-start" id="btn-start" style="margin-top: 100px;">TAP TO START</button>
     </div>
@@ -152,6 +152,7 @@
         <div class="stat-row animate-pop" style="animation-delay: 0.1s;"><span class="stat-label">Time:</span><div class="bar-track"><div class="bar-fill" id="bar-time" style="background:#00ffff"></div></div><span class="stat-val" id="win-time">00:00</span></div>
         <div class="stat-row animate-pop" style="animation-delay: 0.2s;"><span class="stat-label">Fruits:</span><div class="bar-track"><div class="bar-fill" id="bar-fruit" style="background:#2ed573"></div></div><span class="stat-val" id="win-fruit">0/0</span></div>
         <div class="stat-row animate-pop" style="animation-delay: 0.3s;"><span class="stat-label">Rating:</span><div class="bar-track"><div class="bar-fill" id="bar-rating" style="background:#ff4757"></div></div><span class="stat-val" id="win-rating">Good</span></div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.4s;"><span class="stat-label">Score:</span><span class="stat-val" id="win-score">0</span></div>
     </div>
     <button class="btn btn-start" id="btn-next">NEXT LEVEL</button>
 </div>
@@ -223,6 +224,13 @@ class SoundManager {
         if(!this.player || this.isMusicMuted) return;
         if(this.currentTrack === baseName) return; 
         
+        // Smooth transition - fade out current track
+        if(this.player && this.currentTrack) {
+            try {
+                this.player.stop();
+            } catch(e) {}
+        }
+        
         const trackInfo = this.trackMap[baseName];
         if(!trackInfo) {
             console.warn(`Track not found: ${baseName}`);
@@ -232,9 +240,14 @@ class SoundManager {
         this.currentTrack = baseName;
         this.lastTrack = baseName; // Save as last track for resume
         
-        this.player.load(url, (buffer) => {
-            this.player.play(buffer);
-        });
+        // Small delay for smooth transition
+        setTimeout(() => {
+            if(this.player && !this.isMusicMuted) {
+                this.player.load(url, (buffer) => {
+                    this.player.play(buffer);
+                });
+            }
+        }, 50);
     }
     
     stopMusic() {
@@ -397,7 +410,16 @@ class Game {
 
         document.getElementById('btn-retry').onclick = () => this.restart(true);
         // Level logic: goto next or loop at 6
-        document.getElementById('btn-next').onclick = () => { if(this.level >= 6) this.restart(true); else { this.level++; this.restart(false); } };
+        document.getElementById('btn-next').onclick = () => { 
+            // Smooth music transition
+            if(this.audio.player) {
+                this.audio.player.stop();
+            }
+            setTimeout(() => {
+                if(this.level >= 5) this.restart(true); 
+                else { this.level++; this.restart(false); }
+            }, 100);
+        };
         document.getElementById('audio-btn').onclick = () => this.audio.toggleMute();
         document.getElementById('music-btn').onclick = () => this.audio.toggleMusic();
     }
@@ -495,7 +517,9 @@ class Game {
         else if(this.level === 4) grad = "linear-gradient(to bottom, #800000, #200122)";
         else grad = "linear-gradient(to bottom, #ECE9E6, #FFFFFF)";
         const overlayGradient = "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 29%, rgba(0, 0, 0, 0.95) 100%)";
-        const texture = `url("images/bg_level_${this.level}.jpg")`;
+        // Use SVG for levels 1 and 2, JPG for others
+        const bgExt = (this.level === 1 || this.level === 2) ? 'svg' : 'jpg';
+        const texture = `url("images/bg_level_${this.level}.${bgExt}")`;
         document.body.style.backgroundImage = `${overlayGradient}, ${grad}, ${texture}`;
         document.body.style.backgroundRepeat = "no-repeat, no-repeat, repeat";
         document.body.style.backgroundSize = "cover, cover, 30%";
@@ -512,20 +536,22 @@ class Game {
         this.timeLeft = this.maxTime;
 
         const isBoss = this.level === 4; 
-        const isFinal = this.level === 6; 
+        const isFinal = this.level === 5; 
         
         const floors = isFinal ? 50 : (isBoss ? 20 : (this.level===1 ? 25 : 40));
         const matMap = (isBoss || isFinal) ? AssetFactory.texStone : AssetFactory.texFloor;
-        const hidePole = (this.level === 6);
+        const hidePole = (this.level === 5);
         
         let palette;
         if(this.level===1) palette=[0x00d2d3,0x54a0ff,0x5f27cd]; 
         else if(this.level===3) palette=[0xbadc58,0x6ab04c,0xf6e58d]; 
-        else if(this.level===6) palette=[0xFFFFFF, 0xEEEEEE, 0xDDDDDD]; 
+        else if(this.level===5) palette=[0xFFFFFF, 0xEEEEEE, 0xDDDDDD]; 
         else palette=[0x555555, 0x333333];
         
         const core = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,200,32), new THREE.MeshBasicMaterial({map: isBoss?AssetFactory.texStone:AssetFactory.texPole, color: isBoss?0x888:0xddd}));
-        core.position.y = -80; if(hidePole) core.visible = false; this.tower.add(core);
+        core.position.y = -80; if(hidePole) core.visible = false; 
+        // Don't add shadow to pole
+        this.tower.add(core);
         
         const alignedGapIndex = Math.floor(Math.random() * 12);
         
@@ -563,15 +589,12 @@ class Game {
                 if(!isDanger && !isBoss && i>0 && i<floors-1 && Math.random()<0.1) this.spawnItem(grp, Math.cos(j*a+a/2)*2, Math.sin(j*a+a/2)*2);
             }
             
-            // --- LEVEL 6 LOGIC (BOTH ENEMIES) ---
-            if(this.level === 6) { 
-                if(i>2 && Math.random()<0.4) {
-                    if(Math.random() > 0.5) this.spawnFlyingGhost(grp);
-                    else this.spawnMonster(grp, false);
+            // --- LEVEL 5 LOGIC (FINAL LEVEL - MORE GHOSTS, RED LARGER MONSTERS) ---
+            if(this.level === 5) { 
+                if(i>2 && Math.random()<0.6) {
+                    if(Math.random() > 0.4) this.spawnFlyingGhost(grp);
+                    else this.spawnMonster(grp, true); // Red and larger
                 } 
-            }
-            else if(isFinal) { 
-                 if(i>2 && Math.random()<0.4) this.spawnFlyingGhost(grp); 
             }
             else { 
                 const ghostChance = isBoss ? 0.6 : 0.2; 
@@ -605,10 +628,13 @@ class Game {
     
     // --- UPGRADE: MONSTER HANDS + FACING + NO SPIN ---
     spawnMonster(parent, isFire) {
-        const col = isFire ? 0xff4500 : (this.level===3 ? 0x8A2BE2 : 0x32CD32); 
+        const isFinalLevel = this.level === 5;
+        const col = (isFire || isFinalLevel) ? 0xff4500 : (this.level===3 ? 0x8A2BE2 : 0x32CD32);
+        const scale = isFinalLevel ? 1.5 : 1.0; 
         const g = new THREE.Group();
-        const body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), new THREE.MeshBasicMaterial({color:col}));
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.6 * scale, 0.6 * scale, 0.6 * scale), new THREE.MeshBasicMaterial({color:col}));
         g.add(body);
+        if(isFinalLevel) g.scale.set(scale, scale, scale);
         const eyeMat = new THREE.MeshBasicMaterial({color:'yellow'}); const pupilMat = new THREE.MeshBasicMaterial({color:'black'});
         // Eyes facing forward on floor plane (positive Z direction)
         const eyeL = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), eyeMat); eyeL.position.set(-0.15, 0.1, 0.31);
@@ -622,9 +648,9 @@ class Game {
         const mouth = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.1), new THREE.MeshBasicMaterial({color:'black'})); mouth.position.set(0, -0.15, 0.31); mouth.rotation.y = 0;
         g.add(eyeL, eyeR, browL, browR, mouth);
         
-        // HORNS
-        const hornGeo = new THREE.ConeGeometry(0.08, 0.2, 8);
-        const hornMat = new THREE.MeshBasicMaterial({color: col});
+        // HORNS - Bigger and white
+        const hornGeo = new THREE.ConeGeometry(0.12, 0.3, 8);
+        const hornMat = new THREE.MeshBasicMaterial({color: 0xffffff});
         const hornL = new THREE.Mesh(hornGeo, hornMat); hornL.position.set(-0.2, 0.35, 0.1); hornL.rotation.z = -0.3;
         const hornR = new THREE.Mesh(hornGeo, hornMat); hornR.position.set(0.2, 0.35, 0.1); hornR.rotation.z = 0.3;
         g.add(hornL, hornR);
@@ -725,7 +751,7 @@ class Game {
         
         let levelTxt = "LEVEL " + this.level;
         if(this.level === 4) levelTxt = "LAVA HELL";
-        else if(this.level === 6) levelTxt = "THE END";
+        else if(this.level === 5) levelTxt = "THE END";
         updateText('level-indicator', levelTxt);
 
         let h = "";
@@ -863,7 +889,12 @@ class Game {
                 const wPos = new THREE.Vector3(); o.getWorldPosition(wPos);
                 const dist = o.userData.type === 'white-ghost' ? 1.0 : 0.8;
                 
-                if(wPos.distanceTo(pos) < dist) {
+                // Check if ghost is within floor area (radius ~2.5) before collision
+                const floorRadius = 2.5;
+                const distanceFromCenter = Math.sqrt(wPos.x * wPos.x + wPos.z * wPos.z);
+                const isWithinFloor = distanceFromCenter < floorRadius;
+                
+                if(wPos.distanceTo(pos) < dist && isWithinFloor) {
                     const t = o.userData.type;
                     if(t==='apple') { this.lives=Math.min(5,this.lives+1); this.collected.apple++; this.levelCollected++; this.audio.playSFX('collect'); o.parent.remove(o); this.interactables.splice(i,1); }
                     else if(t==='banana') { this.fastTimer+=300; this.collected.banana++; this.levelCollected++; this.audio.playSFX('buff'); o.parent.remove(o); this.interactables.splice(i,1); }
@@ -883,12 +914,17 @@ class Game {
             this.camera.position.y += (ty - this.camera.position.y) * 0.1;
             this.camera.lookAt(0, this.camera.position.y - 8, 0);
             
-            // Update character shadow position
+            // Update character shadow position with jump effect
             if(this.ballShadow) {
                 this.ballShadow.position.x = pos.x;
                 this.ballShadow.position.z = pos.z;
-                const shadowScale = 1 + Math.abs(this.velocity) * 0.3;
-                this.ballShadow.scale.setScalar(Math.max(0.5, Math.min(1.5, shadowScale)));
+                // Shadow scales based on height - higher = smaller shadow
+                const heightFactor = Math.max(0, (pos.y - 0.5) / 10);
+                const jumpScale = this.velocity > 0 ? 1 - heightFactor * 0.5 : 1;
+                const velocityScale = 1 + Math.abs(this.velocity) * 0.2;
+                this.ballShadow.scale.setScalar(Math.max(0.4, Math.min(1.3, jumpScale * velocityScale)));
+                // Shadow opacity based on height
+                this.ballShadow.material.opacity = Math.max(0.1, 0.3 - heightFactor * 0.2);
             }
 
             this.renderer.render(this.scene, this.camera);
@@ -912,14 +948,14 @@ class Game {
     
     levelComplete() {
         this.isPlaying = false;
-        if(this.level === 6) { updateText('complete-title', "YOU WIN!"); updateText('win-emoji', "🏆"); updateText('btn-next', "RESTART GAME"); this.audio.playTrack('you_win'); } 
+        if(this.level === 5) { updateText('complete-title', "YOU WIN!"); updateText('win-emoji', "🏆"); updateText('btn-next', "RESTART GAME"); this.audio.playTrack('you_win'); } 
         else { updateText('complete-title', "LEVEL COMPLETE!"); updateText('btn-next', "NEXT LEVEL"); this.audio.playTrack('you_win'); }
         document.getElementById('level-complete-screen').classList.remove('hidden');
         const timeTaken = Math.max(0, this.maxTime - this.timeLeft);
         const m = Math.floor(timeTaken/60); const s = Math.floor(timeTaken%60).toString().padStart(2,'0'); updateText('win-time', `${m}:${s}`);
         const total = this.totalItems||1; const fruitPct = Math.min(100, Math.floor(this.levelCollected/total*100)); updateText('win-fruit', this.levelCollected+"/"+this.totalItems);
         let rating = "Good"; let ratingVal = 50; if(fruitPct > 80 && timeTaken < this.maxTime*0.5) { rating="Perfect!"; ratingVal=100; } else if(fruitPct > 50) { rating="Great"; ratingVal=75; }
-        updateText('win-rating', rating); if(this.level !== 6) updateText('win-emoji', ratingVal===100?"👑":"🎉");
+        updateText('win-rating', rating); updateText('win-score', this.score); if(this.level !== 5) updateText('win-emoji', ratingVal===100?"👑":"🎉");
         setTimeout(() => { updateBar('bar-time', ((this.maxTime - timeTaken) / this.maxTime) * 100); updateBar('bar-fruit', fruitPct); updateBar('bar-rating', ratingVal); }, 100);
     }
 }
