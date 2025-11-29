@@ -153,8 +153,8 @@
 
         .stat-box { background: rgba(255,255,255,0.15); padding: 20px; border-radius: 10px; width: clamp(280px, 90vw, 350px); max-width: 90vw; margin: 20px auto; flex-shrink: 0; text-align: center; color: white; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); flex-shrink: 0; }
         .stat-row { display: flex; align-items: center; justify-content: space-between; margin: 8px 0; font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; color: white; }
-        .stat-label { width: 70px; text-align: left; font-size: 0.9rem; opacity: 0.8; color: white; }
-        .stat-val { width: 50px; text-align: right; font-weight: bold; color: white; }
+        .stat-label { width: auto; min-width: 120px; text-align: left; font-size: 0.9rem; opacity: 0.8; color: white; display: flex; align-items: center; gap: 5px; }
+        .stat-val { width: 50px; text-align: right; font-weight: bold; color: white; flex-shrink: 0; }
         .bar-track { flex-grow: 1; height: 6px; background: rgba(0,0,0,0.5); margin: 0 10px; border-radius: 4px; overflow: hidden; }
         .bar-fill { height: 100%; width: 0%; transition: width 1s ease-out; }
 
@@ -253,8 +253,7 @@
 </div>
 
 <div id="level-complete-screen" class="overlay hidden" style="padding: 20px; box-sizing: border-box; justify-content: flex-start; padding-top: 5vh;">
-    
-    
+    <div class="big-emoji animate-pulse" id="win-emoji" style="font-size: 6rem; margin: 10px 0; text-align: center;">🎉</div>
     <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
         <div class="stat-row animate-pop" style="animation-delay: 0.1s;">
             <span class="stat-label">🍎 Apples:</span>
@@ -633,64 +632,58 @@ function getBackgroundImage(level) {
 }
 
 // Leaderboard functions - Google Sheets integration
-const LEADERBOARD_URL = 'https://script.google.com/macros/s/AKfycbykT7mzT8W0WVJf-EMDpH2QMgiKtDXkR7VTtVPKMm93rA-C5__CMi8U0vRKiCbuutC2rw/exec';
+const LEADERBOARD_URL = 'https://script.google.com/macros/s/AKfycbzpkIywJ-vvc7zKpKjX_MpKCbk9a5fcVIpIbcFwYZOI8Y_g6UXdr3OBSRz7MMkdR5mP4A/exec';
 
 async function getLeaderboard() {
     try {
-        // Google Apps Script needs CORS headers - try fetch first
-        const res = await fetch(LEADERBOARD_URL, {
+        const response = await fetch(APPS_SCRIPT_URL, {
             method: 'GET',
-            mode: 'cors',
-            cache: 'no-cache'
+            mode: 'cors' // Essential for cross-origin communication
         });
-        
-        if (!res.ok) throw new Error('Failed to fetch leaderboard');
-        const data = await res.json();
-        return data || [];
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const leaderboardData = await response.json();
+        return leaderboardData;
+
     } catch (error) {
-        console.error('Error loading leaderboard:', error);
-        // Fallback to localStorage if network fails or CORS issue
-        const stored = localStorage.getItem('helixJumpLeaderboard');
-        return stored ? JSON.parse(stored) : [];
+        console.error("Error loading leaderboard:", error);
+        return [];
     }
 }
 
-async function saveToLeaderboard(name, score, level) {
-    // Always save to localStorage first (as backup)
-    const stored = localStorage.getItem('helixJumpLeaderboard');
-    const localLeaderboard = stored ? JSON.parse(stored) : [];
-    localLeaderboard.push({
-        name: name || 'Anonymous',
-        score: score,
-        level: level,
-        date: new Date().toISOString()
-    });
-    localLeaderboard.sort((a, b) => b.score - a.score);
-    const top50 = localLeaderboard.slice(0, 50);
-    localStorage.setItem('helixJumpLeaderboard', JSON.stringify(top50));
-    
-    // Try to save to Google Sheets (requires CORS headers in Apps Script)
+async function saveToLeaderboard(playerName, playerScore) {
+    if (!playerName || playerScore === undefined) return;
+
     try {
-        const response = await fetch(LEADERBOARD_URL, {
+        const response = await fetch(APPS_SCRIPT_URL, {
             method: 'POST',
-            mode: 'cors',
-            headers: { 
-                'Content-Type': 'application/json'
+            mode: 'cors', // Essential for cross-origin communication
+            headers: {
+                // This signals the browser to send the OPTIONS preflight request
+                'Content-Type': 'application/json' 
             },
-            body: JSON.stringify({ 
-                name: name || 'Anonymous', 
-                score: score 
+            body: JSON.stringify({
+                name: playerName,
+                score: playerScore
             })
         });
+
+        // The Apps Script should now respond with CORS headers, resolving the block.
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("Score submission successful:", result);
         
-        if (!response.ok) throw new Error('Failed to save score');
-        // Success - data saved to Google Sheets
-        return top50;
+        // After successful submission, refresh the list:
+        displayLeaderboard(); 
+
     } catch (error) {
-        console.error('Error saving score to Google Sheets (CORS issue):', error);
-        console.log('Score saved to localStorage as backup. Update your Google Apps Script to add CORS headers.');
-        // Already saved to localStorage, so return that
-        return top50;
+        console.error("Error saving score to Google Sheets:", error);
     }
 }
 
@@ -1578,7 +1571,7 @@ class Game {
     
     levelComplete() {
         this.isPlaying = false;
-        if(this.level === 5) {  updateText('btn-next', "RESTART GAME"); this.audio.playTrack('you_win'); } 
+        if(this.level === 5) { updateText('btn-next', "RESTART GAME"); this.audio.playTrack('you_win'); } 
         else { updateText('btn-next', "NEXT LEVEL"); this.audio.playTrack('you_win'); }
         document.getElementById('level-complete-screen').classList.remove('hidden');
         
@@ -1625,7 +1618,7 @@ class Game {
         updateText('win-rating', rating);
         updateText('win-score-emoji', scoreEmoji);
         updateText('win-score', `${score1to10}/10`);
-        if(this.level !== 5) 
+        updateText('win-emoji', scoreEmoji);
         
         setTimeout(() => { 
             updateBar('bar-time', timePct); 
@@ -1999,5 +1992,4 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
 
