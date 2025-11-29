@@ -50,6 +50,15 @@
         /* Overlays */
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; pointer-events: auto; transition: opacity 0.3s; }
         .overlay:not(.hidden) { display: flex !important; }
+        #start-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100%;
+            padding-bottom: 5vh;
+            width: 100%;
+        }
         #start-screen { 
             background-color: #2c3e50; 
             background-position: center; 
@@ -64,11 +73,21 @@
                 background-image: url('images/archived/start_screen_portrait_original_size.jpg'); 
             }
             #start-content .stat-box {
-                margin-top: 15vh !important;
+                margin-top: auto !important;
+                margin-bottom: 15vh !important;
                 backdrop-filter: none !important;
+                font-size: 0.85rem !important;
+            }
+            #start-content .stat-box h3 {
+                font-size: 1.1rem !important;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            }
+            #start-content .stat-box p {
+                text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
             }
             #start-content .btn-start {
-                margin-top: 8vh !important;
+                margin-top: 2vh !important;
+                margin-bottom: 5vh !important;
             }
         }
         
@@ -78,11 +97,21 @@
                 background-image: url('images/start_screen_Landscape.jpg'); 
             }
             #start-content .stat-box {
-                margin-top: 10vh !important;
+                margin-top: auto !important;
+                margin-bottom: 10vh !important;
                 backdrop-filter: none !important;
+                font-size: 0.85rem !important;
+            }
+            #start-content .stat-box h3 {
+                font-size: 1.1rem !important;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            }
+            #start-content .stat-box p {
+                text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
             }
             #start-content .btn-start {
-                margin-top: 5vh !important;
+                margin-top: 2vh !important;
+                margin-bottom: 3vh !important;
             }
         }
         
@@ -171,19 +200,19 @@
     </div>
     <div id="start-content">
         <div class="stat-box">
-            <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 1.3rem;">GAME ELEMENTS</h3>
-            <div style="text-align: left; font-size: 0.95rem; line-height: 1.8;">
-                <p><strong>🍎 Apple</strong> - Restores 1 life</p>
-                <p><strong>🍌 Banana</strong> - Increases speed & jump</p>
-                <p><strong>🍫 Chocolate</strong> - Adds 5 seconds to timer</p>
-                <p><strong>💎 Diamond</strong> - Drills through floors</p>
-                <p><strong>🪳 Cockroach</strong> - Reduces jump & speed</p>
-                <p><strong>🤢 Rotten</strong> - Slows you down</p>
-                <p style="margin-top: 10px; margin-bottom: 5px;"><strong>⚠️ DANGERS:</strong></p>
-                <p><strong>👻 Ghosts</strong> - Avoid or use drill!</p>
-                <p><strong>🦇 Bats</strong> - Fly at upper floors</p>
+            <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">GAME ELEMENTS</h3>
+            <div style="text-align: left; font-size: 0.85rem; line-height: 1.8;">
+                <p style="text-shadow: 1px 1px 3px rgba(0,0,0,0.8);"><strong>🍎 Apple</strong> - Restores 1 life</p>
+                <p style="text-shadow: 1px 1px 3px rgba(0,0,0,0.8);"><strong>🍌 Banana</strong> - Increases speed & jump</p>
+                <p style="text-shadow: 1px 1px 3px rgba(0,0,0,0.8);"><strong>🍫 Chocolate</strong> - Adds 5 seconds to timer</p>
+                <p style="text-shadow: 1px 1px 3px rgba(0,0,0,0.8);"><strong>💎 Diamond</strong> - Drills through floors</p>
+                <p style="text-shadow: 1px 1px 3px rgba(0,0,0,0.8);"><strong>🪳 Cockroach</strong> - Reduces jump & speed</p>
+                <p style="text-shadow: 1px 1px 3px rgba(0,0,0,0.8);"><strong>🤢 Rotten</strong> - Slows you down</p>
+                <p style="margin-top: 10px; margin-bottom: 5px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);"><strong>⚠️ DANGERS:</strong></p>
+                <p style="text-shadow: 1px 1px 3px rgba(0,0,0,0.8);"><strong>👻 Ghosts</strong> - Avoid or use drill!</p>
+                <p style="text-shadow: 1px 1px 3px rgba(0,0,0,0.8);"><strong>🦇 Bats</strong> - Fly at upper floors</p>
             </div>
-            <p style="margin-top: 15px; color:#ff4500; font-weight:bold; font-size: 1.1rem;">Level 5: THE END</p>
+            <p style="margin-top: 15px; color:#ff4500; font-weight:bold; font-size: 0.95rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">Level 5: THE END</p>
         </div>
         <button class="btn btn-start" id="btn-start">TAP TO START</button>
     </div>
@@ -615,8 +644,8 @@ class Game {
 
     start() {
         try {
-            document.getElementById('start-screen').style.display = 'none';
-            AssetFactory.init();
+            document.getElementById('start-screen').classList.add('hidden');
+            // AssetFactory.init() already called in DOMContentLoaded
             this.audio.init();
             this.audio.playTrack('start_screen');
             this.initThreeJS();
