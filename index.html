@@ -187,10 +187,37 @@
     <h1 id="complete-title">LEVEL COMPLETE!</h1>
     <div class="big-emoji animate-pulse" id="win-emoji">🎉</div>
     <div class="stat-box">
-        <div class="stat-row animate-pop" style="animation-delay: 0.1s;"><span class="stat-label">Time:</span><div class="bar-track"><div class="bar-fill" id="bar-time" style="background:#00ffff"></div></div><span class="stat-val" id="win-time">00:00</span></div>
-        <div class="stat-row animate-pop" style="animation-delay: 0.2s;"><span class="stat-label">Fruits:</span><div class="bar-track"><div class="bar-fill" id="bar-fruit" style="background:#2ed573"></div></div><span class="stat-val" id="win-fruit">0/0</span></div>
-        <div class="stat-row animate-pop" style="animation-delay: 0.3s;"><span class="stat-label">Rating:</span><div class="bar-track"><div class="bar-fill" id="bar-rating" style="background:#ff4757"></div></div><span class="stat-val" id="win-rating">Good</span></div>
-        <div class="stat-row animate-pop" style="animation-delay: 0.4s;"><span class="stat-label">Score:</span><span class="stat-val" id="win-score">0</span></div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.1s;">
+            <span class="stat-label">🍎 Apples:</span>
+            <span class="stat-val" id="win-apples">0</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.15s;">
+            <span class="stat-label">🍌 Bananas:</span>
+            <span class="stat-val" id="win-bananas">0</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.2s;">
+            <span class="stat-label">🍫 Chocolate:</span>
+            <span class="stat-val" id="win-choco">0</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.25s;">
+            <span class="stat-label">🏢 Floors:</span>
+            <span class="stat-val" id="win-floors">0</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.3s;">
+            <span class="stat-label">⏱️ Time:</span>
+            <div class="bar-track"><div class="bar-fill" id="bar-time" style="background:#00ffff"></div></div>
+            <span class="stat-val" id="win-time">00:00</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.35s;">
+            <span class="stat-label">⭐ Rating:</span>
+            <div class="bar-track"><div class="bar-fill" id="bar-rating" style="background:#ff4757"></div></div>
+            <span class="stat-val" id="win-rating">Good</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.4s; border-bottom: none; padding-bottom: 0;">
+            <span class="stat-label" style="font-size: 1.2rem;">Score:</span>
+            <span class="stat-val" id="win-score-emoji" style="font-size: 2rem;">🐉</span>
+            <span class="stat-val" id="win-score" style="font-size: 1.2rem;">10/10</span>
+        </div>
     </div>
     <button class="btn btn-start" id="btn-next">NEXT LEVEL</button>
 </div>
@@ -586,7 +613,7 @@ class Game {
         else if(this.level === 3) grad = "linear-gradient(to bottom, #134E5E, #71B280)";
         else if(this.level === 4) grad = "linear-gradient(to bottom, #800000, #200122)";
         else grad = "linear-gradient(to bottom, #ECE9E6, #FFFFFF)";
-        const overlayGradient = "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 29%, rgba(0, 0, 0, 0.95) 100%)";
+        const overlayGradient = "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 29%, rgba(0, 0, 0, 0.5) 100%)";
         // Use SVG for levels 1 and 2, JPG for others
         const bgExt = (this.level === 1 || this.level === 2) ? 'svg' : 'jpg';
         const texture = `url("images/bg_level_${this.level}.${bgExt}")`;
@@ -1112,12 +1139,53 @@ class Game {
         if(this.level === 5) { updateText('complete-title', "YOU WIN!"); updateText('win-emoji', "🏆"); updateText('btn-next', "RESTART GAME"); this.audio.playTrack('you_win'); } 
         else { updateText('complete-title', "LEVEL COMPLETE!"); updateText('btn-next', "NEXT LEVEL"); this.audio.playTrack('you_win'); }
         document.getElementById('level-complete-screen').classList.remove('hidden');
+        
+        // Display collected items
+        updateText('win-apples', this.collected.apple || 0);
+        updateText('win-bananas', this.collected.banana || 0);
+        updateText('win-choco', this.collected.choco || 0);
+        
+        // Display floors passed
+        const floorsPassed = Math.max(0, this.currentLevelMaxDepth || 0);
+        updateText('win-floors', floorsPassed);
+        
+        // Calculate time taken and display
         const timeTaken = Math.max(0, this.maxTime - this.timeLeft);
-        const m = Math.floor(timeTaken/60); const s = Math.floor(timeTaken%60).toString().padStart(2,'0'); updateText('win-time', `${m}:${s}`);
-        const total = this.totalItems||1; const fruitPct = Math.min(100, Math.floor(this.levelCollected/total*100)); updateText('win-fruit', this.levelCollected+"/"+this.totalItems);
-        let rating = "Good"; let ratingVal = 50; if(fruitPct > 80 && timeTaken < this.maxTime*0.5) { rating="Perfect!"; ratingVal=100; } else if(fruitPct > 50) { rating="Great"; ratingVal=75; }
-        updateText('win-rating', rating); updateText('win-score', this.score); if(this.level !== 5) updateText('win-emoji', ratingVal===100?"👑":"🎉");
-        setTimeout(() => { updateBar('bar-time', ((this.maxTime - timeTaken) / this.maxTime) * 100); updateBar('bar-fruit', fruitPct); updateBar('bar-rating', ratingVal); }, 100);
+        const m = Math.floor(timeTaken/60); const s = Math.floor(timeTaken%60).toString().padStart(2,'0'); 
+        updateText('win-time', `${m}:${s}`);
+        
+        // Calculate performance score (1-10)
+        const total = this.totalItems||1; 
+        const fruitPct = Math.min(100, Math.floor(this.levelCollected/total*100));
+        const timePct = Math.min(100, Math.floor((this.timeLeft / this.maxTime) * 100));
+        const maxFloors = this.floors.length || 1;
+        const floorsPct = Math.min(100, Math.floor((floorsPassed / maxFloors) * 100));
+        
+        // Weighted scoring: fruits 40%, time 30%, floors 30%
+        const rawScore = (fruitPct * 0.4) + (timePct * 0.3) + (floorsPct * 0.3);
+        const score1to10 = Math.max(1, Math.min(10, Math.floor(rawScore / 10) + 1));
+        
+        // Emoji mapping: 10=🐉, 9=🦕, 8=🐊, 7=🦖, 6=🐍, 5=🦎, 4=🐸, 3=🐢, 2=🐛, 1=🐜
+        const emojiMap = {10: '🐉', 9: '🦕', 8: '🐊', 7: '🦖', 6: '🐍', 5: '🦎', 4: '🐸', 3: '🐢', 2: '🐛', 1: '🐜'};
+        const scoreEmoji = emojiMap[score1to10] || '🐜';
+        
+        // Rating text
+        let rating = "Good"; 
+        let ratingVal = 50; 
+        if(score1to10 >= 9) { rating = "Perfect!"; ratingVal = 100; }
+        else if(score1to10 >= 7) { rating = "Great"; ratingVal = 75; }
+        else if(score1to10 >= 5) { rating = "Good"; ratingVal = 50; }
+        else { rating = "OK"; ratingVal = 25; }
+        
+        updateText('win-rating', rating);
+        updateText('win-score-emoji', scoreEmoji);
+        updateText('win-score', `${score1to10}/10`);
+        if(this.level !== 5) updateText('win-emoji', scoreEmoji);
+        
+        setTimeout(() => { 
+            updateBar('bar-time', timePct); 
+            updateBar('bar-rating', ratingVal); 
+        }, 100);
     }
     
     startPacmanMiniGame() {
