@@ -1,0 +1,93 @@
+<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @keyframes twinkle {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 1; }
+      }
+      @keyframes twinkleSpicy {
+        0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        50% { opacity: 0.7; transform: scale(1.3) rotate(25deg); }
+      }
+      @keyframes blink {
+        0%, 96%, 100% { transform: scaleY(1); }
+        98% { transform: scaleY(0.1); }
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        25% { transform: translateY(-4px) rotate(2deg); }
+        75% { transform: translateY(4px) rotate(-2deg); }
+      }
+      @keyframes shoot {
+        0% { transform: translate(-100px, -100px) rotate(45deg) scale(0.5); opacity: 0; }
+        10% { opacity: 1; }
+        30% { transform: translate(700px, 700px) rotate(45deg) scale(1); opacity: 0; }
+        100% { opacity: 0; }
+      }
+      
+      .star { animation: twinkle 2.5s infinite; font-size: 48px; }
+      .star-slow { animation: twinkleSpicy 3s infinite ease-in-out; font-size: 48px; }
+      .star-fast { animation: twinkleSpicy 1.5s infinite ease-in-out; font-size: 48px; }
+      .dot { animation: twinkle 3s infinite; font-size: 14px; }
+      .eye { animation: blink 4s infinite, float 8s infinite ease-in-out; font-size: 40px; transform-origin: center 60%; }
+      .sparkle { animation: twinkle 2s infinite; font-size: 36px; }
+      .shooting-star { animation: shoot 6s infinite ease-in; }
+      
+      text { dominant-baseline: middle; text-anchor: middle; }
+    </style>
+    <radialGradient id="bgGrad" cx="50%" cy="50%">
+      <stop offset="0%" stop-color="#464275"/>
+      <stop offset="70%" stop-color="#2e2b56"/>
+      <stop offset="100%" stop-color="#1a1838"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="600" height="600" fill="url(#bgGrad)"/>
+  
+  <!-- Shooting stars -->
+  <line x1="60" y1="120" x2="160" y2="220" class="shooting-star" stroke="#fff" stroke-width="2" style="animation-delay: 1s; filter: drop-shadow(0 0 5px #fff);"/>
+  <line x1="-60" y1="300" x2="640" y2="900" class="shooting-star" stroke="#fff" stroke-width="2" style="animation-delay: 4s; filter: drop-shadow(0 0 5px #fff);"/>
+  
+  <!-- Stars - Pink -->
+  <text x="500" y="50" class="star-slow" style="color: #ea859a; filter: drop-shadow(0 0 5px #ea859a);">✨</text>
+  <text x="40" y="80" class="star-fast" style="color: #ea859a; filter: drop-shadow(0 0 5px #ea859a); animation-delay: 0.5s;">⭐</text>
+  <text x="280" y="160" class="star-slow" style="color: #ea859a; filter: drop-shadow(0 0 5px #ea859a); animation-delay: 1s;">✨</text>
+  <text x="430" y="480" class="star-fast" style="color: #ea859a; filter: drop-shadow(0 0 5px #ea859a);">⭐</text>
+  <text x="50" y="400" class="star-slow" style="color: #ea859a; filter: drop-shadow(0 0 5px #ea859a); animation-delay: 1.5s;">✨</text>
+  <text x="550" y="450" class="star-fast" style="color: #ea859a; filter: drop-shadow(0 0 5px #ea859a); animation-delay: 1s;">⭐</text>
+  <text x="80" y="280" class="star-slow" style="color: #ea859a; filter: drop-shadow(0 0 5px #ea859a);">✨</text>
+  
+  <!-- Stars - Blue -->
+  <text x="200" y="30" class="star-slow" style="color: #b0cbe3; filter: drop-shadow(0 0 5px #b0cbe3); animation-delay: 2s;">⭐</text>
+  <text x="200" y="320" class="star-fast" style="color: #b0cbe3; filter: drop-shadow(0 0 5px #b0cbe3); animation-delay: 0.5s;">✨</text>
+  <text x="450" y="320" class="star-slow" style="color: #b0cbe3; filter: drop-shadow(0 0 5px #b0cbe3); animation-delay: 1.5s;">⭐</text>
+  <text x="180" y="520" class="star-fast" style="color: #ea859a; filter: drop-shadow(0 0 5px #ea859a);">✨</text>
+  <text x="550" y="180" class="star-slow" style="color: #ea859a; filter: drop-shadow(0 0 5px #ea859a); animation-delay: 1s;">⭐</text>
+  
+  <!-- Small dots/sparkles -->
+  <text x="100" y="50" class="star-slow" style="color: #ea859a; font-size: 12px; filter: drop-shadow(0 0 3px #ea859a);">✨</text>
+  <text x="350" y="100" class="dot" style="color: #ea859a; animation-delay: 0.5s;">•</text>
+  <text x="50" y="250" class="dot" style="color: #b0cbe3; animation-delay: 1s;">•</text>
+  <text x="400" y="220" class="star-fast" style="color: #b0cbe3; font-size: 10px; filter: drop-shadow(0 0 3px #b0cbe3);">✨</text>
+  <text x="350" y="400" class="dot" style="color: #ea859a; animation-delay: 1.5s;">•</text>
+  <text x="500" y="350" class="dot" style="color: #ea859a;">•</text>
+  <text x="100" y="450" class="dot" style="color: #b0cbe3; animation-delay: 0.5s;">•</text>
+  <text x="580" y="80" class="dot" style="color: #b0cbe3; animation-delay: 2s;">•</text>
+  <text x="300" y="550" class="dot" style="color: #ea859a; animation-delay: 1s;">•</text>
+  
+  <!-- Eyes with blinking and floating -->
+  <g transform="translate(120, 80) rotate(-10)">
+    <text x="0" y="0" class="eye" style="color: #ea859a; filter: drop-shadow(0 0 8px rgba(234, 133, 154, 0.5)); animation-delay: 0.5s, 0s;">👁️</text>
+  </g>
+  
+  <g transform="translate(480, 260) rotate(10)">
+    <text x="0" y="0" class="eye" style="color: #ea859a; filter: drop-shadow(0 0 8px rgba(234, 133, 154, 0.5)); animation-delay: 1.5s, 0s;">👀</text>
+  </g>
+  
+  <g transform="translate(220, 420) rotate(-15)">
+    <text x="0" y="0" class="eye" style="color: #ea859a; font-size: 35px; filter: drop-shadow(0 0 8px rgba(234, 133, 154, 0.5)); animation-delay: 1s, 0s;">👁️</text>
+  </g>
+  
+</svg>
+

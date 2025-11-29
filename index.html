@@ -51,7 +51,7 @@
             background-color: rgba(0,0,0,0.3); 
         }
         
-        /* Portrait orientation */
+        /* Portrait orientation - will be updated by JavaScript based on webp support */
         @media (orientation: portrait) {
             #start-screen { 
                 background-image: url('images/start_screen_portrait.jpg'); 
@@ -65,7 +65,7 @@
             }
         }
         
-        /* Landscape orientation */
+        /* Landscape orientation - will be updated by JavaScript based on webp support */
         @media (orientation: landscape) {
             #start-screen { 
                 background-image: url('images/start_screen_Landscape.png'); 
@@ -471,6 +471,71 @@ class ParticleSystem {
 }
 
 // --- 4. GAME CONTROLLER ---
+// WebP support detection
+let webpSupported = false;
+(function() {
+    const webp = new Image();
+    webp.onload = webp.onerror = function() {
+        webpSupported = (webp.height === 2);
+        // Update start screen background after detection
+        updateStartScreenBackground();
+    };
+    webp.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
+})();
+
+// Helper function to get background image with webp fallback
+function getBackgroundImage(level) {
+    if (level === 1 || level === 2 || level === 3 || level === 5) {
+        // Levels 1-3 and 5 use SVG/GIF (no webp needed)
+        if (level === 5) {
+            // Level 5 uses GIF
+            return `url("images/bg_level_${level}.gif")`;
+        }
+        return `url("images/bg_level_${level}.svg")`;
+    } else {
+        // For other levels (level 4), try webp if supported, otherwise jpg
+        if (webpSupported) {
+            // Return webp - the setupLevel function will test if it exists
+            return `url("images/bg_level_${level}.webp")`;
+        } else {
+            return `url("images/bg_level_${level}.jpg")`;
+        }
+    }
+}
+
+// Update start screen background based on webp support
+function updateStartScreenBackground() {
+    const startScreen = document.getElementById('start-screen');
+    if (!startScreen) return;
+    
+    const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+    if (isPortrait) {
+        if (webpSupported) {
+            startScreen.style.backgroundImage = 'url("images/start_screen_portrait.webp")';
+            // Fallback test
+            const img = new Image();
+            img.onerror = function() {
+                startScreen.style.backgroundImage = 'url("images/start_screen_portrait.jpg")';
+            };
+            img.src = 'images/start_screen_portrait.webp';
+        } else {
+            startScreen.style.backgroundImage = 'url("images/start_screen_portrait.jpg")';
+        }
+    } else {
+        if (webpSupported) {
+            startScreen.style.backgroundImage = 'url("images/start_screen_Landscape.webp")';
+            // Fallback test
+            const img = new Image();
+            img.onerror = function() {
+                startScreen.style.backgroundImage = 'url("images/start_screen_Landscape.png")';
+            };
+            img.src = 'images/start_screen_Landscape.webp';
+        } else {
+            startScreen.style.backgroundImage = 'url("images/start_screen_Landscape.png")';
+        }
+    }
+}
+
 class Game {
     constructor() {
         this.audio = new SoundManager();
@@ -614,9 +679,26 @@ class Game {
         else if(this.level === 4) grad = "linear-gradient(to bottom, #800000, #200122)";
         else grad = "linear-gradient(to bottom, #ECE9E6, #FFFFFF)";
         const overlayGradient = "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 29%, rgba(0, 0, 0, 0.5) 100%)";
-        // Use SVG for levels 1 and 2, JPG for others
-        const bgExt = (this.level === 1 || this.level === 2) ? 'svg' : 'jpg';
-        const texture = `url("images/bg_level_${this.level}.${bgExt}")`;
+        // Use getBackgroundImage helper which handles webp with jpg fallback
+        let texture = getBackgroundImage(this.level);
+        
+        // For level 4, test if webp exists and fallback to jpg if not (levels 3 and 5 use SVG/GIF)
+        if (this.level === 4 && webpSupported) {
+            const testImg = new Image();
+            const levelNum = this.level;
+            testImg.onerror = function() {
+                // Webp doesn't exist, use jpg
+                texture = `url("images/bg_level_${levelNum}.jpg")`;
+                document.body.style.backgroundImage = `${overlayGradient}, ${grad}, ${texture}`;
+            };
+            testImg.onload = function() {
+                // Webp exists, use it
+                texture = `url("images/bg_level_${levelNum}.webp")`;
+                document.body.style.backgroundImage = `${overlayGradient}, ${grad}, ${texture}`;
+            };
+            testImg.src = `images/bg_level_${this.level}.webp`;
+        }
+        
         document.body.style.backgroundImage = `${overlayGradient}, ${grad}, ${texture}`;
         document.body.style.backgroundRepeat = "no-repeat, no-repeat, repeat";
         document.body.style.backgroundSize = "cover, cover, 30%";
