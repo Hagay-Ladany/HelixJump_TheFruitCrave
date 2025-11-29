@@ -17,9 +17,26 @@ const SHEET_NAME = 'Sheet1';
 
 function doPost(e) {
   const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
-  const body = JSON.parse(e.postData.contents);
   
-  sheet.appendRow([body.name, body.score, new Date()]);
+  // Handle FormData (avoids CORS preflight)
+  let name, score;
+  if (e.parameter) {
+    // FormData comes as parameters
+    name = e.parameter.name || 'Anonymous';
+    score = parseInt(e.parameter.score) || 0;
+  } else {
+    // Fallback: try JSON parsing
+    try {
+      const body = JSON.parse(e.postData.contents);
+      name = body.name || 'Anonymous';
+      score = parseInt(body.score) || 0;
+    } catch(err) {
+      name = 'Anonymous';
+      score = 0;
+    }
+  }
+  
+  sheet.appendRow([name, score, new Date()]);
   
   return ContentService
     .createTextOutput(JSON.stringify({status: "OK"}))
