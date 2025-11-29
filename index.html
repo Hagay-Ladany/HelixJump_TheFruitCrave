@@ -253,8 +253,8 @@
 </div>
 
 <div id="level-complete-screen" class="overlay hidden" style="padding: 20px; box-sizing: border-box; justify-content: flex-start; padding-top: 5vh;">
-    <h1 id="complete-title">LEVEL COMPLETE!</h1>
-    <div class="big-emoji animate-pulse" id="win-emoji">🎉</div>
+    
+    
     <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
         <div class="stat-row animate-pop" style="animation-delay: 0.1s;">
             <span class="stat-label">🍎 Apples:</span>
@@ -637,60 +637,59 @@ const LEADERBOARD_URL = 'https://script.google.com/macros/s/AKfycbykT7mzT8W0WVJf
 
 async function getLeaderboard() {
     try {
-        const res = await fetch(LEADERBOARD_URL);
+        // Google Apps Script needs CORS headers - try fetch first
+        const res = await fetch(LEADERBOARD_URL, {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-cache'
+        });
+        
         if (!res.ok) throw new Error('Failed to fetch leaderboard');
         const data = await res.json();
         return data || [];
     } catch (error) {
         console.error('Error loading leaderboard:', error);
-        // Fallback to localStorage if network fails
+        // Fallback to localStorage if network fails or CORS issue
         const stored = localStorage.getItem('helixJumpLeaderboard');
         return stored ? JSON.parse(stored) : [];
     }
 }
 
 async function saveToLeaderboard(name, score, level) {
+    // Always save to localStorage first (as backup)
+    const stored = localStorage.getItem('helixJumpLeaderboard');
+    const localLeaderboard = stored ? JSON.parse(stored) : [];
+    localLeaderboard.push({
+        name: name || 'Anonymous',
+        score: score,
+        level: level,
+        date: new Date().toISOString()
+    });
+    localLeaderboard.sort((a, b) => b.score - a.score);
+    const top50 = localLeaderboard.slice(0, 50);
+    localStorage.setItem('helixJumpLeaderboard', JSON.stringify(top50));
+    
+    // Try to save to Google Sheets (requires CORS headers in Apps Script)
     try {
         const response = await fetch(LEADERBOARD_URL, {
             method: 'POST',
+            mode: 'cors',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({ 
                 name: name || 'Anonymous', 
                 score: score 
-            }),
-            headers: { 'Content-Type': 'application/json' }
+            })
         });
         
         if (!response.ok) throw new Error('Failed to save score');
-        const result = await response.json();
-        
-        // Also save to localStorage as backup
-        const stored = localStorage.getItem('helixJumpLeaderboard');
-        const localLeaderboard = stored ? JSON.parse(stored) : [];
-        localLeaderboard.push({
-            name: name || 'Anonymous',
-            score: score,
-            level: level,
-            date: new Date().toISOString()
-        });
-        localLeaderboard.sort((a, b) => b.score - a.score);
-        const top50 = localLeaderboard.slice(0, 50);
-        localStorage.setItem('helixJumpLeaderboard', JSON.stringify(top50));
-        
-        return result;
+        // Success - data saved to Google Sheets
+        return top50;
     } catch (error) {
-        console.error('Error saving score:', error);
-        // Fallback to localStorage only
-        const stored = localStorage.getItem('helixJumpLeaderboard');
-        const localLeaderboard = stored ? JSON.parse(stored) : [];
-        localLeaderboard.push({
-            name: name || 'Anonymous',
-            score: score,
-            level: level,
-            date: new Date().toISOString()
-        });
-        localLeaderboard.sort((a, b) => b.score - a.score);
-        const top50 = localLeaderboard.slice(0, 50);
-        localStorage.setItem('helixJumpLeaderboard', JSON.stringify(top50));
+        console.error('Error saving score to Google Sheets (CORS issue):', error);
+        console.log('Score saved to localStorage as backup. Update your Google Apps Script to add CORS headers.');
+        // Already saved to localStorage, so return that
         return top50;
     }
 }
@@ -1579,8 +1578,8 @@ class Game {
     
     levelComplete() {
         this.isPlaying = false;
-        if(this.level === 5) { updateText('complete-title', "YOU WIN!"); updateText('win-emoji', "🏆"); updateText('btn-next', "RESTART GAME"); this.audio.playTrack('you_win'); } 
-        else { updateText('complete-title', "LEVEL COMPLETE!"); updateText('btn-next', "NEXT LEVEL"); this.audio.playTrack('you_win'); }
+        if(this.level === 5) {  updateText('btn-next', "RESTART GAME"); this.audio.playTrack('you_win'); } 
+        else { updateText('btn-next', "NEXT LEVEL"); this.audio.playTrack('you_win'); }
         document.getElementById('level-complete-screen').classList.remove('hidden');
         
         // Display collected items
@@ -1626,7 +1625,7 @@ class Game {
         updateText('win-rating', rating);
         updateText('win-score-emoji', scoreEmoji);
         updateText('win-score', `${score1to10}/10`);
-        if(this.level !== 5) updateText('win-emoji', scoreEmoji);
+        if(this.level !== 5) 
         
         setTimeout(() => { 
             updateBar('bar-time', timePct); 
@@ -2000,4 +1999,5 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
