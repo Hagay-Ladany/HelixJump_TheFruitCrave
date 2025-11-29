@@ -49,6 +49,7 @@
 
         /* Overlays */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; pointer-events: auto; transition: opacity 0.3s; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        #leaderboard-screen { background-color: rgba(0,0,0,0.85) !important; } /* Remove transparency from leaderboard */
         .overlay:not(.hidden) { display: flex !important; }
         #start-content {
             display: flex;
@@ -316,6 +317,7 @@
         </div>
     </div>
     <button class="btn" id="btn-close-leaderboard" style="margin-top: 20px; background: #5352ed;">CLOSE</button>
+    <button class="btn btn-start" id="btn-restart-from-leaderboard" style="margin-top: 10px;">RESTART GAME</button>
 </div>
 
 <div id="name-input-screen" class="overlay hidden">
@@ -452,6 +454,12 @@ class SoundManager {
         // Small delay for smooth transition
         setTimeout(() => {
             if(this.player && !this.isMusicMuted) {
+                // Increase volume for level 1
+                if(baseName === 'level_1' && this.player.musicGain) {
+                    this.player.musicGain.gain.value = 0.25; // 25% for level 1 (increased from 15%)
+                } else if(this.player.musicGain) {
+                    this.player.musicGain.gain.value = 0.15; // Default 15% for other levels
+                }
                 this.player.load(url, (buffer) => {
                     this.player.play(buffer);
                 });
@@ -792,6 +800,10 @@ class Game {
         }
         document.getElementById('btn-close-leaderboard').onclick = () => {
             document.getElementById('leaderboard-screen').classList.add('hidden');
+        };
+        document.getElementById('btn-restart-from-leaderboard').onclick = () => {
+            document.getElementById('leaderboard-screen').classList.add('hidden');
+            this.restart(true);
         };
         document.getElementById('btn-start-leaderboard').onclick = async () => {
             await displayLeaderboard();
