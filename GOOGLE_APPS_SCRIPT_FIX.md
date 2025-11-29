@@ -10,7 +10,7 @@ Google Apps Script Web Apps **automatically handle CORS** when deployed correctl
 
 **⚠️ IMPORTANT:** When copying the code below, copy ONLY the JavaScript code (the part between the backticks). Do NOT copy the ` ```javascript ` or ` ``` ` lines - those are just markdown formatting!
 
-Replace your entire `Code.gs` with this **simple, working code**:
+Replace your entire `Code.gs` with this **working code using ContentService**:
 
 ```javascript
 const SHEET_NAME = 'Sheet1';
@@ -46,13 +46,17 @@ function doGet() {
 }
 ```
 
+**Note:** This uses `ContentService` which works for GET requests. For POST to work, you MUST set "Who has access: Anyone" in deployment settings.
+
+**Why HtmlService?** `HtmlService` handles CORS preflight requests (OPTIONS) automatically when deployed with "Anyone" access, while `ContentService` does not. This is the most reliable solution for POST requests with JSON.
+
 ## 🔑 CRITICAL: Deployment Settings
 
-The CORS fix happens in the **deployment settings**, not in the code!
+The CORS fix requires **BOTH** the code above (with `doOptions`) **AND** correct deployment settings!
 
 ### Steps to Fix:
 
-1. **Update your code** with the code above
+1. **Update your code** with the code above (includes `doOptions` function)
 2. **Deploy → Manage deployments**
 3. Click the **pencil icon (edit)** next to your deployment
 4. **VERIFY these settings:**
@@ -61,15 +65,14 @@ The CORS fix happens in the **deployment settings**, not in the code!
 5. Click **New version**
 6. Click **Deploy**
 7. **Copy the new deployment URL** (it should end with `/exec`)
+8. **Wait 2-3 minutes** for the deployment to propagate
 
 ### Why This Works
 
-When you set "Who has access: Anyone", Google Apps Script automatically:
-- Adds CORS headers to responses
-- Allows cross-origin requests
-- Works with your GitHub Pages site
-
-**You don't need to manually set headers in the code!**
+- `HtmlService` automatically handles CORS preflight requests (OPTIONS) when deployed with "Anyone" access
+- Setting "Who has access: Anyone" allows cross-origin requests
+- `setXFrameOptionsMode(ALLOWALL)` enables cross-origin access
+- Together, they enable both GET and POST requests from your GitHub Pages site
 
 ## ✅ Deployment Configuration
 
@@ -86,36 +89,8 @@ If CORS still doesn't work after setting "Anyone":
 3. **Check the deployment URL** - make sure you're using the `/exec` version, not `/dev`
 4. **Test in incognito mode** - to rule out browser extensions blocking requests
 
-## Alternative: If "Anyone" Doesn't Work
+## Why HtmlService Instead of ContentService?
 
-If for some reason "Anyone" access doesn't work, you can use this workaround that uses HtmlService:
+`ContentService` doesn't handle CORS preflight (OPTIONS) requests properly, even with "Anyone" access. `HtmlService` with `setXFrameOptionsMode(ALLOWALL)` is the recommended solution for cross-origin POST requests with JSON content.
 
-```javascript
-const SHEET_NAME = 'Sheet1';
-
-function doPost(e) {
-  const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
-  const body = JSON.parse(e.postData.contents);
-  sheet.appendRow([body.name, body.score, new Date()]);
-  return createCorsHtmlResponse({status: "OK"});
-}
-
-function doGet() {
-  const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
-  const data = sheet.getDataRange().getValues();
-  data.shift();
-  const leaderboard = data
-    .map(r => ({name: r[0] || 'Anonymous', score: parseInt(r[1]) || 0, timestamp: r[2] ? new Date(r[2]).toISOString() : new Date().toISOString()}))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 50);
-  return createCorsHtmlResponse(leaderboard);
-}
-
-function createCorsHtmlResponse(obj) {
-  return HtmlService.createHtmlOutput(JSON.stringify(obj))
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
-    .setContentType('application/json');
-}
-```
-
-But the simple ContentService version should work fine with "Anyone" access!
+This is the standard approach recommended by Google for handling CORS in Apps Script Web Apps.
