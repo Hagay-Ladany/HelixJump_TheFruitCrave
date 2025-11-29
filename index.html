@@ -638,9 +638,10 @@ function getBackgroundImage(level) {
 
 async function getLeaderboard() {
     try {
-        const response = await fetch(APPS_SCRIPT_URL, {
+        // TRICK: We add "?t=" + Date.now() to the URL.
+        // This forces the browser to fetch fresh data instead of using the cache.
+        const response = await fetch(`${APPS_SCRIPT_URL}?t=${Date.now()}`, {
             method: 'GET',
-            mode: 'cors' // Essential for cross-origin communication
         });
 
         if (!response.ok) {
@@ -652,6 +653,7 @@ async function getLeaderboard() {
 
     } catch (error) {
         console.error("Error loading leaderboard:", error);
+        // Return empty array so the game doesn't crash
         return [];
     }
 }
@@ -660,12 +662,13 @@ async function saveToLeaderboard(playerName, playerScore) {
     if (!playerName || playerScore === undefined) return;
 
     try {
+        // CHANGED: We send JSON string, but tell browser it is text/plain
+        // This bypasses the CORS Preflight (OPTIONS) check
         const response = await fetch(APPS_SCRIPT_URL, {
             method: 'POST',
-            mode: 'cors', // Essential for cross-origin communication
+            redirect: 'follow', // Important for Google Script redirects
             headers: {
-                // This signals the browser to send the OPTIONS preflight request
-                'Content-Type': 'application/json' 
+                'Content-Type': 'text/plain;charset=utf-8', 
             },
             body: JSON.stringify({
                 name: playerName,
@@ -673,7 +676,6 @@ async function saveToLeaderboard(playerName, playerScore) {
             })
         });
 
-        // The Apps Script should now respond with CORS headers, resolving the block.
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -682,10 +684,12 @@ async function saveToLeaderboard(playerName, playerScore) {
         console.log("Score submission successful:", result);
         
         // After successful submission, refresh the list:
-        displayLeaderboard(); 
+        await displayLeaderboard(); 
 
     } catch (error) {
         console.error("Error saving score to Google Sheets:", error);
+        // Rethrow so the UI knows it failed
+        throw error;
     }
 }
 
