@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Helix Jump: Arcade Final</title>
+    <link rel="icon" type="image/x-icon" href="images/favicons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="96x96" href="images/favicons/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="images/favicons/favicon.svg">
+    <link rel="apple-touch-icon" href="images/favicons/apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
     <style>
         body {
             margin: 0; overflow: hidden; background-color: #222;
@@ -48,7 +53,8 @@
             background-color: #2c3e50; 
             background-position: center; 
             background-size: cover; 
-            background-color: rgba(0,0,0,0.3); 
+            background-color: rgba(0,0,0,0.3);
+            background-repeat: no-repeat;
         }
         
         /* Portrait orientation - will be updated by JavaScript based on webp support */
@@ -100,7 +106,7 @@
         .bar-track { flex-grow: 1; height: 6px; background: rgba(0,0,0,0.5); margin: 0 10px; border-radius: 4px; overflow: hidden; }
         .bar-fill { height: 100%; width: 0%; transition: width 1s ease-out; }
 
-        button.btn { background: #ff4757; color: white; border: none; padding: 15px 50px; font-size: 1.5rem; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4); transition: transform 0.1s; margin: 10px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        button.btn { background: #ff4757; color: white; border: none; padding: clamp(12px, 2vh, 20px) clamp(40px, 8vw, 60px); font-size: clamp(1.2rem, 4vw, 1.8rem); border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4); transition: transform 0.1s; margin: 10px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
         button.btn:active { transform: scale(0.95); }
         button.btn-start { background: #2ed573; box-shadow: 0 5px 15px rgba(46, 213, 115, 0.4); }
         
@@ -199,7 +205,19 @@
             <span class="stat-label">🍫 Chocolate:</span>
             <span class="stat-val" id="win-choco">0</span>
         </div>
-        <div class="stat-row animate-pop" style="animation-delay: 0.25s;">
+        <div class="stat-row animate-pop" style="animation-delay: 0.22s;">
+            <span class="stat-label">💎 Diamonds:</span>
+            <span class="stat-val" id="win-diamonds">0</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.24s;">
+            <span class="stat-label">🪳 Cockroaches:</span>
+            <span class="stat-val" id="win-cockroaches">0</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.26s;">
+            <span class="stat-label">🤢 Rotten:</span>
+            <span class="stat-val" id="win-rotten">0</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.28s;">
             <span class="stat-label">🏢 Floors:</span>
             <span class="stat-val" id="win-floors">0</span>
         </div>
@@ -213,10 +231,13 @@
             <div class="bar-track"><div class="bar-fill" id="bar-rating" style="background:#ff4757"></div></div>
             <span class="stat-val" id="win-rating">Good</span>
         </div>
-        <div class="stat-row animate-pop" style="animation-delay: 0.4s; border-bottom: none; padding-bottom: 0;">
-            <span class="stat-label" style="font-size: 1.2rem;">Score:</span>
-            <span class="stat-val" id="win-score-emoji" style="font-size: 2rem;">🐉</span>
-            <span class="stat-val" id="win-score" style="font-size: 1.2rem;">10/10</span>
+        <div class="stat-row animate-pop" style="animation-delay: 0.38s;">
+            <span class="stat-label" style="font-size: 1.1rem;">Score:</span>
+            <div class="bar-track" style="height: 12px;"><div class="bar-fill" id="bar-score" style="background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573, #00ffff);"></div></div>
+            <span class="stat-val" id="win-score-emoji" style="font-size: 1.5rem;">🐉</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.4s; border-bottom: none; padding-bottom: 0; text-align: center;">
+            <span class="stat-val" id="win-score" style="font-size: 1.5rem; width: 100%;">10/10</span>
         </div>
     </div>
     <button class="btn btn-start" id="btn-next">NEXT LEVEL</button>
@@ -403,8 +424,14 @@ const AssetFactory = {
             this.textures['apple'] = this.createEmojiTexture('🍎');
             this.textures['banana'] = this.createEmojiTexture('🍌');
             this.textures['choco'] = this.createEmojiTexture('🍫');
+            // Load rotten.gif as texture
+            const loader = new THREE.TextureLoader();
+            this.textures['rotten'] = loader.load('images/rotten.gif', undefined, undefined, (err) => {
+                console.warn('Could not load rotten.gif, using emoji fallback');
             this.textures['rotten'] = this.createEmojiTexture('🤢'); 
+            }); 
             this.textures['diamond'] = this.createEmojiTexture('💎');
+            this.textures['cockroach'] = this.createEmojiTexture('🪳');
             this.texFloor = this.createFloorTexture();
             this.texStone = this.createStoneTexture();
             this.texPole = this.createPoleTexture();
@@ -543,7 +570,7 @@ class Game {
         this.baseGravity = 0.012; this.jumpForce = 0.2268; this.gravity = this.baseGravity; this.velocity = 0;
         this.currentScale = new THREE.Vector3(1,1,1); this.targetScale = new THREE.Vector3(1,1,1);
         this.fastTimer = 0; this.slowTimer = 0; this.invincible = 0; this.drillFloors = 0;
-        this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0 }; 
+        this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0, cockroach: 0 }; 
         this.totalItems = 0; this.levelCollected = 0; this.previousLevelsScore = 0; this.currentLevelMaxDepth = 0;
         
         if (typeof THREE !== 'undefined') this.raycaster = new THREE.Raycaster();
@@ -602,9 +629,23 @@ class Game {
         this.camera.position.set(0, 8, 15); this.camera.lookAt(0, 0, 0);
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.shadowMap.enabled = false;
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.getElementById('canvas-container').appendChild(this.renderer.domElement);
-        this.scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+        this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        // Add directional light for shadows
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(10, 20, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 50;
+        dirLight.shadow.camera.left = -20;
+        dirLight.shadow.camera.right = 20;
+        dirLight.shadow.camera.top = 20;
+        dirLight.shadow.camera.bottom = -20;
+        this.scene.add(dirLight);
         this.particles = new ParticleSystem(this.scene);
         this.createCharacter(); this.setupLevel();
         
@@ -624,7 +665,10 @@ class Game {
         this.ballWrap = new THREE.Group(); this.ballWrap.position.set(0, 2, 2);
         const geo = new THREE.SphereGeometry(0.4, 32, 32);
         this.ballMat = new THREE.MeshBasicMaterial({ color: 0xFF9966 });
-        this.ballBody = new THREE.Mesh(geo, this.ballMat); this.ballWrap.add(this.ballBody);
+        this.ballBody = new THREE.Mesh(geo, this.ballMat); 
+        this.ballBody.castShadow = true;
+        this.ballBody.receiveShadow = false;
+        this.ballWrap.add(this.ballBody);
         const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.15, 8), new THREE.MeshBasicMaterial({color:0x5D4037})); stem.position.set(0, 0.4, 0); this.ballBody.add(stem);
         
         this.ballFace = new THREE.Group();
@@ -652,13 +696,7 @@ class Game {
         const legL = new THREE.Mesh(limbGeo, limbMat); legL.position.set(-0.15, -0.4, 0); this.ballBody.add(legL);
         const legR = new THREE.Mesh(limbGeo, limbMat); legR.position.set(0.15, -0.4, 0); this.ballBody.add(legR);
         
-        // Add shadow on floor for character
-        const shadowGeo = new THREE.CircleGeometry(0.5, 16);
-        const shadowMat = new THREE.MeshBasicMaterial({color: 0x000000, transparent: true, opacity: 0.3});
-        this.ballShadow = new THREE.Mesh(shadowGeo, shadowMat);
-        this.ballShadow.rotation.x = -Math.PI / 2;
-        this.ballShadow.position.y = -1.8;
-        this.scene.add(this.ballShadow);
+        // Character shadow will be rendered by shadow maps (no flat polygon needed)
         
         this.scene.add(this.ballWrap);
     }
@@ -668,7 +706,7 @@ class Game {
         this.tower = new THREE.Group(); this.scene.add(this.tower);
         this.floors = []; this.interactables = []; this.physicsMeshes = []; 
         this.totalItems = 0; this.levelCollected = 0;
-        this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0 };
+        this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0, cockroach: 0 };
         this.lastFloorY = -9999; 
         this.highestY = 0;      
         
@@ -728,8 +766,10 @@ class Game {
         else palette=[0x555555, 0x333333];
         
         const core = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,200,32), new THREE.MeshBasicMaterial({map: isBoss?AssetFactory.texStone:AssetFactory.texPole, color: isBoss?0x888:0xddd}));
+        core.receiveShadow = true;
+        core.receiveShadow = true;
         core.position.y = -80; if(hidePole) core.visible = false; 
-        // Don't add shadow to pole
+        core.receiveShadow = true;
         this.tower.add(core);
         
         const alignedGapIndex = Math.floor(Math.random() * 12);
@@ -754,15 +794,8 @@ class Game {
                 geo.rotateX(-Math.PI/2);
                 const mat = new THREE.MeshBasicMaterial({ color: isDanger ? dangerColor : col, map: matMap, transparent: isFinal, opacity: isFinal ? 0.9 : 1.0 });
                 const m = new THREE.Mesh(geo, mat);
-                // Add shadow to floor sides for 3D look
-                const sideShadowGeo = new THREE.ExtrudeGeometry(shape, {depth:0.4, bevelEnabled:false});
-                sideShadowGeo.rotateX(-Math.PI/2);
-                const sideShadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.4 });
-                const sideShadow = new THREE.Mesh(sideShadowGeo, sideShadowMat);
-                sideShadow.position.y = -0.2;
-                // Only show shadow on the sides (not top/bottom)
-                sideShadow.scale.set(1, 0.1, 1);
-                grp.add(sideShadow); 
+                m.receiveShadow = true;
+                m.castShadow = false; 
                 m.userData = { type: isDanger?'danger':'safe', color: isDanger?dangerColor:new THREE.Color(col).getHex() };
                 this.physicsMeshes.push(m); grp.add(m);
                 if(!isDanger && !isBoss && i>0 && i<floors-1 && Math.random()<0.1) this.spawnItem(grp, Math.cos(j*a+a/2)*2, Math.sin(j*a+a/2)*2);
@@ -800,6 +833,7 @@ class Game {
         if(r>0.6) { type='banana'; tex=AssetFactory.textures['banana']; }
         if(r>0.75) { type='chocolate'; tex=AssetFactory.textures['choco']; } 
         if(r>0.88) { type='rotten'; tex=AssetFactory.textures['rotten']; }
+        if(r>0.92) { type='cockroach'; tex=AssetFactory.textures['cockroach']; }
         if(r>0.96) { type='diamond'; tex=AssetFactory.textures['diamond']; }
         
         const grp = new THREE.Group(); grp.position.set(x, 1.2, z);
@@ -807,7 +841,7 @@ class Game {
         const sprite = new THREE.Sprite(mat); sprite.scale.set(0.6, 0.6, 1);
         if(type==='banana') sprite.scale.set(0.7, 0.7, 1); if(type==='chocolate') sprite.scale.set(0.7, 0.7, 1);
         grp.add(sprite); grp.userData = { type: type }; parent.add(grp); this.interactables.push(grp);
-        if(type !== 'rotten') this.totalItems++;
+        if(type !== 'rotten' && type !== 'cockroach') this.totalItems++;
     }
     
     // --- UPGRADE: MONSTER HANDS + FACING + NO SPIN ---
@@ -853,13 +887,9 @@ class Game {
         g.userData = { type:'ghost', angle:Math.random()*6, speed:0.02, baseColor: col, dir: direction };
         g.position.y = 0.8; g.position.x = 2;
         
-        // Add shadow on floor
-        const shadowGeo = new THREE.CircleGeometry(0.4, 16);
-        const shadowMat = new THREE.MeshBasicMaterial({color: 0x000000, transparent: true, opacity: 0.3});
-        const shadow = new THREE.Mesh(shadowGeo, shadowMat);
-        shadow.rotation.x = -Math.PI / 2;
-        shadow.position.y = -0.3;
-        g.add(shadow); 
+        // Monster will cast shadow using shadow maps
+        body.castShadow = true;
+        body.receiveShadow = false; 
         // Rotate to face forward on floor plane (rotate around Y axis to face positive Z)
         g.rotation.set(0, 0, 0); 
         parent.add(g); this.interactables.push(g);
@@ -877,13 +907,11 @@ class Game {
         g.userData = { type: 'white-ghost', angle: Math.random()*6, speed: 0.03, offset: Math.random()*3, baseColor: 0xffffff, dir: direction };
         g.position.set(Math.cos(0)*3, 2, Math.sin(0)*3);
         
-        // Add shadow on floor for flying ghost
-        const shadowGeo = new THREE.CircleGeometry(0.35, 16);
-        const shadowMat = new THREE.MeshBasicMaterial({color: 0x000000, transparent: true, opacity: 0.25});
-        const shadow = new THREE.Mesh(shadowGeo, shadowMat);
-        shadow.rotation.x = -Math.PI / 2;
-        shadow.position.y = -1.7;
-        g.add(shadow);
+        // Flying ghost will cast shadow using shadow maps
+        body.castShadow = true;
+        body.receiveShadow = false;
+        skirt.castShadow = true;
+        skirt.receiveShadow = false;
         
         parent.add(g); this.interactables.push(g);
     }
@@ -917,15 +945,13 @@ class Game {
         const direction = Math.random() > 0.5 ? 1 : -1;
         g.userData = { type: 'bat', angle: Math.random()*6, speed: 0.04, offset: Math.random()*3, baseColor: 0x1a1a1a, dir: direction, wingFlap: 0 };
         // Position at upper part of floor (higher Y)
-        g.position.set(Math.cos(0)*2.5, 3.5, Math.sin(0)*2.5);
+        g.position.set(Math.cos(0)*2.5, 2.5, Math.sin(0)*2.5);
         
-        // Add shadow on floor for bat
-        const shadowGeo = new THREE.CircleGeometry(0.25, 16);
-        const shadowMat = new THREE.MeshBasicMaterial({color: 0x000000, transparent: true, opacity: 0.2});
-        const shadow = new THREE.Mesh(shadowGeo, shadowMat);
-        shadow.rotation.x = -Math.PI / 2;
-        shadow.position.y = -3.2;
-        g.add(shadow);
+        // Bat will cast shadow using shadow maps
+        body.castShadow = true;
+        body.receiveShadow = false;
+        wingL.castShadow = true;
+        wingR.castShadow = true;
         
         parent.add(g); this.interactables.push(g);
     }
@@ -934,7 +960,7 @@ class Game {
         if(full) { 
             this.level = 1;
             this.score = 0; this.lives = 3; 
-            this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0 };
+            this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0, cockroach: 0 };
             this.previousLevelsScore = 0; 
             this.currentLevelMaxDepth = 0;
             this.audio.playTrack('start_screen');
@@ -1051,7 +1077,7 @@ class Game {
                     // 1.5 (offset) + 0.4 (radius) = 1.9 approx distance to center
                     if(dist < 1.9 + Math.abs(this.velocity) && dist > 0) { 
                          const u = hitsMain[0].object.userData.type ? hitsMain[0].object.userData : (hitsMain[0].object.parent ? hitsMain[0].object.parent.userData : {});
-                         if(!['apple','banana','rotten','diamond','ghost','chocolate','white-ghost','bat'].includes(u.type)) {
+                         if(!['apple','banana','rotten','diamond','ghost','chocolate','white-ghost','bat','cockroach'].includes(u.type)) {
                             this.ballWrap.position.y = hitsMain[0].point.y + 0.4; 
                             if(u.type === 'safe') {
                                 this.velocity = jump; this.audio.playSFX('bounce'); this.currentScale.set(1.4, 0.6, 1.4);
@@ -1086,10 +1112,9 @@ class Game {
                         const r = 2; 
                         o.position.x = Math.cos(o.userData.angle) * r; 
                         o.position.z = Math.sin(o.userData.angle) * r; 
-                        // Face tangent direction - rotate around Y axis to face movement direction
-                        // Calculate tangent angle (perpendicular to radius)
-                        const tangentAngle = o.userData.angle + (Math.PI / 2) * dir;
-                        o.rotation.y = tangentAngle;
+                        // Face 90° to floor platform (perpendicular) - always face forward on floor plane
+                        // Don't rotate on Y axis - keep facing forward (positive Z direction)
+                        o.rotation.y = 0;
                         // Keep X and Z rotations at 0 so it stands upright on floor
                         o.rotation.x = 0;
                         o.rotation.z = 0;
@@ -1103,13 +1128,7 @@ class Game {
                     o.position.z = Math.sin(o.userData.angle) * rad; 
                     o.position.y = 2 + Math.sin(Date.now() * 0.002 + o.userData.offset) * 2; 
                     o.lookAt(pos);
-                    // Update shadow position and scale based on height
-                    o.children.forEach(child => {
-                        if(child.geometry && child.geometry.type === 'CircleGeometry') {
-                            const heightFactor = (o.position.y - 0.5) / 3.5;
-                            child.scale.setScalar(1 + heightFactor * 0.5);
-                        }
-                    });
+                    // Shadow is now rendered by shadow maps (no manual update needed)
                 }
                 else if(o.userData.type === 'bat') {
                     let dir = o.userData.dir || 1;
@@ -1119,7 +1138,7 @@ class Game {
                     o.position.x = Math.cos(o.userData.angle) * rad;
                     o.position.z = Math.sin(o.userData.angle) * rad;
                     // Keep bats at upper part (Y around 3-4)
-                    o.position.y = 3.5 + Math.sin(Date.now() * 0.004 + o.userData.offset) * 0.5;
+                    o.position.y = 2.5 + Math.sin(Date.now() * 0.004 + o.userData.offset) * 0.5;
                     o.lookAt(pos);
                     // Animate wing flapping
                     o.userData.wingFlap += 0.3;
@@ -1153,6 +1172,7 @@ class Game {
                     if(t==='apple') { this.lives=Math.min(5,this.lives+1); this.collected.apple++; this.levelCollected++; this.audio.playSFX('collect'); o.parent.remove(o); this.interactables.splice(i,1); }
                     else if(t==='banana') { this.fastTimer+=300; this.collected.banana++; this.levelCollected++; this.audio.playSFX('buff'); o.parent.remove(o); this.interactables.splice(i,1); }
                     else if(t==='rotten') { this.slowTimer+=150; this.audio.playSFX('damage'); this.collected.rotten++; o.parent.remove(o); this.interactables.splice(i,1); }
+                    else if(t==='cockroach') { this.jumpForce *= 0.7; this.baseGravity *= 0.7; this.gravity = this.baseGravity; this.audio.playSFX('damage'); this.collected.cockroach++; o.parent.remove(o); this.interactables.splice(i,1); }
                     else if(t==='diamond') { this.drillFloors = 3; this.drillTimer = 300; this.audio.playSFX('buff'); this.collected.diamond++; o.parent.remove(o); this.interactables.splice(i,1); }
                     else if(t==='chocolate') { this.timeLeft += 5; this.collected.choco++; this.audio.playSFX('collect'); o.parent.remove(o); this.interactables.splice(i,1); }
                     else if(t==='ghost' || t==='white-ghost' || t==='bat') { if(this.drillFloors<=0) this.takeDamage(); else { o.parent.remove(o); this.interactables.splice(i,1); } }
@@ -1168,34 +1188,7 @@ class Game {
             this.camera.position.y += (ty - this.camera.position.y) * 0.1;
             this.camera.lookAt(0, this.camera.position.y - 8, 0);
             
-            // Update character shadow position with jump effect
-            if(this.ballShadow) {
-                // Shadow follows character's X and Z position
-                this.ballShadow.position.x = pos.x;
-                this.ballShadow.position.z = pos.z;
-                
-                // Calculate shadow size based on height - higher = smaller shadow
-                // Base height is around 2, so we calculate distance from base
-                const baseHeight = 2;
-                const currentHeight = pos.y;
-                const heightDiff = Math.max(0, currentHeight - baseHeight);
-                
-                // Shadow gets smaller as character goes higher (inverse relationship)
-                // At base height (2), shadow is normal size (1.0)
-                // At height 10, shadow is much smaller (0.3)
-                const heightScale = 1.0 - (heightDiff / 12) * 0.7; // Max reduction of 70%
-                
-                // Add velocity effect - when moving fast, shadow stretches slightly
-                const velocityEffect = 1.0 + Math.abs(this.velocity) * 0.15;
-                
-                // Combine effects
-                const finalScale = Math.max(0.3, Math.min(1.2, heightScale * velocityEffect));
-                this.ballShadow.scale.setScalar(finalScale);
-                
-                // Shadow opacity based on height - higher = more transparent
-                const opacityFactor = 1.0 - (heightDiff / 15) * 0.6; // Max reduction of 60% opacity
-                this.ballShadow.material.opacity = Math.max(0.1, 0.3 * opacityFactor);
-            }
+            // Character shadow is now rendered by Three.js shadow maps (no manual update needed)
 
             this.renderer.render(this.scene, this.camera);
         } catch(e) { console.error("Loop Error:", e); }
@@ -1266,7 +1259,8 @@ class Game {
         
         setTimeout(() => { 
             updateBar('bar-time', timePct); 
-            updateBar('bar-rating', ratingVal); 
+            updateBar('bar-rating', ratingVal);
+            updateBar('bar-score', score1to10 * 10); // Score bar 0-100%
         }, 100);
     }
     
@@ -1581,6 +1575,8 @@ class Game {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+    // Update start screen background on load
+    updateStartScreenBackground();
     try { AssetFactory.init(); window.game = new Game(); const startBtn = document.getElementById('btn-start'); if(startBtn) { startBtn.onclick = function() { window.game.start(); }; } } catch(e) { console.error("Initialization failed:", e); }
 });
 </script>
