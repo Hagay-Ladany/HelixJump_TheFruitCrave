@@ -19,7 +19,7 @@
         }
         #canvas-container { width: 100%; height: 100dvh; display: block; }
         #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
         }
         
@@ -48,7 +48,7 @@
         .audio-off { opacity: 0.4; }
 
         /* Overlays */
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; pointer-events: auto; transition: opacity 0.3s; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; pointer-events: auto; transition: opacity 0.3s; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .overlay:not(.hidden) { display: flex !important; }
         #start-content {
             display: flex;
@@ -126,17 +126,17 @@
         /* Animations */
         @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); } }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2) rotate(5deg); } 100% { transform: scale(1); } }
-        .animate-pop { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 0; }
+        .animate-pop { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 1 !important; }
         .animate-pulse { animation: pulse 1s infinite; }
 
-        .stat-box { background: rgba(255,255,255,0.15); padding: 20px; border-radius: 10px; width: clamp(280px, 90vw, 350px); max-width: 90vw; margin: 20px; text-align: center; color: white; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .stat-box { background: rgba(255,255,255,0.15); padding: 20px; border-radius: 10px; width: clamp(280px, 90vw, 350px); max-width: 90vw; margin: 20px auto; flex-shrink: 0; text-align: center; color: white; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); flex-shrink: 0; }
         .stat-row { display: flex; align-items: center; justify-content: space-between; margin: 8px 0; font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; color: white; }
         .stat-label { width: 70px; text-align: left; font-size: 0.9rem; opacity: 0.8; color: white; }
         .stat-val { width: 50px; text-align: right; font-weight: bold; color: white; }
         .bar-track { flex-grow: 1; height: 6px; background: rgba(0,0,0,0.5); margin: 0 10px; border-radius: 4px; overflow: hidden; }
         .bar-fill { height: 100%; width: 0%; transition: width 1s ease-out; }
 
-        button.btn { background: #ff4757; color: white; border: none; padding: clamp(12px, 2vh, 20px) clamp(40px, 8vw, 60px); font-size: clamp(1.2rem, 4vw, 1.8rem); border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4); transition: transform 0.1s; margin: 10px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        button.btn { background: #ff4757; color: white; border: none; padding: clamp(12px, 2vh, 20px) clamp(40px, 8vw, 60px); font-size: clamp(1.2rem, 4vw, 1.8rem); border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4); transition: transform 0.1s; margin: 10px auto; flex-shrink: 0; min-height: 44px; display: block; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
         button.btn:active { transform: scale(0.95); }
         button.btn-start { background: #2ed573; box-shadow: 0 5px 15px rgba(46, 213, 115, 0.4); }
         
@@ -199,7 +199,7 @@
         <p id="loading-text" style="color: white; margin-top: 10px; font-size: 0.9rem;">Preparing game assets...</p>
     </div>
     <div id="start-content">
-        <div class="stat-box">
+        <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
             <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">GAME ELEMENTS</h3>
             <div style="text-align: left; font-size: 0.85rem; line-height: 1.8;">
                 <p style="text-shadow: 1px 1px 3px rgba(0,0,0,0.8);"><strong>🍎 Apple</strong> - Restores 1 life</p>
@@ -211,17 +211,17 @@
                 <p style="margin-top: 10px; margin-bottom: 5px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);"><strong>⚠️ DANGERS:</strong></p>
                 <p style="text-shadow: 1px 1px 3px rgba(0,0,0,0.8);"><strong>👻 Ghosts</strong> - Avoid or use drill!</p>
                 <p style="text-shadow: 1px 1px 3px rgba(0,0,0,0.8);"><strong>🦇 Bats</strong> - Fly at upper floors</p>
-            </div>
-            <p style="margin-top: 15px; color:#ff4500; font-weight:bold; font-size: 0.95rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">Level 5: THE END</p>
         </div>
-        <button class="btn btn-start" id="btn-start">TAP TO START</button>
+            <p style="margin-top: 15px; color:#ff4500; font-weight:bold; font-size: 0.95rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">Level 5: THE END</p>
+    </div>
+    <button class="btn btn-start" id="btn-start">TAP TO START</button>
     </div>
 </div>
 
 <div id="game-over-screen" class="overlay hidden">
     <h1>GAME OVER</h1>
     <div class="big-emoji animate-pulse">😭</div>
-    <div class="stat-box">
+    <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
         <p id="fail-reason" style="color:#ff4444; font-weight:bold;">SMASHED!</p>
         <div class="stat-row animate-pop" style="animation-delay: 0.1s;"><span class="stat-label">Score:</span><span class="stat-val" id="go-score">0</span></div>
         <div class="stat-row animate-pop" style="animation-delay: 0.2s;"><span class="stat-label">Best:</span><span class="stat-val" id="go-best">0</span></div>
@@ -229,14 +229,14 @@
     <button class="btn" id="btn-retry">TRY AGAIN</button>
 </div>
 
-<div id="level-complete-screen" class="overlay hidden">
+<div id="level-complete-screen" class="overlay hidden" style="padding: 20px; box-sizing: border-box; justify-content: flex-start; padding-top: 5vh;">
     <h1 id="complete-title">LEVEL COMPLETE!</h1>
     <div class="big-emoji animate-pulse" id="win-emoji">🎉</div>
-    <div class="stat-box">
+    <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
         <div class="stat-row animate-pop" style="animation-delay: 0.1s;">
             <span class="stat-label">🍎 Apples:</span>
             <span class="stat-val" id="win-apples">0</span>
-        </div>
+    </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.15s;">
             <span class="stat-label">🍌 Bananas:</span>
             <span class="stat-val" id="win-bananas">0</span>
@@ -280,7 +280,7 @@
             <span class="stat-val" id="win-score" style="font-size: 1.5rem; width: 100%;">10/10</span>
         </div>
     </div>
-    <button class="btn btn-start" id="btn-next">NEXT LEVEL</button>
+    <button class="btn btn-start" id="btn-next" style="margin-top: 20px; margin-bottom: 20px; position: relative; z-index: 21; flex-shrink: 0;">NEXT LEVEL</button>
 </div>
 
 <div id="pacman-minigame-screen" class="overlay hidden">
@@ -291,7 +291,7 @@
     <canvas id="pacman-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
     <div id="pacman-result" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 30;">
         <h1 style="color: white; font-size: 3rem; margin-bottom: 20px;">MINI-GAME COMPLETE!</h1>
-        <div class="stat-box">
+        <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
             <p style="font-size: 1.5rem; margin-bottom: 10px;">🍎 Apples Collected: <span id="pacman-final-score">0</span></p>
         </div>
         <button class="btn btn-start" id="btn-pacman-continue" style="margin-top: 20px;">CONTINUE TO LEVEL 3</button>
@@ -384,9 +384,9 @@ class SoundManager {
         // Small delay for smooth transition
         setTimeout(() => {
             if(this.player && !this.isMusicMuted) {
-                this.player.load(url, (buffer) => {
-                    this.player.play(buffer);
-                });
+        this.player.load(url, (buffer) => {
+            this.player.play(buffer);
+        });
             }
         }, 50);
     }
@@ -746,7 +746,8 @@ class Game {
         else if(this.level === 3) grad = "linear-gradient(to bottom, #134E5E, #71B280)";
         else if(this.level === 4) grad = "linear-gradient(to bottom, #800000, #200122)";
         else grad = "linear-gradient(to bottom, #ECE9E6, #FFFFFF)";
-        const overlayGradient = "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 29%, rgba(0, 0, 0, 0.3) 100%)";
+        // Dramatically reduce black overlay - much lighter
+        const overlayGradient = (this.level === 4) ? "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%)" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 29%, rgba(0, 0, 0, 0.1) 100%)";
         // Use getBackgroundImage helper which handles webp with jpg fallback
         let texture = getBackgroundImage(this.level);
         
@@ -790,7 +791,7 @@ class Game {
         
         const floors = isFinal ? 50 : (isBoss ? 20 : (this.level===1 ? 25 : 40));
         const matMap = (isBoss || isFinal) ? AssetFactory.texStone : AssetFactory.texFloor;
-        const hidePole = (this.level === 5);
+        const hidePole = (this.level === 5 || this.level === 4); // Hide pole for level 4 and 5
         
         let palette;
         if(this.level===1) palette=[0x00d2d3,0x54a0ff,0x5f27cd]; 
@@ -826,7 +827,7 @@ class Game {
                 const geo = new THREE.ExtrudeGeometry(shape, {depth:0.4, bevelEnabled:true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 3}); 
                 geo.rotateX(-Math.PI/2);
                 const mat = new THREE.MeshBasicMaterial({ color: isDanger ? dangerColor : col, map: matMap, transparent: isFinal, opacity: isFinal ? 0.9 : 1.0 });
-                const m = new THREE.Mesh(geo, mat);
+                const m = new THREE.Mesh(geo, mat); 
                 m.receiveShadow = true;
                 m.castShadow = false; 
                 m.userData = { type: isDanger?'danger':'safe', color: isDanger?dangerColor:new THREE.Color(col).getHex() };
@@ -1200,7 +1201,7 @@ class Game {
                     o.position.x = Math.cos(o.userData.angle) * rad; 
                     o.position.z = Math.sin(o.userData.angle) * rad; 
                     o.position.y = 2 + Math.sin(Date.now() * 0.002 + o.userData.offset) * 2; 
-                    o.lookAt(pos);
+                    o.lookAt(pos); 
                     // Shadow is now rendered by shadow maps (no manual update needed)
                 }
                 else if(o.userData.type === 'bat') {
@@ -1705,3 +1706,4 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
