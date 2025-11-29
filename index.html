@@ -316,7 +316,6 @@ class SoundManager {
     constructor() {
         this.player = null; 
         this.trackMap = { 
-            'start_screen': { file: 'start_screen_raina_-_smile', ext: 'xm' },
             'game_over': { file: 'game_over_old_keys', ext: 'mod' },
             'level_1': { file: 'level_1_civilian', ext: 'xm' },
             'level_2': { file: 'level_2_im_a_chip_melody', ext: 'xm' },
@@ -324,6 +323,7 @@ class SoundManager {
             'level_4': { file: 'level_4_god_no_love_me', ext: 'mod' },
             'level_5': { file: 'level_5_jazzberr', ext: 'mod' },
             'level_6': { file: 'level_5_jazzberr', ext: 'mod' }, 
+            'stress': { file: 'last_10_sec_civilian', ext: 'xm' }, // Stress music for last 10 seconds
             'you_win': { file: 'you_win_cerror_-_ode_to_maktone', ext: 'mod' }
         };
         this.isMuted = false;
@@ -419,8 +419,8 @@ class SoundManager {
         if(this.isMusicMuted) {
             this.stopMusic();
         } else {
-            // Resume the last track that was playing, or start_screen if none
-            const trackToResume = this.lastTrack || 'start_screen';
+            // Resume the last track that was playing
+            const trackToResume = this.lastTrack || 'level_1';
             this.currentTrack = ""; // Reset to allow replay
             this.playTrack(trackToResume);
         }
@@ -596,6 +596,7 @@ class Game {
     constructor() {
         this.audio = new SoundManager();
         this.level = 1; this.lives = 3; this.score = 0; this.bestScore = 0; this.isPlaying = false;
+        this.stressMusicPlaying = false; // Track if stress music is currently playing
         this.baseGravity = 0.012; this.jumpForce = 0.2268; this.gravity = this.baseGravity; this.velocity = 0;
         this.currentScale = new THREE.Vector3(1,1,1); this.targetScale = new THREE.Vector3(1,1,1);
         this.fastTimer = 0; this.slowTimer = 0; this.invincible = 0; this.drillFloors = 0;
@@ -647,7 +648,7 @@ class Game {
             document.getElementById('start-screen').classList.add('hidden');
             // AssetFactory.init() already called in DOMContentLoaded
             this.audio.init();
-            this.audio.playTrack('start_screen');
+            // No start screen music
             this.initThreeJS();
         } catch (e) { console.error(e); }
     }
@@ -780,6 +781,7 @@ class Game {
         
         let trackName = 'level_' + this.level;
         this.audio.playTrack(trackName);
+        this.stressMusicPlaying = false; // Reset stress music flag for new level
 
         this.timeLeft = this.maxTime;
 
@@ -893,6 +895,11 @@ class Game {
         const eyeR = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), eyeMat); eyeR.position.set(0.15, 0.1, 0.31);
         eyeR.rotation.y = 0; // Face forward
         const pupilR = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.05), pupilMat); pupilR.position.z = 0.01; eyeR.add(pupilR);
+        // Store eye references for dynamic pupil movement
+        g.userData.eyeL = eyeL;
+        g.userData.eyeR = eyeR;
+        g.userData.pupilL = pupilL;
+        g.userData.pupilR = pupilR;
         const browL = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.05), new THREE.MeshBasicMaterial({color:'black'})); browL.position.set(-0.15, 0.22, 0.31); browL.rotation.z = -0.3; browL.rotation.y = 0;
         const browR = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.05), new THREE.MeshBasicMaterial({color:'black'})); browR.position.set(0.15, 0.22, 0.31); browR.rotation.z = 0.3; browR.rotation.y = 0;
         const mouth = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.1), new THREE.MeshBasicMaterial({color:'black'})); mouth.position.set(0, -0.15, 0.31); mouth.rotation.y = 0;
@@ -996,7 +1003,7 @@ class Game {
             this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0, cockroach: 0 };
             this.previousLevelsScore = 0; 
             this.currentLevelMaxDepth = 0;
-            this.audio.playTrack('start_screen');
+            // No start screen music
         }
         else {
             this.lives = Math.max(1, this.lives);
@@ -1014,6 +1021,7 @@ class Game {
         document.getElementById('game-over-screen').classList.add('hidden');
         document.getElementById('level-complete-screen').classList.add('hidden');
         
+        this.stressMusicPlaying = false; // Reset stress music flag
         this.setupLevel();
         this.updateUI();
         this.isPlaying = true;
@@ -1027,6 +1035,17 @@ class Game {
             if(dt < 1) { 
                 this.timeLeft -= dt;
                 if(this.timeLeft <= 0) { this.timeLeft = 0; this.handleTimeout(); }
+            }
+            
+            // Play stress music in last 10 seconds
+            if(this.timeLeft <= 10 && !this.stressMusicPlaying) {
+                this.audio.playTrack('stress');
+                this.stressMusicPlaying = true;
+            } else if(this.timeLeft > 10 && this.stressMusicPlaying) {
+                // Switch back to level music if time goes above 10 seconds (e.g., chocolate collected)
+                let trackName = 'level_' + this.level;
+                this.audio.playTrack(trackName);
+                this.stressMusicPlaying = false;
             }
         }
         const m = Math.floor(this.timeLeft/60);
@@ -1073,6 +1092,11 @@ class Game {
     loop() {
         try {
             requestAnimationFrame(() => this.loop());
+            // Don't hide overlays if level complete screen is showing
+            const levelCompleteScreen = document.getElementById('level-complete-screen');
+            if(!this.isPlaying && levelCompleteScreen && !levelCompleteScreen.classList.contains('hidden')) {
+                return; // Keep showing level complete screen
+            }
             if(!this.isPlaying) return;
             
             this.particles.update();
@@ -1141,6 +1165,7 @@ class Game {
                 if (o.userData.type === 'ghost') {
                     if (!o.userData.isStatic) {
                         let dir = o.userData.dir || 1; 
+                        const prevAngle = o.userData.angle || 0;
                         o.userData.angle += o.userData.speed * dir; 
                         const r = 2; 
                         o.position.x = Math.cos(o.userData.angle) * r; 
@@ -1151,6 +1176,21 @@ class Game {
                         // Keep X and Z rotations at 0 so it stands upright on floor
                         o.rotation.x = 0;
                         o.rotation.z = 0;
+                        
+                        // Update eye pupils to point in rotation direction
+                        if (o.userData.eyeL && o.userData.eyeR && o.userData.pupilL && o.userData.pupilR) {
+                            // Calculate direction of movement (tangent to the circle)
+                            const angleRad = o.userData.angle;
+                            const lookDirX = -Math.sin(angleRad) * dir; // Perpendicular to radius
+                            const lookDirZ = Math.cos(angleRad) * dir;
+                            
+                            // Move pupils within eyes (max offset 0.03 from center)
+                            const pupilOffset = 0.03;
+                            o.userData.pupilL.position.x = lookDirX * pupilOffset;
+                            o.userData.pupilL.position.z = lookDirZ * pupilOffset + 0.01;
+                            o.userData.pupilR.position.x = lookDirX * pupilOffset;
+                            o.userData.pupilR.position.z = lookDirZ * pupilOffset + 0.01;
+                        }
                     } 
                 }
                 else if(o.userData.type === 'white-ghost') { 
@@ -1396,6 +1436,45 @@ class Game {
         canvas.addEventListener('touchmove', handleTouchMove, {passive: false});
         canvas.addEventListener('touchend', handleTouchEnd);
         
+        // Mouse support for Pacman
+        let mouseDown = false;
+        let mouseStart = null;
+        const handleMouseDown = (e) => {
+            e.preventDefault();
+            mouseDown = true;
+            const rect = canvas.getBoundingClientRect();
+            mouseStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        };
+        const handleMouseMove = (e) => {
+            e.preventDefault();
+            if(!mouseDown || !mouseStart) return;
+            const rect = canvas.getBoundingClientRect();
+            const dx = (e.clientX - rect.left) - mouseStart.x;
+            const dy = (e.clientY - rect.top) - mouseStart.y;
+            
+            // Reset keys
+            gameState.keys.up = gameState.keys.down = gameState.keys.left = gameState.keys.right = false;
+            
+            // Simple threshold for direction
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 10) gameState.keys.right = true;
+                else if (dx < -10) gameState.keys.left = true;
+            } else {
+                if (dy > 10) gameState.keys.down = true;
+                else if (dy < -10) gameState.keys.up = true;
+            }
+        };
+        const handleMouseUp = () => {
+            gameState.keys.up = gameState.keys.down = gameState.keys.left = gameState.keys.right = false;
+            mouseDown = false;
+            mouseStart = null;
+        };
+        
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseup', handleMouseUp);
+        canvas.addEventListener('mouseleave', handleMouseUp); // Handle mouse leaving canvas
+        
         // 5. Game Loop
         const startTime = Date.now();
         let animationId = null;
@@ -1408,6 +1487,10 @@ class Game {
                 canvas.removeEventListener('touchstart', handleTouchStart);
                 canvas.removeEventListener('touchmove', handleTouchMove);
                 canvas.removeEventListener('touchend', handleTouchEnd);
+                canvas.removeEventListener('mousedown', handleMouseDown);
+                canvas.removeEventListener('mousemove', handleMouseMove);
+                canvas.removeEventListener('mouseup', handleMouseUp);
+                canvas.removeEventListener('mouseleave', handleMouseUp);
                 if(animationId) cancelAnimationFrame(animationId);
                 return;
             }
@@ -1520,6 +1603,10 @@ class Game {
                 canvas.removeEventListener('touchstart', handleTouchStart);
                 canvas.removeEventListener('touchmove', handleTouchMove);
                 canvas.removeEventListener('touchend', handleTouchEnd);
+                canvas.removeEventListener('mousedown', handleMouseDown);
+                canvas.removeEventListener('mousemove', handleMouseMove);
+                canvas.removeEventListener('mouseup', handleMouseUp);
+                canvas.removeEventListener('mouseleave', handleMouseUp);
                 if(animationId) cancelAnimationFrame(animationId);
                 return;
             }
