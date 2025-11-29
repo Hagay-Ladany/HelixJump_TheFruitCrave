@@ -1,47 +1,35 @@
 # Fix CORS Issue in Google Apps Script
 
-Your Google Apps Script needs to return CORS headers to work with your website. Here's the updated code:
+**The error `setHeaders is not a function` occurs because `ContentService` doesn't support that method.**
 
-## Updated Apps Script Code
+## ✅ CORRECT Solution (Simple & Working)
 
-Replace your current `Code.gs` with this:
+Google Apps Script Web Apps **automatically handle CORS** when deployed correctly. You don't need to manually set headers!
+
+### Updated Apps Script Code
+
+**⚠️ IMPORTANT:** When copying the code below, copy ONLY the JavaScript code (the part between the backticks). Do NOT copy the ` ```javascript ` or ` ``` ` lines - those are just markdown formatting!
+
+Replace your entire `Code.gs` with this **simple, working code**:
 
 ```javascript
 const SHEET_NAME = 'Sheet1';
 
 function doPost(e) {
   const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
+  const body = JSON.parse(e.postData.contents);
   
-  // Parse the request body
-  let body;
-  try {
-    body = JSON.parse(e.postData.contents);
-  } catch (e) {
-    body = e.parameter; // Fallback for form data
-  }
+  sheet.appendRow([body.name, body.score, new Date()]);
   
-  const name = body.name || 'Anonymous';
-  const score = parseInt(body.score) || 0;
-  
-  sheet.appendRow([name, score, new Date()]);
-  
-  // Return JSON with CORS headers
   return ContentService
     .createTextOutput(JSON.stringify({status: "OK"}))
-    .setMimeType(ContentService.MimeType.JSON)
-    .setHeaders({
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    });
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function doGet() {
   const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
   const data = sheet.getDataRange().getValues();
-  
-  // Remove header row
-  data.shift();
+  data.shift(); // remove header row
   
   const leaderboard = data
     .map(r => ({
@@ -52,56 +40,82 @@ function doGet() {
     .sort((a, b) => b.score - a.score)
     .slice(0, 50); // Return top 50
   
-  // Return JSON with CORS headers
   return ContentService
     .createTextOutput(JSON.stringify(leaderboard))
-    .setMimeType(ContentService.MimeType.JSON)
-    .setHeaders({
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    });
-}
-
-// Handle OPTIONS request for CORS preflight
-function doOptions() {
-  return ContentService
-    .createTextOutput('')
-    .setMimeType(ContentService.MimeType.JSON)
-    .setHeaders({
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Max-Age': '3600'
-    });
+    .setMimeType(ContentService.MimeType.JSON);
 }
 ```
 
-## Steps to Update
+## 🔑 CRITICAL: Deployment Settings
 
-1. Go to your Google Sheet
-2. Click **Extensions → Apps Script**
-3. Replace all the code in `Code.gs` with the code above
-4. Click **Deploy → Manage deployments**
-5. Click the pencil icon (edit) next to your existing deployment
-6. Click **New version**
-7. Click **Deploy**
-8. Test your game again
+The CORS fix happens in the **deployment settings**, not in the code!
 
-## Important Notes
+### Steps to Fix:
 
-- The `setHeaders()` method adds CORS headers to allow your website to access the script
-- `Access-Control-Allow-Origin: *` allows any website to access it (you can restrict this to your domain if needed)
-- After updating, it may take a few minutes for changes to propagate
+1. **Update your code** with the code above
+2. **Deploy → Manage deployments**
+3. Click the **pencil icon (edit)** next to your deployment
+4. **VERIFY these settings:**
+   - **Execute as:** `Me`
+   - **Who has access:** `Anyone` ⚠️ **THIS IS CRITICAL!**
+5. Click **New version**
+6. Click **Deploy**
+7. **Copy the new deployment URL** (it should end with `/exec`)
 
-## Alternative: Restrict to Your Domain
+### Why This Works
 
-If you want to restrict access to only your GitHub Pages domain, change:
+When you set "Who has access: Anyone", Google Apps Script automatically:
+- Adds CORS headers to responses
+- Allows cross-origin requests
+- Works with your GitHub Pages site
+
+**You don't need to manually set headers in the code!**
+
+## ✅ Deployment Configuration
+
+After deploying your Apps Script, make sure the Web App URL is configured in your `index.html` file in the `LEADERBOARD_URL` constant.
+
+**Note:** The deployment URL is already public in your `index.html` file, so it will be visible to anyone who views your game's source code.
+
+## Troubleshooting
+
+If CORS still doesn't work after setting "Anyone":
+
+1. **Clear browser cache** - old responses might be cached
+2. **Wait 2-3 minutes** - deployment changes can take time to propagate
+3. **Check the deployment URL** - make sure you're using the `/exec` version, not `/dev`
+4. **Test in incognito mode** - to rule out browser extensions blocking requests
+
+## Alternative: If "Anyone" Doesn't Work
+
+If for some reason "Anyone" access doesn't work, you can use this workaround that uses HtmlService:
+
 ```javascript
-'Access-Control-Allow-Origin': '*'
-```
-to:
-```javascript
-'Access-Control-Allow-Origin': 'https://hagay-ladany.github.io'
+const SHEET_NAME = 'Sheet1';
+
+function doPost(e) {
+  const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
+  const body = JSON.parse(e.postData.contents);
+  sheet.appendRow([body.name, body.score, new Date()]);
+  return createCorsHtmlResponse({status: "OK"});
+}
+
+function doGet() {
+  const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
+  const data = sheet.getDataRange().getValues();
+  data.shift();
+  const leaderboard = data
+    .map(r => ({name: r[0] || 'Anonymous', score: parseInt(r[1]) || 0, timestamp: r[2] ? new Date(r[2]).toISOString() : new Date().toISOString()}))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 50);
+  return createCorsHtmlResponse(leaderboard);
+}
+
+function createCorsHtmlResponse(obj) {
+  return HtmlService.createHtmlOutput(JSON.stringify(obj))
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .setContentType('application/json');
+}
 ```
 
+But the simple ContentService version should work fine with "Anyone" access!
