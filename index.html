@@ -217,8 +217,8 @@
 </div>
 
 <div id="start-screen" class="overlay">
+    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.1.0</div>
     <div id="loading-container" style="display: none;">
-        <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
         <div style="width: 300px; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
             <div id="loading-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #2ed573, #00ffff); transition: width 0.3s ease;"></div>
         </div>
@@ -785,7 +785,7 @@ class Game {
         this.drillColorTime = 0; // For colorful drill effect
         this.isTransitioningToTop = false; // For smooth transition after timeout
         this.transitionTargetY = 2; // Target Y position for transition
-        this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0, cockroach: 0 }; 
+        this.timeUpEffect = false; // Time up effect flag
         this.totalItems = 0; this.levelCollected = 0; this.previousLevelsScore = 0; this.currentLevelMaxDepth = 0;
         
         if (typeof THREE !== 'undefined') this.raycaster = new THREE.Raycaster();
@@ -898,7 +898,7 @@ class Game {
     initThreeJS() {
         this.scene = new THREE.Scene(); this.scene.fog = new THREE.FogExp2(0x111, 0.03);
         this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
-        this.camera.position.set(0, 8, 15); this.camera.lookAt(0, 0, 0);
+        this.camera.position.set(0, 8, 13.5); this.camera.lookAt(0, 0, 0); // Zoomed in 10% (15 * 0.9 = 13.5)
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true;
@@ -1105,7 +1105,7 @@ class Game {
                 const mat = new THREE.MeshBasicMaterial({ color: isDanger ? dangerColor : col, transparent: isFinal, opacity: isFinal ? 0.9 : 1.0 });
                 const m = new THREE.Mesh(geo, mat);
                 m.receiveShadow = true;
-                m.castShadow = false; 
+                m.castShadow = true;
                 m.userData = { type: isDanger?'danger':'safe', color: isDanger?dangerColor:new THREE.Color(col).getHex() };
                 this.physicsMeshes.push(m); grp.add(m);
                 if(!isDanger && !isBoss && i>0 && i<floors-1 && Math.random()<0.1) this.spawnItem(grp, Math.cos(j*a+a/2)*2, Math.sin(j*a+a/2)*2);
@@ -1290,8 +1290,8 @@ class Game {
         
         this.ballWrap.position.y = 2; this.velocity = 0;
         this.fastTimer = 0; this.slowTimer = 0; this.invincible = 0; this.drillFloors = 0; this.drillTimer = 0;
-        this.hasCockroachDebuff = false; // Reset cockroach debuff
-        this.drillColorTime = 0; // Reset drill color animation
+        this.fastTimer = 0; this.slowTimer = 0; this.invincible = 0; this.drillFloors = 0; this.drillTimer = 0;
+        this.timeUpEffect = false; // Reset time up effect
         this.isTransitioningToTop = false; // Reset transition flag
         this.transitionTargetY = 2; // Reset transition target
         this.lastTime = Date.now(); 
