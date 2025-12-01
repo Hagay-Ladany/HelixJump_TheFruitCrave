@@ -902,7 +902,7 @@ class Game {
     initThreeJS() {
         this.scene = new THREE.Scene(); this.scene.fog = new THREE.FogExp2(0x111, 0.03);
         this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
-        this.camera.position.set(0, 8, 13.5); this.camera.lookAt(0, 0, 0); // Zoomed in 10% (15 * 0.9 = 13.5)
+        this.camera.position.set(0, 10, 13.5); this.camera.lookAt(0, 2, 0); // Start at y=10 (above character at y=2), look at character's starting position
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true;
@@ -1394,8 +1394,18 @@ class Game {
     }
     
     handleTimeout() {
-        // Instead of ending game, apply super rotten apple effect (very fast jumping up)
-        this.timeUpEffect = true; // Flag for time up effect - makes you jump up very fast
+        // Reset character to upper floor, reset floor count and time, keep hearts
+        if(this.floors && this.floors.length > 0) {
+            this.ballWrap.position.y = this.floors[0].position.y + 2; // Reset to top floor
+        } else {
+            this.ballWrap.position.y = 2; // Fallback to starting position
+        }
+        this.velocity = 0; // Stop any movement
+        this.currentLevelMaxDepth = 0; // Reset floor count
+        this.timeLeft = this.maxTime; // Reset time
+        this.timeUpEffect = false; // Clear time up effect
+        this.score = this.previousLevelsScore; // Reset score to previous levels only
+        this.updateUI(); // Update UI to reflect changes
     }
 
     loop() {
@@ -1447,11 +1457,7 @@ class Game {
                 jump *= 0.2;
             }
             if(this.drillFloors > 0) { grav = 0.03; } else { 
-                if(this.timeUpEffect) { 
-                    // Super rotten effect: very fast jumping up (negative gravity, high jump)
-                    grav = -0.15; // Negative gravity pushes up
-                    jump = 0.8; // High jump force
-                } else if(this.fastTimer>0) { grav *= 2.0; jump *= 1.4; } 
+                if(this.fastTimer>0) { grav *= 2.0; jump *= 1.4; } 
                 if(this.slowTimer>0) { grav = 0.005; jump = 0.25; } 
             }
             
@@ -1618,23 +1624,25 @@ class Game {
             this.score = this.previousLevelsScore + this.currentLevelMaxDepth;
             this.updateUI();
 
-            // --- OPTIMIZED CAMERA CONTROL ---
-            const cameraFollowHeight = 12; // Camera stays this far above ball
-            const cameraLookAtHeight = 4; // Camera looks this far below ball
-            const cameraDamping = 0.15; // Lower = smoother, higher = more responsive
+            // --- FIXED CAMERA FOLLOWING LOGIC ---
+            // 1. Calculate where camera should be (always a fixed distance above character)
+            const cameraOffsetY = 12; // Keep camera 12 units above character
+            const lookAtOffsetY = -3; // Look 3 units below character to see floors ahead
             
-            // Calculate targets
-            const targetCameraY = this.ballWrap.position.y + cameraFollowHeight;
-            const targetLookAtY = this.ballWrap.position.y - cameraLookAtHeight;
+            // 2. Calculate target positions
+            const targetCameraY = this.ballWrap.position.y + cameraOffsetY;
+            const targetLookAtY = this.ballWrap.position.y + lookAtOffsetY;
             
-            // Apply damping for smooth movement
-            this.camera.position.y += (targetCameraY - this.camera.position.y) * cameraDamping;
+            // 3. Smoothly move camera (0.2 = responsive but not jittery)
+            this.camera.position.y += (targetCameraY - this.camera.position.y) * 0.2;
             
-            // Look at point near the ball
+            // 4. Make camera look at character's level
             this.camera.lookAt(0, targetLookAtY, 0);
             
-            // Clamp camera Y to reasonable bounds
-            this.camera.position.y = Math.max(5, Math.min(100, this.camera.position.y));
+            // 5. Keep camera from going too low
+            if (this.camera.position.y < 5) {
+                this.camera.position.y = 5;
+            }
             
             // Character shadow is now rendered by Three.js shadow maps (no manual update needed)
 
