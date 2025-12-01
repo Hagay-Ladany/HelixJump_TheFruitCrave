@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -197,20 +197,20 @@
         <div id="level-info">
             <h2 id="level-indicator">LEVEL 1</h2>
             <div id="timer-display">00:00</div>
-            <div id="hearts">❤️❤️❤️</div>
+            <div id="hearts">ג₪ן¸ג₪ן¸ג₪ן¸</div>
             <div id="buffs-display"></div>
         </div>
         <div id="item-counters">
-            <div class="counter-item">🍎 <span id="c-apple">0</span></div>
-            <div class="counter-item">🍌 <span id="c-banana">0</span></div>
-            <div class="counter-item">🍫 <span id="c-choco">0</span></div>
+            <div class="counter-item">נ <span id="c-apple">0</span></div>
+            <div class="counter-item">נ <span id="c-banana">0</span></div>
+            <div class="counter-item">נ« <span id="c-choco">0</span></div>
         </div>
     </div>
     <div id="score-board">0</div>
     
     <div class="audio-controls">
-        <button id="music-btn" class="audio-icon">🎵</button>
-        <button id="audio-btn" class="audio-icon">🔊</button>
+        <button id="music-btn" class="audio-icon">נµ</button>
+        <button id="audio-btn" class="audio-icon">נ”</button>
     </div>
     
     <div class="tutorial">DRAG TO ROTATE</div>
@@ -226,14 +226,14 @@
     </div>
     <div id="start-content">
         <button class="btn btn-start" id="btn-start">TAP TO START</button>
-        <button class="btn" id="btn-start-leaderboard" style="margin-top: 10px; background: #5352ed;">🏆 LEADERBOARD</button>
-        <button class="btn" id="btn-help" style="margin-top: 10px; background: #5352ed;">❓ HELP</button>
+        <button class="btn" id="btn-start-leaderboard" style="margin-top: 10px; background: #5352ed;">נ† LEADERBOARD</button>
+        <button class="btn" id="btn-help" style="margin-top: 10px; background: #5352ed;">ג“ HELP</button>
     </div>
 </div>
 
 <div id="game-over-screen" class="overlay hidden">
     <h1>GAME OVER</h1>
-    <div class="big-emoji animate-pulse">😭</div>
+    <div class="big-emoji animate-pulse">נ˜­</div>
     <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
         <p id="fail-reason" style="color:#ff4444; font-weight:bold;">SMASHED!</p>
         <div class="stat-row animate-pop" style="animation-delay: 0.1s;"><span class="stat-label">Score:</span><span class="stat-val" id="go-score">0</span></div>
@@ -243,60 +243,60 @@
 </div>
 
 <div id="level-complete-screen" class="overlay hidden" style="padding: 10px; box-sizing: border-box; justify-content: center; align-items: center;">
-    <div class="big-emoji animate-pulse" id="win-emoji" style="font-size: clamp(3rem, 8vw, 6rem); margin: 5px 0; text-align: center; flex-shrink: 0;">🎉</div>
+    <div class="big-emoji animate-pulse" id="win-emoji" style="font-size: clamp(3rem, 8vw, 6rem); margin: 5px 0; text-align: center; flex-shrink: 0;">נ‰</div>
     <div class="stat-box" style="max-height: 50vh; overflow-y: auto; -webkit-overflow-scrolling: touch; flex-shrink: 0;">
         <div class="stat-row animate-pop" style="animation-delay: 0.1s;">
-            <span class="stat-label">🍎 Apples:</span>
+            <span class="stat-label">נ Apples:</span>
             <span class="stat-val" id="win-apples">0</span>
     </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.15s;">
-            <span class="stat-label">🍌 Bananas:</span>
+            <span class="stat-label">נ Bananas:</span>
             <span class="stat-val" id="win-bananas">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.2s;">
-            <span class="stat-label">🍫 Chocolate:</span>
+            <span class="stat-label">נ« Chocolate:</span>
             <span class="stat-val" id="win-choco">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.22s;">
-            <span class="stat-label">💎 Diamonds:</span>
+            <span class="stat-label">נ’ Diamonds:</span>
             <span class="stat-val" id="win-diamonds">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.24s;">
-            <span class="stat-label">🪳 Cockroaches:</span>
+            <span class="stat-label">נ×³ Cockroaches:</span>
             <span class="stat-val" id="win-cockroaches">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.26s;">
-            <span class="stat-label">🤢 Rotten:</span>
+            <span class="stat-label">נ₪¢ Rotten:</span>
             <span class="stat-val" id="win-rotten">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.28s;">
-            <span class="stat-label">🏢 Floors:</span>
+            <span class="stat-label">נ¢ Floors:</span>
             <span class="stat-val" id="win-floors">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.3s;">
-            <span class="stat-label">⏱️ Time:</span>
+            <span class="stat-label">ג±ן¸ Time:</span>
             <div class="bar-track"><div class="bar-fill" id="bar-time" style="background:#00ffff"></div></div>
             <span class="stat-val" id="win-time">00:00</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.35s;">
-            <span class="stat-label">⭐ Rating:</span>
+            <span class="stat-label">ג­ Rating:</span>
             <div class="bar-track"><div class="bar-fill" id="bar-rating" style="background:#ff4757"></div></div>
             <span class="stat-val" id="win-rating">Good</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.38s;">
             <span class="stat-label" style="font-size: 1.1rem;">Score:</span>
             <div class="bar-track" style="height: 12px;"><div class="bar-fill" id="bar-score" style="background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573, #00ffff);"></div></div>
-            <span class="stat-val" id="win-score-emoji" style="font-size: 1.5rem;">🐉</span>
+            <span class="stat-val" id="win-score-emoji" style="font-size: 1.5rem;">נ‰</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.4s; border-bottom: none; padding-bottom: 0; text-align: center;">
             <span class="stat-val" id="win-score" style="font-size: 1.5rem; width: 100%;">10/10</span>
         </div>
     </div>
+    <div class="big-emoji animate-pulse" id="win-emoji" style="font-size: clamp(3rem, 8vw, 6rem); margin: 10px 0 5px 0; text-align: center; flex-shrink: 0;">🎉</div>
     <button class="btn btn-start" id="btn-next" style="margin-top: 10px; margin-bottom: 10px; position: relative; z-index: 21; flex-shrink: 0;">NEXT LEVEL</button>
-</div>
 
 <div id="leaderboard-screen" class="overlay hidden">
-    <h1>🏆 TOP SCORES</h1>
+    <h1>נ† TOP SCORES</h1>
     <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch; width: clamp(300px, 90vw, 500px);">
         <div id="leaderboard-list" style="text-align: left;">
             <p style="text-align: center; color: rgba(255,255,255,0.7);">No scores yet. Be the first!</p>
@@ -318,19 +318,19 @@
 </div>
 
 <div id="help-screen" class="overlay hidden">
-    <h1>❓ HELP</h1>
+    <h1>ג“ HELP</h1>
     <div class="stat-box" style="max-height: 70vh; overflow-y: auto; -webkit-overflow-scrolling: touch; width: clamp(300px, 90vw, 500px);">
         <div style="text-align: left; font-size: 0.9rem; line-height: 1.8;">
             <h3 style="margin-top: 0; margin-bottom: 10px; text-align: center;">GAME ELEMENTS</h3>
-            <p><strong>🍎 Apple</strong> - Restores 1 life</p>
-            <p><strong>🍌 Banana</strong> - Increases speed & jump</p>
-            <p><strong>🍫 Chocolate</strong> - Adds 5 seconds to timer</p>
-            <p><strong>💎 Diamond</strong> - Drills through floors</p>
-            <p><strong>🪳 Cockroach</strong> - Reduces jump & speed</p>
-            <p><strong>🤢 Rotten</strong> - Slows you down</p>
-            <p style="margin-top: 15px; margin-bottom: 5px;"><strong>⚠️ DANGERS:</strong></p>
-            <p><strong>👻 Ghosts</strong> - Avoid or use drill!</p>
-            <p><strong>🦇 Bats</strong> - Fly at upper floors</p>
+            <p><strong>נ Apple</strong> - Restores 1 life</p>
+            <p><strong>נ Banana</strong> - Increases speed & jump</p>
+            <p><strong>נ« Chocolate</strong> - Adds 5 seconds to timer</p>
+            <p><strong>נ’ Diamond</strong> - Drills through floors</p>
+            <p><strong>נ×³ Cockroach</strong> - Reduces jump & speed</p>
+            <p><strong>נ₪¢ Rotten</strong> - Slows you down</p>
+            <p style="margin-top: 15px; margin-bottom: 5px;"><strong>ג ן¸ DANGERS:</strong></p>
+            <p><strong>נ‘» Ghosts</strong> - Avoid or use drill!</p>
+            <p><strong>נ¦‡ Bats</strong> - Fly at upper floors</p>
             <p style="margin-top: 15px; color:#ff4500; font-weight:bold;">Level 5: THE END</p>
             <p style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); text-align: center; font-size: 0.85rem; color: rgba(255,255,255,0.7);">Game made by <strong>Hagay Ladany</strong></p>
         </div>
@@ -341,13 +341,13 @@
 <div id="pacman-minigame-screen" class="overlay hidden">
     <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: white; font-size: 2rem; font-weight: bold; text-shadow: 2px 2px 0 #000; z-index: 25;">
         <div>Time: <span id="pacman-timer">15</span>s</div>
-        <div style="font-size: 1.5rem; margin-top: 10px;">🍎 Collected: <span id="pacman-score">0</span></div>
+        <div style="font-size: 1.5rem; margin-top: 10px;">נ Collected: <span id="pacman-score">0</span></div>
     </div>
     <canvas id="pacman-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
     <div id="pacman-result" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 30;">
         <h1 style="color: white; font-size: 3rem; margin-bottom: 20px;">MINI-GAME COMPLETE!</h1>
         <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
-            <p style="font-size: 1.5rem; margin-bottom: 10px;">🍎 Apples Collected: <span id="pacman-final-score">0</span></p>
+            <p style="font-size: 1.5rem; margin-bottom: 10px;">נ Apples Collected: <span id="pacman-final-score">0</span></p>
         </div>
         <button class="btn btn-start" id="btn-pacman-continue" style="margin-top: 20px;">CONTINUE TO LEVEL 3</button>
     </div>
@@ -517,7 +517,7 @@ class SoundManager {
         switch(type) {
             case 'bounce': this.playTone('triangle', 250, 0.1, 0.2); break;
             case 'collect': this.playTone('sine', 1500, 0.1, 0.4); break;
-            case 'damage': this.playTone('sawtooth', 100, 0.3, 0.4); break;
+            case 'damage': this.playTone('sine', 200, 0.15, 0.2); break;
             case 'buff': this.playTone('square', 600, 0.2, 0.3); break; 
             case 'win': this.playWin(); break;
         }
@@ -545,17 +545,17 @@ const AssetFactory = {
     textures: {},
     init() {
         try {
-            this.textures['apple'] = this.createEmojiTexture('🍎');
-            this.textures['banana'] = this.createEmojiTexture('🍌');
-            this.textures['choco'] = this.createEmojiTexture('🍫');
+            this.textures['apple'] = this.createEmojiTexture('נ');
+            this.textures['banana'] = this.createEmojiTexture('נ');
+            this.textures['choco'] = this.createEmojiTexture('נ«');
             // Load rotten.gif as texture
             const loader = new THREE.TextureLoader();
             this.textures['rotten'] = loader.load('images/rotten.gif', undefined, undefined, (err) => {
                 console.warn('Could not load rotten.gif, using emoji fallback');
-            this.textures['rotten'] = this.createEmojiTexture('🤢'); 
+            this.textures['rotten'] = this.createEmojiTexture('נ₪¢'); 
             }); 
-            this.textures['diamond'] = this.createEmojiTexture('💎');
-            this.textures['cockroach'] = this.createEmojiTexture('🪳');
+            this.textures['diamond'] = this.createEmojiTexture('נ’');
+            this.textures['cockroach'] = this.createEmojiTexture('נ×³');
             this.texFloor = this.createFloorTexture();
             this.texStone = this.createStoneTexture();
             this.texPole = this.createPoleTexture();
@@ -723,7 +723,7 @@ async function displayLeaderboard() {
             return;
         }
         
-        const medals = ['🥇', '🥈', '🥉'];
+        const medals = ['נ¥‡', 'נ¥ˆ', 'נ¥‰'];
         listEl.innerHTML = leaderboard.slice(0, 20).map((entry, index) => {
             const rank = index + 1;
             const medal = rank <= 3 ? medals[rank - 1] : `${rank}.`;
@@ -1340,17 +1340,17 @@ class Game {
         updateText('level-indicator', levelTxt);
 
         let h = "";
-        for(let i=0;i<Math.min(5,this.lives);i++) h+="❤️";
+        for(let i=0;i<Math.min(5,this.lives);i++) h+="ג₪ן¸";
         updateText('hearts', h);
         
         let b = "";
         if(this.drillFloors > 0) {
             const drillPct = Math.max(0, Math.min(100, (this.drillTimer / 300) * 100));
-            b+="<span class='buff-drill'>💎DRILL</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-drill' style='width:"+drillPct+"%'></span></span> ";
+            b+="<span class='buff-drill'>נ’DRILL</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-drill' style='width:"+drillPct+"%'></span></span> ";
         }
         else if(this.fastTimer>0) {
             const fastPct = Math.max(0, Math.min(100, (this.fastTimer / 300) * 100));
-            b+="<span class='buff-fast'>⚡FAST</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-fast' style='width:"+fastPct+"%'></span></span> ";
+            b+="<span class='buff-fast'>ג¡FAST</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-fast' style='width:"+fastPct+"%'></span></span> ";
         }
         else if(this.slowTimer>0) {
             const slowPct = Math.max(0, Math.min(100, (this.slowTimer / 150) * 100));
@@ -1492,7 +1492,7 @@ class Game {
                         const r = 2; 
                         o.position.x = Math.cos(o.userData.angle) * r; 
                         o.position.z = Math.sin(o.userData.angle) * r; 
-                        // Face 90° to floor platform (perpendicular) - always face forward on floor plane
+                        // Face 90ֲ° to floor platform (perpendicular) - always face forward on floor plane
                         // Don't rotate on Y axis - keep facing forward (positive Z direction)
                         o.rotation.y = 0;
                         // Keep X and Z rotations at 0 so it stands upright on floor
@@ -1669,9 +1669,9 @@ class Game {
         const rawScore = (fruitPct * 0.4) + (timePct * 0.3) + (floorsPct * 0.3);
         const score1to10 = Math.max(1, Math.min(10, Math.floor(rawScore / 10) + 1));
         
-        // Emoji mapping: 10=🐉, 9=🦕, 8=🐊, 7=🦖, 6=🐍, 5=🦎, 4=🐸, 3=🐢, 2=🐛, 1=🐜
-        const emojiMap = {10: '🐉', 9: '🦕', 8: '🐊', 7: '🦖', 6: '🐍', 5: '🦎', 4: '🐸', 3: '🐢', 2: '🐛', 1: '🐜'};
-        const scoreEmoji = emojiMap[score1to10] || '🐜';
+        // Emoji mapping: 10=נ‰, 9=נ¦•, 8=נ, 7=נ¦–, 6=נ, 5=נ¦, 4=נ¸, 3=נ¢, 2=נ›, 1=נ
+        const emojiMap = {10: 'נ‰', 9: 'נ¦•', 8: 'נ', 7: 'נ¦–', 6: 'נ', 5: 'נ¦', 4: 'נ¸', 3: 'נ¢', 2: 'נ›', 1: 'נ'};
+        const scoreEmoji = emojiMap[score1to10] || 'נ';
         
         // Rating text
         let rating = "Good"; 
@@ -1936,7 +1936,7 @@ class Game {
             ctx.textBaseline = "middle";
             gameState.apples.forEach(apple => {
                 if(!apple.collected) {
-                    ctx.fillText("🍎", apple.x, apple.y);
+                    ctx.fillText("נ", apple.x, apple.y);
                 }
             });
             
