@@ -218,7 +218,7 @@
 </div>
 
 <div id="start-screen" class="overlay">
-    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.1.0</div>
+    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.1.1</div>
     <div id="loading-container" style="display: none;">
         <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
         <div style="width: 300px; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
@@ -784,9 +784,7 @@ class Game {
         this.fastTimer = 0; this.slowTimer = 0; this.invincible = 0; this.drillFloors = 0;
         this.hasCockroachDebuff = false; // Track cockroach debuff
         this.drillColorTime = 0; // For colorful drill effect
-        this.isTransitioningToTop = false; // For smooth transition after timeout
         this.timeUpEffect = false; // Time up effect flag
-        this.transitionTargetY = 2; // Target Y position for transition
         this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0, cockroach: 0 }; 
         this.totalItems = 0; this.levelCollected = 0; this.previousLevelsScore = 0; this.currentLevelMaxDepth = 0;
         
@@ -1026,7 +1024,7 @@ class Game {
         if(this.level === 1) grad = "linear-gradient(to bottom, #87CEEB, #E0F7FA)";
         else if(this.level === 2) grad = "linear-gradient(to bottom, #2c3e50, #000000)"; 
         else if(this.level === 3) grad = "linear-gradient(to bottom, #134E5E, #71B280)";
-        else if(this.level === 4) grad = "linear-gradient(to bottom, #800000, #200122)";
+        else if(this.level === 4) grad = "linear-gradient(to bottom, #cc4444, #400044)";
         else grad = "linear-gradient(to bottom, #ECE9E6, #FFFFFF)";
         // Dramatically reduce black overlay - much lighter
         const overlayGradient = (this.level === 4) ? "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%)" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 29%, rgba(0, 0, 0, 0.1) 100%)";
@@ -1099,13 +1097,13 @@ class Game {
         if(this.level===1) palette=[0x00d2d3,0x54a0ff,0x5f27cd]; 
         else if(this.level===3) palette=[0xbadc58,0x6ab04c,0xf6e58d]; 
         else if(this.level===5) palette=[0xFFFFFF, 0xEEEEEE, 0xDDDDDD]; 
+        else if(this.level === 4) palette=[0xcc6666, 0xaa4444, 0x884444]; // Level 4: Lighter, more distinct colors
         else palette=[0x555555, 0x333333];
         
         const core = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,200,32), new THREE.MeshBasicMaterial({color: isBoss?0x888:0xddd}));
         core.receiveShadow = true;
-        core.receiveShadow = true;
-        core.position.y = -80; if(hidePole) core.visible = false; 
-        core.receiveShadow = true;
+        core.castShadow = true;
+        core.position.y = -80; if(hidePole) core.visible = false;
         this.tower.add(core);
         
         const alignedGapIndex = Math.floor(Math.random() * 12);
@@ -1126,7 +1124,7 @@ class Game {
                 const isDanger = (j===danger);
                 const shape = new THREE.Shape(); const a = Math.PI*2/12;
                 shape.absarc(0,0, 1.6, j*a, (j+1)*a, false); shape.absarc(0,0, 2.5, (j+1)*a, j*a, true);
-                const geo = new THREE.ExtrudeGeometry(shape, {depth:0.4, bevelEnabled:true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 3}); 
+                const geo = new THREE.ExtrudeGeometry(shape, {depth:0.28, bevelEnabled:true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 3}); 
                 geo.rotateX(-Math.PI/2);
                 const mat = new THREE.MeshBasicMaterial({ color: isDanger ? dangerColor : col, transparent: isFinal, opacity: isFinal ? 0.9 : 1.0 });
                 const m = new THREE.Mesh(geo, mat);
@@ -1176,7 +1174,14 @@ class Game {
         const mat = new THREE.SpriteMaterial({ map: tex || null, color: tex ? 0xffffff : 0xff0000 });
         const sprite = new THREE.Sprite(mat); sprite.scale.set(0.6, 0.6, 1);
         if(type==='banana') sprite.scale.set(0.7, 0.7, 1); if(type==='chocolate') sprite.scale.set(0.7, 0.7, 1);
-        grp.add(sprite); grp.userData = { type: type }; parent.add(grp); this.interactables.push(grp);
+        // Add shadow-casting mesh for fruits (sprites don't cast shadows in Three.js)
+        const shadowCasterGeo = new THREE.SphereGeometry(0.25, 8, 8);
+        const shadowCasterMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.01 });
+        const shadowCaster = new THREE.Mesh(shadowCasterGeo, shadowCasterMat);
+        shadowCaster.castShadow = true;
+        shadowCaster.receiveShadow = false;
+        shadowCaster.visible = false; // Invisible but casts shadow
+        grp.add(sprite, shadowCaster); grp.userData = { type: type }; parent.add(grp); this.interactables.push(grp);
         if(type !== 'rotten' && type !== 'cockroach') this.totalItems++;
     }
     
@@ -1319,8 +1324,6 @@ class Game {
         this.timeUpEffect = false; // Reset time up effect
         this.hasCockroachDebuff = false; // Reset cockroach debuff
         this.drillColorTime = 0; // Reset drill color animation
-        this.isTransitioningToTop = false; // Reset transition flag
-        this.transitionTargetY = 2; // Reset transition target
         this.lastTime = Date.now(); 
         
         this.ballMat.color.setHex(0xFF9966);
@@ -1452,26 +1455,7 @@ class Game {
                 if(this.slowTimer>0) { grav = 0.005; jump = 0.25; } 
             }
             
-            // Smooth transition to top after timeout
-            if(this.isTransitioningToTop) {
-                const currentY = this.ballWrap.position.y;
-                const distance = this.transitionTargetY - currentY;
-                const transitionSpeed = 0.15; // Smooth transition speed
-                
-                if(Math.abs(distance) > 0.1) {
-                    // Smoothly move towards target
-                    this.ballWrap.position.y += distance * transitionSpeed;
-                    this.velocity = 0; // Stop physics during transition
-                } else {
-                    // Transition complete - finish the restart
-                    this.ballWrap.position.y = this.transitionTargetY;
-                    this.velocity = 0;
-                    this.isTransitioningToTop = false;
-                    this.restart(false);
-                }
-            } else {
             this.velocity -= grav; if(this.velocity < -0.8) this.velocity = -0.8; this.ballWrap.position.y += this.velocity;
-            }
             
             if(this.ballWrap.position.y > this.highestY) this.highestY = this.ballWrap.position.y;
 
