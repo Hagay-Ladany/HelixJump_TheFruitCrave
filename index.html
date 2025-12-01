@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -59,6 +59,7 @@
             height: 100%;
             padding-bottom: 5vh;
             width: 100%;
+            gap: 10px;
         }
         #start-screen { 
             background-color: #2c3e50; 
@@ -159,9 +160,9 @@
         .bar-track { flex-grow: 1; height: 6px; background: rgba(0,0,0,0.5); margin: 0 10px; border-radius: 4px; overflow: hidden; }
         .bar-fill { height: 100%; width: 0%; transition: width 1s ease-out; }
 
-        button.btn { background: #ff4757; color: white; border: none; padding: clamp(12px, 2vh, 20px) clamp(40px, 8vw, 60px); font-size: clamp(1.2rem, 4vw, 1.8rem); border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4); transition: transform 0.1s; margin: 10px auto; flex-shrink: 0; min-height: 44px; display: block; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        button.btn { background: rgba(255, 71, 87, 0.8); color: white; border: none; padding: clamp(9.6px, 1.6vh, 16px) clamp(32px, 6.4vw, 48px); font-size: clamp(0.96rem, 3.2vw, 1.44rem); border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 71, 87, 0.32); transition: transform 0.1s; margin: 8px auto; flex-shrink: 0; min-height: 35.2px; display: block; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
         button.btn:active { transform: scale(0.95); }
-        button.btn-start { background: #2ed573; box-shadow: 0 5px 15px rgba(46, 213, 115, 0.4); }
+        button.btn-start { background: rgba(46, 213, 115, 0.8); box-shadow: 0 5px 15px rgba(46, 213, 115, 0.32); }
         
         .tutorial { position: absolute; bottom: 30px; right: 30px; text-align: right; color: rgba(255,255,255,0.3); font-size: 1rem; font-weight: bold; pointer-events: none; }
     </style>
@@ -197,20 +198,20 @@
         <div id="level-info">
             <h2 id="level-indicator">LEVEL 1</h2>
             <div id="timer-display">00:00</div>
-            <div id="hearts">ג₪ן¸ג₪ן¸ג₪ן¸</div>
+            <div id="hearts">❤️❤️❤️</div>
             <div id="buffs-display"></div>
         </div>
         <div id="item-counters">
-            <div class="counter-item">נ <span id="c-apple">0</span></div>
-            <div class="counter-item">נ <span id="c-banana">0</span></div>
-            <div class="counter-item">נ« <span id="c-choco">0</span></div>
+            <div class="counter-item">🍎 <span id="c-apple">0</span></div>
+            <div class="counter-item">🍌 <span id="c-banana">0</span></div>
+            <div class="counter-item">🍫 <span id="c-choco">0</span></div>
         </div>
     </div>
     <div id="score-board">0</div>
     
     <div class="audio-controls">
-        <button id="music-btn" class="audio-icon">נµ</button>
-        <button id="audio-btn" class="audio-icon">נ”</button>
+        <button id="music-btn" class="audio-icon">🎵</button>
+        <button id="audio-btn" class="audio-icon">🔊</button>
     </div>
     
     <div class="tutorial">DRAG TO ROTATE</div>
@@ -219,6 +220,7 @@
 <div id="start-screen" class="overlay">
     <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.1.0</div>
     <div id="loading-container" style="display: none;">
+        <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
         <div style="width: 300px; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
             <div id="loading-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #2ed573, #00ffff); transition: width 0.3s ease;"></div>
         </div>
@@ -226,14 +228,14 @@
     </div>
     <div id="start-content">
         <button class="btn btn-start" id="btn-start">TAP TO START</button>
-        <button class="btn" id="btn-start-leaderboard" style="margin-top: 10px; background: #5352ed;">נ† LEADERBOARD</button>
-        <button class="btn" id="btn-help" style="margin-top: 10px; background: #5352ed;">ג“ HELP</button>
+        <button class="btn" id="btn-start-leaderboard" style="background: rgba(83, 82, 237, 0.8);">🏆 LEADERBOARD</button>
+        <button class="btn" id="btn-help" style="background: rgba(83, 82, 237, 0.8);">❓ HELP</button>
     </div>
 </div>
 
 <div id="game-over-screen" class="overlay hidden">
     <h1>GAME OVER</h1>
-    <div class="big-emoji animate-pulse">נ˜­</div>
+    <div class="big-emoji animate-pulse">😭</div>
     <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
         <p id="fail-reason" style="color:#ff4444; font-weight:bold;">SMASHED!</p>
         <div class="stat-row animate-pop" style="animation-delay: 0.1s;"><span class="stat-label">Score:</span><span class="stat-val" id="go-score">0</span></div>
@@ -243,50 +245,49 @@
 </div>
 
 <div id="level-complete-screen" class="overlay hidden" style="padding: 10px; box-sizing: border-box; justify-content: center; align-items: center;">
-    <div class="big-emoji animate-pulse" id="win-emoji" style="font-size: clamp(3rem, 8vw, 6rem); margin: 5px 0; text-align: center; flex-shrink: 0;">נ‰</div>
     <div class="stat-box" style="max-height: 50vh; overflow-y: auto; -webkit-overflow-scrolling: touch; flex-shrink: 0;">
         <div class="stat-row animate-pop" style="animation-delay: 0.1s;">
-            <span class="stat-label">נ Apples:</span>
+            <span class="stat-label">🍎 Apples:</span>
             <span class="stat-val" id="win-apples">0</span>
     </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.15s;">
-            <span class="stat-label">נ Bananas:</span>
+            <span class="stat-label">🍌 Bananas:</span>
             <span class="stat-val" id="win-bananas">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.2s;">
-            <span class="stat-label">נ« Chocolate:</span>
+            <span class="stat-label">🍫 Chocolate:</span>
             <span class="stat-val" id="win-choco">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.22s;">
-            <span class="stat-label">נ’ Diamonds:</span>
+            <span class="stat-label">💎 Diamonds:</span>
             <span class="stat-val" id="win-diamonds">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.24s;">
-            <span class="stat-label">נ×³ Cockroaches:</span>
+            <span class="stat-label">🪳 Cockroaches:</span>
             <span class="stat-val" id="win-cockroaches">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.26s;">
-            <span class="stat-label">נ₪¢ Rotten:</span>
+            <span class="stat-label">🤢 Rotten:</span>
             <span class="stat-val" id="win-rotten">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.28s;">
-            <span class="stat-label">נ¢ Floors:</span>
+            <span class="stat-label">🏢 Floors:</span>
             <span class="stat-val" id="win-floors">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.3s;">
-            <span class="stat-label">ג±ן¸ Time:</span>
+            <span class="stat-label">⏱️ Time:</span>
             <div class="bar-track"><div class="bar-fill" id="bar-time" style="background:#00ffff"></div></div>
             <span class="stat-val" id="win-time">00:00</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.35s;">
-            <span class="stat-label">ג­ Rating:</span>
+            <span class="stat-label">⭐ Rating:</span>
             <div class="bar-track"><div class="bar-fill" id="bar-rating" style="background:#ff4757"></div></div>
             <span class="stat-val" id="win-rating">Good</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.38s;">
             <span class="stat-label" style="font-size: 1.1rem;">Score:</span>
             <div class="bar-track" style="height: 12px;"><div class="bar-fill" id="bar-score" style="background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573, #00ffff);"></div></div>
-            <span class="stat-val" id="win-score-emoji" style="font-size: 1.5rem;">נ‰</span>
+            <span class="stat-val" id="win-score-emoji" style="font-size: 1.5rem;">🐉</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.4s; border-bottom: none; padding-bottom: 0; text-align: center;">
             <span class="stat-val" id="win-score" style="font-size: 1.5rem; width: 100%;">10/10</span>
@@ -294,9 +295,10 @@
     </div>
     <div class="big-emoji animate-pulse" id="win-emoji" style="font-size: clamp(3rem, 8vw, 6rem); margin: 10px 0 5px 0; text-align: center; flex-shrink: 0;">🎉</div>
     <button class="btn btn-start" id="btn-next" style="margin-top: 10px; margin-bottom: 10px; position: relative; z-index: 21; flex-shrink: 0;">NEXT LEVEL</button>
+</div>
 
 <div id="leaderboard-screen" class="overlay hidden">
-    <h1>נ† TOP SCORES</h1>
+    <h1>🏆 TOP SCORES</h1>
     <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch; width: clamp(300px, 90vw, 500px);">
         <div id="leaderboard-list" style="text-align: left;">
             <p style="text-align: center; color: rgba(255,255,255,0.7);">No scores yet. Be the first!</p>
@@ -314,23 +316,22 @@
     </div>
     <button class="btn btn-start" id="btn-save-score" style="margin-top: 20px;">SAVE SCORE</button>
     <button class="btn" id="btn-skip-name" style="margin-top: 10px; background: #5352ed;">SKIP</button>
-    <button class="btn btn-start" id="btn-restart-after-name" style="margin-top: 10px; background: #ff4757;">RESTART GAME</button>
 </div>
 
 <div id="help-screen" class="overlay hidden">
-    <h1>ג“ HELP</h1>
+    <h1>❓ HELP</h1>
     <div class="stat-box" style="max-height: 70vh; overflow-y: auto; -webkit-overflow-scrolling: touch; width: clamp(300px, 90vw, 500px);">
         <div style="text-align: left; font-size: 0.9rem; line-height: 1.8;">
             <h3 style="margin-top: 0; margin-bottom: 10px; text-align: center;">GAME ELEMENTS</h3>
-            <p><strong>נ Apple</strong> - Restores 1 life</p>
-            <p><strong>נ Banana</strong> - Increases speed & jump</p>
-            <p><strong>נ« Chocolate</strong> - Adds 5 seconds to timer</p>
-            <p><strong>נ’ Diamond</strong> - Drills through floors</p>
-            <p><strong>נ×³ Cockroach</strong> - Reduces jump & speed</p>
-            <p><strong>נ₪¢ Rotten</strong> - Slows you down</p>
-            <p style="margin-top: 15px; margin-bottom: 5px;"><strong>ג ן¸ DANGERS:</strong></p>
-            <p><strong>נ‘» Ghosts</strong> - Avoid or use drill!</p>
-            <p><strong>נ¦‡ Bats</strong> - Fly at upper floors</p>
+            <p><strong>🍎 Apple</strong> - Restores 1 life</p>
+            <p><strong>🍌 Banana</strong> - Increases speed & jump</p>
+            <p><strong>🍫 Chocolate</strong> - Adds 5 seconds to timer</p>
+            <p><strong>💎 Diamond</strong> - Drills through floors</p>
+            <p><strong>🪳 Cockroach</strong> - Reduces jump & speed</p>
+            <p><strong>🤢 Rotten</strong> - Slows you down</p>
+            <p style="margin-top: 15px; margin-bottom: 5px;"><strong>⚠️ DANGERS:</strong></p>
+            <p><strong>👻 Ghosts</strong> - Avoid or use drill!</p>
+            <p><strong>🦇 Bats</strong> - Fly at upper floors</p>
             <p style="margin-top: 15px; color:#ff4500; font-weight:bold;">Level 5: THE END</p>
             <p style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); text-align: center; font-size: 0.85rem; color: rgba(255,255,255,0.7);">Game made by <strong>Hagay Ladany</strong></p>
         </div>
@@ -341,13 +342,13 @@
 <div id="pacman-minigame-screen" class="overlay hidden">
     <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: white; font-size: 2rem; font-weight: bold; text-shadow: 2px 2px 0 #000; z-index: 25;">
         <div>Time: <span id="pacman-timer">15</span>s</div>
-        <div style="font-size: 1.5rem; margin-top: 10px;">נ Collected: <span id="pacman-score">0</span></div>
+        <div style="font-size: 1.5rem; margin-top: 10px;">🍎 Collected: <span id="pacman-score">0</span></div>
     </div>
     <canvas id="pacman-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
     <div id="pacman-result" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 30;">
         <h1 style="color: white; font-size: 3rem; margin-bottom: 20px;">MINI-GAME COMPLETE!</h1>
         <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
-            <p style="font-size: 1.5rem; margin-bottom: 10px;">נ Apples Collected: <span id="pacman-final-score">0</span></p>
+            <p style="font-size: 1.5rem; margin-bottom: 10px;">🍎 Apples Collected: <span id="pacman-final-score">0</span></p>
         </div>
         <button class="btn btn-start" id="btn-pacman-continue" style="margin-top: 20px;">CONTINUE TO LEVEL 3</button>
     </div>
@@ -545,17 +546,17 @@ const AssetFactory = {
     textures: {},
     init() {
         try {
-            this.textures['apple'] = this.createEmojiTexture('נ');
-            this.textures['banana'] = this.createEmojiTexture('נ');
-            this.textures['choco'] = this.createEmojiTexture('נ«');
+            this.textures['apple'] = this.createEmojiTexture('🍎');
+            this.textures['banana'] = this.createEmojiTexture('🍌');
+            this.textures['choco'] = this.createEmojiTexture('🍫');
             // Load rotten.gif as texture
             const loader = new THREE.TextureLoader();
             this.textures['rotten'] = loader.load('images/rotten.gif', undefined, undefined, (err) => {
                 console.warn('Could not load rotten.gif, using emoji fallback');
-            this.textures['rotten'] = this.createEmojiTexture('נ₪¢'); 
+            this.textures['rotten'] = this.createEmojiTexture('🤢'); 
             }); 
-            this.textures['diamond'] = this.createEmojiTexture('נ’');
-            this.textures['cockroach'] = this.createEmojiTexture('נ×³');
+            this.textures['diamond'] = this.createEmojiTexture('💎');
+            this.textures['cockroach'] = this.createEmojiTexture('🪳');
             this.texFloor = this.createFloorTexture();
             this.texStone = this.createStoneTexture();
             this.texPole = this.createPoleTexture();
@@ -723,7 +724,7 @@ async function displayLeaderboard() {
             return;
         }
         
-        const medals = ['נ¥‡', 'נ¥ˆ', 'נ¥‰'];
+        const medals = ['🥇', '🥈', '🥉'];
         listEl.innerHTML = leaderboard.slice(0, 20).map((entry, index) => {
             const rank = index + 1;
             const medal = rank <= 3 ? medals[rank - 1] : `${rank}.`;
@@ -784,8 +785,9 @@ class Game {
         this.hasCockroachDebuff = false; // Track cockroach debuff
         this.drillColorTime = 0; // For colorful drill effect
         this.isTransitioningToTop = false; // For smooth transition after timeout
-        this.transitionTargetY = 2; // Target Y position for transition
         this.timeUpEffect = false; // Time up effect flag
+        this.transitionTargetY = 2; // Target Y position for transition
+        this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0, cockroach: 0 }; 
         this.totalItems = 0; this.levelCollected = 0; this.previousLevelsScore = 0; this.currentLevelMaxDepth = 0;
         
         if (typeof THREE !== 'undefined') this.raycaster = new THREE.Raycaster();
@@ -837,9 +839,12 @@ class Game {
             
             try {
                 await saveToLeaderboard(name, score, level);
-                document.getElementById('name-input-screen').classList.add('hidden');
-                await displayLeaderboard();
-                document.getElementById('leaderboard-screen').classList.remove('hidden');
+                btn.innerText = 'SAVED!';
+                setTimeout(async () => {
+                    document.getElementById('name-input-screen').classList.add('hidden');
+                    await displayLeaderboard();
+                    document.getElementById('leaderboard-screen').classList.remove('hidden');
+                }, 1000);
             } catch (error) {
                 console.error('Error saving score:', error);
                 btn.innerText = 'ERROR - TRY AGAIN';
@@ -851,6 +856,7 @@ class Game {
         };
         document.getElementById('btn-skip-name').onclick = () => {
             document.getElementById('name-input-screen').classList.add('hidden');
+            this.restart(true);
         };
         
         // Level logic: goto next or loop at 6
@@ -1024,33 +1030,54 @@ class Game {
         else grad = "linear-gradient(to bottom, #ECE9E6, #FFFFFF)";
         // Dramatically reduce black overlay - much lighter
         const overlayGradient = (this.level === 4) ? "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%)" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 29%, rgba(0, 0, 0, 0.1) 100%)";
-        // Use getBackgroundImage helper which handles webp with jpg fallback
-        let texture = getBackgroundImage(this.level);
-        
-        // For level 4, test if webp exists and fallback to jpg if not (levels 1-3 and 5 use GIF)
-        if (this.level === 4 && webpSupported) {
-            const testImg = new Image();
+        // Preload background image before setting it
+        const preloadBackground = (callback) => {
+            let texture = getBackgroundImage(this.level);
             const levelNum = this.level;
-            testImg.onerror = function() {
-                // Webp doesn't exist, use jpg
-                texture = `url("images/bg_level_${levelNum}.jpg")`;
-                document.body.style.backgroundImage = `${overlayGradient}, ${grad}, ${texture}`;
-            };
-            testImg.onload = function() {
-                // Webp exists, use it
-                texture = `url("images/bg_level_${levelNum}.webp")`;
-                document.body.style.backgroundImage = `${overlayGradient}, ${grad}, ${texture}`;
-            };
-            testImg.src = `images/bg_level_${this.level}.webp`;
-        }
+            
+            // For level 4, test if webp exists and fallback to jpg if not (levels 1-3 and 5 use GIF)
+            if (this.level === 4 && webpSupported) {
+                const testImg = new Image();
+                testImg.onerror = function() {
+                    // Webp doesn't exist, use jpg
+                    texture = `url("images/bg_level_${levelNum}.jpg")`;
+                    const bgImg = new Image();
+                    bgImg.onload = () => callback(texture);
+                    bgImg.onerror = () => callback(texture); // Use anyway if load fails
+                    bgImg.src = `images/bg_level_${levelNum}.jpg`;
+                };
+                testImg.onload = function() {
+                    // Webp exists, use it
+                    texture = `url("images/bg_level_${levelNum}.webp")`;
+                    const bgImg = new Image();
+                    bgImg.onload = () => callback(texture);
+                    bgImg.onerror = () => callback(texture);
+                    bgImg.src = `images/bg_level_${levelNum}.webp`;
+                };
+                testImg.src = `images/bg_level_${this.level}.webp`;
+            } else {
+                // For other levels, preload the image
+                const bgImg = new Image();
+                bgImg.onload = () => callback(texture);
+                bgImg.onerror = () => callback(texture);
+                if (this.level === 1 || this.level === 2 || this.level === 3 || this.level === 5) {
+                    bgImg.src = `images/bg_level_${levelNum}.gif`;
+                } else {
+                    bgImg.src = `images/bg_level_${levelNum}.jpg`;
+                }
+            }
+        };
         
-        document.body.style.backgroundImage = `${overlayGradient}, ${grad}, ${texture}`;
-        document.body.style.backgroundRepeat = "no-repeat, no-repeat, repeat";
-        // Level 5: reduce background pattern size by 50%
-        const patternSize = (this.level === 5) ? "15%" : "30%";
-        document.body.style.backgroundSize = `cover, cover, ${patternSize}`;
-        document.body.style.backgroundBlendMode = "normal, multiply, normal";
-        document.body.style.height = "100%";
+        // Preload background, then set it and properties
+        preloadBackground((texture) => {
+            document.body.style.backgroundImage = `${overlayGradient}, ${grad}, ${texture}`;
+            document.body.style.backgroundRepeat = "no-repeat, no-repeat, repeat";
+            // Level 5: reduce background pattern size by 50%
+            const patternSize = (this.level === 5) ? "15%" : "30%";
+            document.body.style.backgroundSize = `cover, cover, ${patternSize}`;
+            document.body.style.backgroundBlendMode = "normal, multiply, normal";
+            document.body.style.height = "100%";
+        });
         
         let fogCol = 0x000000;
         if(this.level === 1) fogCol = 0x88CCFF;
@@ -1066,7 +1093,6 @@ class Game {
         const isFinal = this.level === 5; 
         
         const floors = isFinal ? 50 : (isBoss ? 20 : (this.level===1 ? 25 : 40));
-
         const hidePole = (this.level === 5 || this.level === 4); // Hide pole for level 4 and 5
         
         let palette;
@@ -1075,7 +1101,7 @@ class Game {
         else if(this.level===5) palette=[0xFFFFFF, 0xEEEEEE, 0xDDDDDD]; 
         else palette=[0x555555, 0x333333];
         
-        const core = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,200,32), new THREE.MeshBasicMaterial({map: isBoss?AssetFactory.texStone:AssetFactory.texPole, color: isBoss?0x888:0xddd}));
+        const core = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,200,32), new THREE.MeshBasicMaterial({color: isBoss?0x888:0xddd}));
         core.receiveShadow = true;
         core.receiveShadow = true;
         core.position.y = -80; if(hidePole) core.visible = false; 
@@ -1105,7 +1131,7 @@ class Game {
                 const mat = new THREE.MeshBasicMaterial({ color: isDanger ? dangerColor : col, transparent: isFinal, opacity: isFinal ? 0.9 : 1.0 });
                 const m = new THREE.Mesh(geo, mat);
                 m.receiveShadow = true;
-                m.castShadow = true;
+                m.castShadow = true; 
                 m.userData = { type: isDanger?'danger':'safe', color: isDanger?dangerColor:new THREE.Color(col).getHex() };
                 this.physicsMeshes.push(m); grp.add(m);
                 if(!isDanger && !isBoss && i>0 && i<floors-1 && Math.random()<0.1) this.spawnItem(grp, Math.cos(j*a+a/2)*2, Math.sin(j*a+a/2)*2);
@@ -1290,8 +1316,9 @@ class Game {
         
         this.ballWrap.position.y = 2; this.velocity = 0;
         this.fastTimer = 0; this.slowTimer = 0; this.invincible = 0; this.drillFloors = 0; this.drillTimer = 0;
-        this.fastTimer = 0; this.slowTimer = 0; this.invincible = 0; this.drillFloors = 0; this.drillTimer = 0;
         this.timeUpEffect = false; // Reset time up effect
+        this.hasCockroachDebuff = false; // Reset cockroach debuff
+        this.drillColorTime = 0; // Reset drill color animation
         this.isTransitioningToTop = false; // Reset transition flag
         this.transitionTargetY = 2; // Reset transition target
         this.lastTime = Date.now(); 
@@ -1340,17 +1367,17 @@ class Game {
         updateText('level-indicator', levelTxt);
 
         let h = "";
-        for(let i=0;i<Math.min(5,this.lives);i++) h+="ג₪ן¸";
+        for(let i=0;i<Math.min(5,this.lives);i++) h+="❤️";
         updateText('hearts', h);
         
         let b = "";
         if(this.drillFloors > 0) {
             const drillPct = Math.max(0, Math.min(100, (this.drillTimer / 300) * 100));
-            b+="<span class='buff-drill'>נ’DRILL</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-drill' style='width:"+drillPct+"%'></span></span> ";
+            b+="<span class='buff-drill'>💎DRILL</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-drill' style='width:"+drillPct+"%'></span></span> ";
         }
         else if(this.fastTimer>0) {
             const fastPct = Math.max(0, Math.min(100, (this.fastTimer / 300) * 100));
-            b+="<span class='buff-fast'>ג¡FAST</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-fast' style='width:"+fastPct+"%'></span></span> ";
+            b+="<span class='buff-fast'>⚡FAST</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-fast' style='width:"+fastPct+"%'></span></span> ";
         }
         else if(this.slowTimer>0) {
             const slowPct = Math.max(0, Math.min(100, (this.slowTimer / 150) * 100));
@@ -1364,13 +1391,8 @@ class Game {
     }
     
     handleTimeout() {
-        this.takeDamage(true);
-        if(this.lives > 0) {
-            // Start smooth transition to top instead of instant restart
-            this.isTransitioningToTop = true;
-            this.transitionTargetY = this.floors.length > 0 ? this.floors[0].position.y + 2 : 2;
-            // Don't call restart immediately - let the transition complete
-        }
+        // Instead of ending game, apply super rotten apple effect (very fast jumping up)
+        this.timeUpEffect = true; // Flag for time up effect - makes you jump up very fast
     }
 
     loop() {
@@ -1385,7 +1407,19 @@ class Game {
             
             this.particles.update();
             
-            if(this.invincible > 0) { this.invincible--; if(this.invincible === 0) { this.ballMat.color.setHex(0xFF9966); if(this.mouthMesh) this.mouthMesh.rotation.z = 3.14; } }
+            if(this.invincible > 0) { 
+                this.invincible--; 
+                // Blink effect during invincibility
+                if(this.invincible % 10 < 5) {
+                    this.ballMat.color.setHex(0xFF9966);
+                } else {
+                    this.ballMat.color.setHex(0xFF4444);
+                }
+                if(this.invincible === 0) { 
+                    this.ballMat.color.setHex(0xFF9966); 
+                    if(this.mouthMesh) this.mouthMesh.rotation.z = 3.14; 
+                } 
+            }
             if(this.fastTimer>0) this.fastTimer--; if(this.slowTimer>0) this.slowTimer--;
             if(this.drillTimer>0) { this.drillTimer--; if(this.drillTimer <= 0) { this.drillFloors = 0; this.drillColorTime = 0; this.ballMat.color.setHex(0xFF9966); } }
             
@@ -1404,12 +1438,19 @@ class Game {
             }
             
             let grav = this.gravity; let jump = this.jumpForce;
-            // Apply cockroach debuff if active
+            // Apply cockroach debuff if active - much slower
             if(this.hasCockroachDebuff) {
-                grav *= 0.7;
-                jump *= 0.7;
+                grav *= 0.2;
+                jump *= 0.2;
             }
-            if(this.drillFloors > 0) { grav = 0.03; } else { if(this.fastTimer>0) { grav *= 2.0; jump *= 1.4; } if(this.slowTimer>0) { grav = 0.005; jump = 0.25; } }
+            if(this.drillFloors > 0) { grav = 0.03; } else { 
+                if(this.timeUpEffect) { 
+                    // Super rotten effect: very fast jumping up (negative gravity, high jump)
+                    grav = -0.15; // Negative gravity pushes up
+                    jump = 0.8; // High jump force
+                } else if(this.fastTimer>0) { grav *= 2.0; jump *= 1.4; } 
+                if(this.slowTimer>0) { grav = 0.005; jump = 0.25; } 
+            }
             
             // Smooth transition to top after timeout
             if(this.isTransitioningToTop) {
@@ -1462,7 +1503,7 @@ class Game {
                                 this.velocity = jump; this.audio.playSFX('bounce'); this.currentScale.set(1.4, 0.6, 1.4);
                                 this.particles.spawn(this.ballWrap.position, u.color || 0xffffff);
                             } else if(u.type === 'danger' && this.drillFloors <= 0) {
-                                this.takeDamage(); this.velocity = jump;
+                                this.takeDamage();
                             } else if(u.type === 'finish') { this.levelComplete(); }
                          }
                     }
@@ -1492,7 +1533,7 @@ class Game {
                         const r = 2; 
                         o.position.x = Math.cos(o.userData.angle) * r; 
                         o.position.z = Math.sin(o.userData.angle) * r; 
-                        // Face 90ֲ° to floor platform (perpendicular) - always face forward on floor plane
+                        // Face 90° to floor platform (perpendicular) - always face forward on floor plane
                         // Don't rotate on Y axis - keep facing forward (positive Z direction)
                         o.rotation.y = 0;
                         // Keep X and Z rotations at 0 so it stands upright on floor
@@ -1584,7 +1625,7 @@ class Game {
                     }
                     else if(t==='diamond') { this.drillFloors = 3; this.drillTimer = 300; this.audio.playSFX('buff'); this.collected.diamond++; o.parent.remove(o); this.interactables.splice(i,1); }
                     else if(t==='chocolate') { this.timeLeft += 5; this.collected.choco++; this.audio.playSFX('collect'); o.parent.remove(o); this.interactables.splice(i,1); }
-                    else if(t==='ghost' || t==='white-ghost' || t==='bat') { if(this.drillFloors<=0) this.takeDamage(); else { o.parent.remove(o); this.interactables.splice(i,1); } }
+                    else if(t==='ghost' || t==='white-ghost' || t==='bat') { if(this.drillFloors<=0) { this.takeDamage(); } else { o.parent.remove(o); this.interactables.splice(i,1); } }
                 }
             }
             
@@ -1593,9 +1634,11 @@ class Game {
             this.score = this.previousLevelsScore + this.currentLevelMaxDepth;
             this.updateUI();
 
-            const ty = pos.y + 8; 
-            this.camera.position.y += (ty - this.camera.position.y) * 0.1;
-            this.camera.lookAt(0, this.camera.position.y - 8, 0);
+            // Camera focuses on current floor level, not ball position (prevents shaking)
+            const currentFloorY = Math.floor((pos.y - 2) / 4) * 4 + 2; // Snap to floor level
+            const ty = currentFloorY + 8; 
+            this.camera.position.y += (ty - this.camera.position.y) * 0.05; // Slower interpolation for stability
+            this.camera.lookAt(0, currentFloorY, 0); // Look at floor level, not ball
             
             // Character shadow is now rendered by Three.js shadow maps (no manual update needed)
 
@@ -1631,7 +1674,12 @@ class Game {
                 }, 2000);
             }
         } else {
-            this.audio.playSFX('damage'); if(!isTimeout) { this.velocity = this.jumpForce; this.invincible = 60; }
+            this.audio.playSFX('damage'); 
+            if(!isTimeout) { 
+                // Don't set velocity to jumpForce to prevent going up a floor
+                // Set invincible to 120 frames (2 seconds at 60fps)
+                this.invincible = 120; 
+            }
         }
     }
     
@@ -1669,9 +1717,9 @@ class Game {
         const rawScore = (fruitPct * 0.4) + (timePct * 0.3) + (floorsPct * 0.3);
         const score1to10 = Math.max(1, Math.min(10, Math.floor(rawScore / 10) + 1));
         
-        // Emoji mapping: 10=נ‰, 9=נ¦•, 8=נ, 7=נ¦–, 6=נ, 5=נ¦, 4=נ¸, 3=נ¢, 2=נ›, 1=נ
-        const emojiMap = {10: 'נ‰', 9: 'נ¦•', 8: 'נ', 7: 'נ¦–', 6: 'נ', 5: 'נ¦', 4: 'נ¸', 3: 'נ¢', 2: 'נ›', 1: 'נ'};
-        const scoreEmoji = emojiMap[score1to10] || 'נ';
+        // Emoji mapping: 10=🐉, 9=🦕, 8=🐊, 7=🦖, 6=🐍, 5=🦎, 4=🐸, 3=🐢, 2=🐛, 1=🐜
+        const emojiMap = {10: '🐉', 9: '🦕', 8: '🐊', 7: '🦖', 6: '🐍', 5: '🦎', 4: '🐸', 3: '🐢', 2: '🐛', 1: '🐜'};
+        const scoreEmoji = emojiMap[score1to10] || '🐜';
         
         // Rating text
         let rating = "Good"; 
@@ -1936,7 +1984,7 @@ class Game {
             ctx.textBaseline = "middle";
             gameState.apples.forEach(apple => {
                 if(!apple.collected) {
-                    ctx.fillText("נ", apple.x, apple.y);
+                    ctx.fillText("🍎", apple.x, apple.y);
                 }
             });
             
