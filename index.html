@@ -218,7 +218,7 @@
 </div>
 
 <div id="start-screen" class="overlay">
-    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.1.2</div>
+    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.1.3</div>
     <div id="loading-container" style="display: none;">
         <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
         <div style="width: 300px; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
@@ -794,9 +794,6 @@ class Game {
         
         // For Spiral Level
         this.highestY = 0;
-        
-        // Camera stability: Track the floor level the camera should focus on
-        this.cameraTargetFloorY = 0;
 
         document.getElementById('btn-retry').onclick = () => this.restart(true);
         
@@ -1323,7 +1320,6 @@ class Game {
         }
         
         this.ballWrap.position.y = 2; this.velocity = 0;
-        this.cameraTargetFloorY = 2; // Initialize camera to starting floor level
         this.fastTimer = 0; this.slowTimer = 0; this.invincible = 0; this.drillFloors = 0; this.drillTimer = 0;
         this.timeUpEffect = false; // Reset time up effect
         this.hasCockroachDebuff = false; // Reset cockroach debuff
@@ -1487,9 +1483,6 @@ class Game {
                          const u = hitsMain[0].object.userData.type ? hitsMain[0].object.userData : (hitsMain[0].object.parent ? hitsMain[0].object.parent.userData : {});
                          if(!['apple','banana','rotten','diamond','ghost','chocolate','white-ghost','bat','cockroach'].includes(u.type)) {
                             this.ballWrap.position.y = hitsMain[0].point.y + 0.4; 
-                            // Update camera target floor only when ball actually lands on a floor
-                            const landedFloorY = Math.floor((this.ballWrap.position.y - 2) / 4) * 4 + 2;
-                            this.cameraTargetFloorY = landedFloorY;
                             if(u.type === 'safe') {
                                 this.velocity = jump; this.audio.playSFX('bounce'); this.currentScale.set(1.4, 0.6, 1.4);
                                 this.particles.spawn(this.ballWrap.position, u.color || 0xffffff);
@@ -1625,16 +1618,23 @@ class Game {
             this.score = this.previousLevelsScore + this.currentLevelMaxDepth;
             this.updateUI();
 
-            // Camera focuses on stable floor level (only updates when ball lands, prevents wiggle)
-            // Only update camera target if ball has moved to a significantly different floor
-            const currentCalculatedFloorY = Math.floor((pos.y - 2) / 4) * 4 + 2;
-            // Update target only if ball has crossed to a new floor (difference > 2)
-            if(Math.abs(currentCalculatedFloorY - this.cameraTargetFloorY) > 2) {
-                this.cameraTargetFloorY = currentCalculatedFloorY;
-            }
-            const ty = this.cameraTargetFloorY + 8; 
-            this.camera.position.y += (ty - this.camera.position.y) * 0.05; // Smooth interpolation
-            this.camera.lookAt(0, this.cameraTargetFloorY, 0); // Look at stable floor level
+            // --- OPTIMIZED CAMERA CONTROL ---
+            const cameraFollowHeight = 12; // Camera stays this far above ball
+            const cameraLookAtHeight = 4; // Camera looks this far below ball
+            const cameraDamping = 0.15; // Lower = smoother, higher = more responsive
+            
+            // Calculate targets
+            const targetCameraY = this.ballWrap.position.y + cameraFollowHeight;
+            const targetLookAtY = this.ballWrap.position.y - cameraLookAtHeight;
+            
+            // Apply damping for smooth movement
+            this.camera.position.y += (targetCameraY - this.camera.position.y) * cameraDamping;
+            
+            // Look at point near the ball
+            this.camera.lookAt(0, targetLookAtY, 0);
+            
+            // Clamp camera Y to reasonable bounds
+            this.camera.position.y = Math.max(5, Math.min(100, this.camera.position.y));
             
             // Character shadow is now rendered by Three.js shadow maps (no manual update needed)
 
