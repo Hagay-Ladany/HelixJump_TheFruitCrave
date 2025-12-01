@@ -929,6 +929,40 @@ class Game {
         window.addEventListener('touchend', () => dragging=false);
         const onMove = (e) => { if(dragging && this.isPlaying && this.tower) { const x = getX(e); this.tower.rotation.y += (x - lastX) * 0.008; lastX = x; } }
         window.addEventListener('mousemove', onMove); window.addEventListener('touchmove', onMove);
+        
+        // Arrow key support for rotation
+        let arrowLeftPressed = false;
+        let arrowRightPressed = false;
+        window.addEventListener('keydown', (e) => {
+            if(!this.isPlaying || !this.tower) return;
+            if(e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                arrowLeftPressed = true;
+                e.preventDefault();
+            }
+            if(e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                arrowRightPressed = true;
+                e.preventDefault();
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            if(e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                arrowLeftPressed = false;
+            }
+            if(e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                arrowRightPressed = false;
+            }
+        });
+        
+        // Apply arrow key rotation in game loop
+        const originalLoop = this.loop.bind(this);
+        this.loop = () => {
+            if(this.isPlaying && this.tower) {
+                if(arrowLeftPressed) this.tower.rotation.y -= 0.05;
+                if(arrowRightPressed) this.tower.rotation.y += 0.05;
+            }
+            originalLoop();
+        };
+        
         window.addEventListener('resize', () => { this.camera.aspect = window.innerWidth/window.innerHeight; this.camera.updateProjectionMatrix(); this.renderer.setSize(window.innerWidth, window.innerHeight); });
         this.isPlaying = true; this.lastTime = Date.now(); this.loop();
     }
