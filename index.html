@@ -1,0 +1,2027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Helix Jump: Arcade Final</title>
+    <link rel="icon" type="image/x-icon" href="images/favicons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="96x96" href="images/favicons/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="images/favicons/favicon.svg">
+    <link rel="apple-touch-icon" href="images/favicons/apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+    <style>
+        body {
+            margin: 0; overflow: hidden; background-color: #222;
+            background-position: center; background-size: cover; background-repeat: no-repeat;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none; -webkit-user-select: none;
+            transition: background-image 0.5s ease-in-out;
+        }
+        #canvas-container { width: 100%; height: 100dvh; display: block; }
+        #ui-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
+        }
+        
+        /* HUD */
+        #top-bar { display: flex; justify-content: space-between; padding: 20px; width: 100%; box-sizing: border-box; pointer-events: none; }
+        #level-info { text-align: left; }
+        #level-indicator { font-size: 1.8rem; font-weight: 900; color: white; text-shadow: 2px 2px 0 #000; margin: 0; }
+        #timer-display { font-size: 1.5rem; color: #00ffff; font-family: monospace; font-weight: bold; text-shadow: 1px 1px 0 rgba(0,0,0,0.5); }
+        #hearts { font-size: 1.2rem; margin-top: 5px; letter-spacing: 1px; white-space: nowrap; }
+        #buffs-display { font-size: 1rem; font-weight: bold; margin-top: 5px; text-shadow: 1px 1px 0 #000; min-height: 1.2em; }
+        .buff-fast { color: #ffff00; } .buff-slow { color: #76ff03; font-style: italic; } .buff-drill { color: #00ffff; text-shadow: 0 0 5px cyan; }
+        .effect-bar-container { display: inline-block; margin-left: 10px; width: 80px; height: 6px; background: rgba(0,0,0,0.6); border-radius: 3px; overflow: hidden; vertical-align: middle; border: 1px solid rgba(255,255,255,0.2); }
+        .effect-bar-fill { height: 100%; transition: width 0.1s linear; box-shadow: 0 0 4px rgba(255,255,255,0.5); }
+        .effect-bar-fast { background: linear-gradient(90deg, #ffff00, #ffaa00); }
+        .effect-bar-slow { background: linear-gradient(90deg, #76ff03, #4caf50); }
+        .effect-bar-drill { background: linear-gradient(90deg, #00ffff, #0099ff); }
+        
+        #item-counters { background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 20px; backdrop-filter: blur(4px); display: flex; gap: 15px; height: fit-content; border: 1px solid rgba(255,255,255,0.2); }
+        .counter-item { font-size: 1.2rem; color: white; font-weight: bold; }
+        #score-board { position: absolute; top: 120px; width: 100%; text-align: center; font-size: 5rem; font-weight: 900; color: rgba(255,255,255,0.2); pointer-events: none; }
+
+        /* Audio Controls */
+        .audio-controls { position: absolute; bottom: 20px; left: 20px; display: flex; gap: 15px; z-index: 30; pointer-events: auto; }
+        .audio-icon { font-size: 32px; cursor: pointer; background: none; border: none; opacity: 0.8; color: white; text-shadow: 0 2px 4px black; transition: transform 0.1s; }
+        .audio-icon:active { transform: scale(0.9); }
+        .audio-off { opacity: 0.4; }
+
+        /* Overlays */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; pointer-events: auto; transition: opacity 0.3s; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        #leaderboard-screen { background-color: rgba(0,0,0,0.85) !important; } /* Remove transparency from leaderboard */
+        .overlay:not(.hidden) { display: flex !important; }
+        #start-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100%;
+            padding-bottom: 5vh;
+            width: 100%;
+        }
+        #start-screen { 
+            background-color: #2c3e50; 
+            background-position: center; 
+            background-size: cover; 
+            background-color: rgba(0,0,0,0.3);
+            background-repeat: no-repeat;
+        }
+        
+        /* Portrait orientation - will be updated by JavaScript based on webp support */
+        @media (orientation: portrait) {
+            #start-screen { 
+                background-image: url('images/archived/start_screen_portrait_original_size.jpg'); 
+            }
+            #start-content .stat-box {
+                margin-top: auto !important;
+                margin-bottom: 15vh !important;
+                backdrop-filter: none !important;
+                font-size: 0.85rem !important;
+            }
+            #start-content .stat-box h3 {
+                font-size: 1.1rem !important;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            }
+            #start-content .stat-box p {
+                text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            }
+            #start-content .btn-start {
+                margin-top: 2vh !important;
+                margin-bottom: 5vh !important;
+            }
+        }
+        
+        /* Landscape orientation - will be updated by JavaScript based on webp support */
+        @media (orientation: landscape) {
+            #start-screen { 
+                background-image: url('images/start_screen_Landscape.jpg'); 
+            }
+            #start-content .stat-box {
+                margin-top: auto !important;
+                margin-bottom: 10vh !important;
+                backdrop-filter: none !important;
+                font-size: 0.85rem !important;
+            }
+            #start-content .stat-box h3 {
+                font-size: 1.1rem !important;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            }
+            #start-content .stat-box p {
+                text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            }
+            #start-content .btn-start {
+                margin-top: 2vh !important;
+                margin-bottom: 3vh !important;
+            }
+        }
+        
+        /* Remove blur from start screen stat-box */
+        #start-content .stat-box {
+            backdrop-filter: none !important;
+        }
+        .hidden { display: none !important; }
+        h1 { color: white; font-size: 2rem; margin: 0 0 20px 0; text-transform: uppercase; text-shadow: none; font-weight: 900; letter-spacing: 2px; }
+        .big-emoji { font-size: 6rem; margin: 10px 0; }
+        
+        /* Animations */
+        @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2) rotate(5deg); } 100% { transform: scale(1); } }
+        .animate-pop { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 1 !important; }
+        
+        /* Leaderboard styles */
+        #leaderboard-list .leaderboard-item {
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid transparent;
+        }
+        #leaderboard-list .leaderboard-item:nth-child(1) { border-left-color: #ffd700; background: rgba(255,215,0,0.15); }
+        #leaderboard-list .leaderboard-item:nth-child(2) { border-left-color: #c0c0c0; background: rgba(192,192,192,0.15); }
+        #leaderboard-list .leaderboard-item:nth-child(3) { border-left-color: #cd7f32; background: rgba(205,127,50,0.15); }
+        .leaderboard-rank { font-size: 1.3rem; font-weight: bold; margin-right: 15px; min-width: 30px; }
+        .leaderboard-name { flex: 1; font-size: 1.1rem; font-weight: bold; }
+        .leaderboard-score { font-size: 1.2rem; font-weight: 900; color: #2ed573; }
+        .leaderboard-date { font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 3px; }
+        
+        input[type="text"]::placeholder { color: rgba(255,255,255,0.5); }
+        input[type="text"]:focus { outline: none; border-color: #2ed573; background: rgba(255,255,255,0.15); }
+        .animate-pulse { animation: pulse 1s infinite; }
+
+        .stat-box { background: rgba(255,255,255,0.15); padding: 20px; border-radius: 10px; width: clamp(280px, 90vw, 350px); max-width: 90vw; margin: 20px auto; flex-shrink: 0; text-align: center; color: white; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); flex-shrink: 0; }
+        .stat-row { display: flex; align-items: center; justify-content: space-between; margin: 8px 0; font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; color: white; }
+        .stat-label { width: auto; min-width: 120px; text-align: left; font-size: 0.9rem; opacity: 0.8; color: white; display: flex; align-items: center; gap: 5px; }
+        .stat-val { width: 50px; text-align: right; font-weight: bold; color: white; flex-shrink: 0; }
+        .bar-track { flex-grow: 1; height: 6px; background: rgba(0,0,0,0.5); margin: 0 10px; border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; width: 0%; transition: width 1s ease-out; }
+
+        button.btn { background: #ff4757; color: white; border: none; padding: clamp(12px, 2vh, 20px) clamp(40px, 8vw, 60px); font-size: clamp(1.2rem, 4vw, 1.8rem); border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4); transition: transform 0.1s; margin: 10px auto; flex-shrink: 0; min-height: 44px; display: block; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        button.btn:active { transform: scale(0.95); }
+        button.btn-start { background: #2ed573; box-shadow: 0 5px 15px rgba(46, 213, 115, 0.4); }
+        
+        .tutorial { position: absolute; bottom: 30px; right: 30px; text-align: right; color: rgba(255,255,255,0.3); font-size: 1rem; font-weight: bold; pointer-events: none; }
+    </style>
+    
+    <script src="js/three.min.js"></script>
+    
+    <script>
+        //leaderboard script url
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN5YBoT3NCYuK9cQYpvldH6VnhJKr5hSkQNEJNlfIbqWkSlUQ8B-vOKsnHVy5v6u6r4A/exec';
+        //audio engine ready
+        var Module = {
+            onRuntimeInitialized: function() {
+                console.log("Audio Engine Ready.");
+                window.libopenmpt = Module; // Force global availability
+            }
+        };
+    </script>
+    
+    <script src="chiptune2/libopenmpt.js"></script>
+    <script>
+        // BRIDGE SCRIPT: Ensure 'libopenmpt' is defined before Chiptune2 loads
+        if (typeof libopenmpt === 'undefined' && typeof Module !== 'undefined') {
+            window.libopenmpt = Module;
+        }
+    </script>
+    <script src="chiptune2/chiptune2.js"></script>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+<div id="ui-layer">
+    <div id="top-bar">
+        <div id="level-info">
+            <h2 id="level-indicator">LEVEL 1</h2>
+            <div id="timer-display">00:00</div>
+            <div id="hearts">❤️❤️❤️</div>
+            <div id="buffs-display"></div>
+        </div>
+        <div id="item-counters">
+            <div class="counter-item">🍎 <span id="c-apple">0</span></div>
+            <div class="counter-item">🍌 <span id="c-banana">0</span></div>
+            <div class="counter-item">🍫 <span id="c-choco">0</span></div>
+        </div>
+    </div>
+    <div id="score-board">0</div>
+    
+    <div class="audio-controls">
+        <button id="music-btn" class="audio-icon">🎵</button>
+        <button id="audio-btn" class="audio-icon">🔊</button>
+    </div>
+    
+    <div class="tutorial">DRAG TO ROTATE</div>
+</div>
+
+<div id="start-screen" class="overlay">
+    <div id="loading-container" style="display: none;">
+        <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
+        <div style="width: 300px; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
+            <div id="loading-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #2ed573, #00ffff); transition: width 0.3s ease;"></div>
+        </div>
+        <p id="loading-text" style="color: white; margin-top: 10px; font-size: 0.9rem;">Preparing game assets...</p>
+    </div>
+    <div id="start-content">
+        <button class="btn btn-start" id="btn-start">TAP TO START</button>
+        <button class="btn" id="btn-start-leaderboard" style="margin-top: 10px; background: #5352ed;">🏆 LEADERBOARD</button>
+        <button class="btn" id="btn-help" style="margin-top: 10px; background: #5352ed;">❓ HELP</button>
+    </div>
+</div>
+
+<div id="game-over-screen" class="overlay hidden">
+    <h1>GAME OVER</h1>
+    <div class="big-emoji animate-pulse">😭</div>
+    <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
+        <p id="fail-reason" style="color:#ff4444; font-weight:bold;">SMASHED!</p>
+        <div class="stat-row animate-pop" style="animation-delay: 0.1s;"><span class="stat-label">Score:</span><span class="stat-val" id="go-score">0</span></div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.2s;"><span class="stat-label">Best:</span><span class="stat-val" id="go-best">0</span></div>
+    </div>
+    <button class="btn" id="btn-retry">TRY AGAIN</button>
+</div>
+
+<div id="level-complete-screen" class="overlay hidden" style="padding: 10px; box-sizing: border-box; justify-content: center; align-items: center;">
+    <div class="big-emoji animate-pulse" id="win-emoji" style="font-size: clamp(3rem, 8vw, 6rem); margin: 5px 0; text-align: center; flex-shrink: 0;">🎉</div>
+    <div class="stat-box" style="max-height: 50vh; overflow-y: auto; -webkit-overflow-scrolling: touch; flex-shrink: 0;">
+        <div class="stat-row animate-pop" style="animation-delay: 0.1s;">
+            <span class="stat-label">🍎 Apples:</span>
+            <span class="stat-val" id="win-apples">0</span>
+    </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.15s;">
+            <span class="stat-label">🍌 Bananas:</span>
+            <span class="stat-val" id="win-bananas">0</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.2s;">
+            <span class="stat-label">🍫 Chocolate:</span>
+            <span class="stat-val" id="win-choco">0</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.22s;">
+            <span class="stat-label">💎 Diamonds:</span>
+            <span class="stat-val" id="win-diamonds">0</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.24s;">
+            <span class="stat-label">🪳 Cockroaches:</span>
+            <span class="stat-val" id="win-cockroaches">0</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.26s;">
+            <span class="stat-label">🤢 Rotten:</span>
+            <span class="stat-val" id="win-rotten">0</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.28s;">
+            <span class="stat-label">🏢 Floors:</span>
+            <span class="stat-val" id="win-floors">0</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.3s;">
+            <span class="stat-label">⏱️ Time:</span>
+            <div class="bar-track"><div class="bar-fill" id="bar-time" style="background:#00ffff"></div></div>
+            <span class="stat-val" id="win-time">00:00</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.35s;">
+            <span class="stat-label">⭐ Rating:</span>
+            <div class="bar-track"><div class="bar-fill" id="bar-rating" style="background:#ff4757"></div></div>
+            <span class="stat-val" id="win-rating">Good</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.38s;">
+            <span class="stat-label" style="font-size: 1.1rem;">Score:</span>
+            <div class="bar-track" style="height: 12px;"><div class="bar-fill" id="bar-score" style="background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573, #00ffff);"></div></div>
+            <span class="stat-val" id="win-score-emoji" style="font-size: 1.5rem;">🐉</span>
+        </div>
+        <div class="stat-row animate-pop" style="animation-delay: 0.4s; border-bottom: none; padding-bottom: 0; text-align: center;">
+            <span class="stat-val" id="win-score" style="font-size: 1.5rem; width: 100%;">10/10</span>
+        </div>
+    </div>
+    <button class="btn btn-start" id="btn-next" style="margin-top: 10px; margin-bottom: 10px; position: relative; z-index: 21; flex-shrink: 0;">NEXT LEVEL</button>
+</div>
+
+<div id="leaderboard-screen" class="overlay hidden">
+    <h1>🏆 TOP SCORES</h1>
+    <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch; width: clamp(300px, 90vw, 500px);">
+        <div id="leaderboard-list" style="text-align: left;">
+            <p style="text-align: center; color: rgba(255,255,255,0.7);">No scores yet. Be the first!</p>
+        </div>
+    </div>
+    <button class="btn" id="btn-close-leaderboard" style="margin-top: 20px; background: #5352ed;">CLOSE</button>
+    <button class="btn btn-start" id="btn-restart-from-leaderboard" style="margin-top: 10px;">RESTART GAME</button>
+</div>
+
+<div id="name-input-screen" class="overlay hidden">
+    <h1>Enter Your Name</h1>
+    <div class="stat-box" style="width: clamp(280px, 90vw, 400px);">
+        <input type="text" id="player-name-input" placeholder="Your name..." maxlength="20" style="width: 100%; padding: 15px; font-size: 1.2rem; border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; background: rgba(255,255,255,0.1); color: white; text-align: center; box-sizing: border-box; font-family: inherit;">
+        <p style="margin-top: 15px; color: rgba(255,255,255,0.8); font-size: 0.9rem;">Score: <span id="name-input-score">0</span></p>
+    </div>
+    <button class="btn btn-start" id="btn-save-score" style="margin-top: 20px;">SAVE SCORE</button>
+    <button class="btn" id="btn-skip-name" style="margin-top: 10px; background: #5352ed;">SKIP</button>
+    <button class="btn btn-start" id="btn-restart-after-name" style="margin-top: 10px; background: #ff4757;">RESTART GAME</button>
+</div>
+
+<div id="help-screen" class="overlay hidden">
+    <h1>❓ HELP</h1>
+    <div class="stat-box" style="max-height: 70vh; overflow-y: auto; -webkit-overflow-scrolling: touch; width: clamp(300px, 90vw, 500px);">
+        <div style="text-align: left; font-size: 0.9rem; line-height: 1.8;">
+            <h3 style="margin-top: 0; margin-bottom: 10px; text-align: center;">GAME ELEMENTS</h3>
+            <p><strong>🍎 Apple</strong> - Restores 1 life</p>
+            <p><strong>🍌 Banana</strong> - Increases speed & jump</p>
+            <p><strong>🍫 Chocolate</strong> - Adds 5 seconds to timer</p>
+            <p><strong>💎 Diamond</strong> - Drills through floors</p>
+            <p><strong>🪳 Cockroach</strong> - Reduces jump & speed</p>
+            <p><strong>🤢 Rotten</strong> - Slows you down</p>
+            <p style="margin-top: 15px; margin-bottom: 5px;"><strong>⚠️ DANGERS:</strong></p>
+            <p><strong>👻 Ghosts</strong> - Avoid or use drill!</p>
+            <p><strong>🦇 Bats</strong> - Fly at upper floors</p>
+            <p style="margin-top: 15px; color:#ff4500; font-weight:bold;">Level 5: THE END</p>
+            <p style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); text-align: center; font-size: 0.85rem; color: rgba(255,255,255,0.7);">Game made by <strong>Hagay Ladany</strong></p>
+        </div>
+    </div>
+    <button class="btn" id="btn-close-help" style="margin-top: 20px; background: #5352ed;">CLOSE</button>
+</div>
+
+<div id="pacman-minigame-screen" class="overlay hidden">
+    <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: white; font-size: 2rem; font-weight: bold; text-shadow: 2px 2px 0 #000; z-index: 25;">
+        <div>Time: <span id="pacman-timer">15</span>s</div>
+        <div style="font-size: 1.5rem; margin-top: 10px;">🍎 Collected: <span id="pacman-score">0</span></div>
+    </div>
+    <canvas id="pacman-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+    <div id="pacman-result" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 30;">
+        <h1 style="color: white; font-size: 3rem; margin-bottom: 20px;">MINI-GAME COMPLETE!</h1>
+        <div class="stat-box" style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
+            <p style="font-size: 1.5rem; margin-bottom: 10px;">🍎 Apples Collected: <span id="pacman-final-score">0</span></p>
+        </div>
+        <button class="btn btn-start" id="btn-pacman-continue" style="margin-top: 20px;">CONTINUE TO LEVEL 3</button>
+    </div>
+</div>
+
+<script>
+/**
+ * HELIX JUMP - COMBINED EDITION
+ * 1. Sound Logic: Restored from User V15.
+ * 2. Level 2: Reverted to Standard Level (Dark Theme).
+ * 3. Upgrades: Monsters (Hands + Direction), Physics (Sky Ray), Level 6 (Final).
+ */
+
+// --- SAFETY UTILS ---
+function updateText(id, text) { const el = document.getElementById(id); if (el) el.innerText = text; }
+function updateHTML(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+function updateBar(id, percent) { const el = document.getElementById(id); if(el) el.style.width = Math.min(100, Math.max(0, percent)) + "%"; }
+
+// HSL to RGB conversion for colorful drill effect
+function hslToRgb(h, s, l) {
+    let r, g, b;
+    if (s === 0) {
+        r = g = b = l; // achromatic
+    } else {
+        const hue2rgb = (p, q, t) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1/6) return p + (q - p) * 6 * t;
+            if (t < 1/2) return q;
+            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+    return [Math.round(r * 255) / 255, Math.round(g * 255) / 255, Math.round(b * 255) / 255];
+}
+
+// --- 1. SOUND MANAGER (USER V15 LOGIC) ---
+class SoundManager {
+    constructor() {
+        this.player = null; 
+        this.trackMap = { 
+            'game_over': { file: 'game_over_old_keys', ext: 'mod' },
+            'level_1': { file: 'level_1_raina_-_smile', ext: 'xm' },
+            'level_2': { file: 'level_2_im_a_chip_melody', ext: 'xm' },
+            'level_3': { file: 'level_3_arcane_toaster_-_warios_game_room', ext: 'xm' },
+            'level_4': { file: 'level_4_god_no_love_me', ext: 'mod' },
+            'level_5': { file: 'level_5_jazzberr', ext: 'mod' },
+            'level_6': { file: 'level_5_jazzberr', ext: 'mod' }, 
+            'stress': { file: 'last_10_sec_civilian', ext: 'xm' }, // Stress music for last 10 seconds
+            'you_win': { file: 'you_win_cerror_-_ode_to_maktone', ext: 'mod' }
+        };
+        this.isMuted = false;
+        this.isMusicMuted = false;
+        this.currentTrack = "";
+        this.lastTrack = ""; // Track what was playing before muting
+        
+        // SFX Context
+        const AC = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AC();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.connect(this.ctx.destination);
+        this.masterGain.gain.value = 0.9; // Stronger SFX volume (90%)
+    }
+
+    init() {
+        if (typeof ChiptuneJsPlayer === 'undefined') {
+            console.warn("ChiptuneJsPlayer not loaded.");
+            return;
+        }
+        try {
+            var config = new ChiptuneJsConfig(0); 
+            this.player = new ChiptuneJsPlayer(config);
+            // Resume context on first click
+            document.addEventListener('click', () => {
+                if(this.player.context && this.player.context.state === 'suspended') {
+                    this.player.context.resume();
+                }
+                if(this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }, { once:true });
+        } catch(e) {
+            console.error("Audio Init Failed:", e);
+        }
+    }
+
+    playTrack(baseName) {
+        if(!this.player || this.isMusicMuted) return;
+        if(this.currentTrack === baseName) return; 
+        
+        // Smooth transition - fade out current track
+        if(this.player && this.currentTrack) {
+            try {
+                this.player.stop();
+            } catch(e) {}
+        }
+        
+        const trackInfo = this.trackMap[baseName];
+        if(!trackInfo) {
+            console.warn(`Track not found: ${baseName}`);
+            return;
+        }
+        const url = `sound/${trackInfo.file}.${trackInfo.ext}`;
+        this.currentTrack = baseName;
+        this.lastTrack = baseName; // Save as last track for resume
+        
+        // Small delay for smooth transition
+        setTimeout(() => {
+            if(this.player && !this.isMusicMuted) {
+                // Increase volume for level 1
+                if(baseName === 'level_1' && this.player.musicGain) {
+                    this.player.musicGain.gain.value = 0.25; // 25% for level 1 (increased from 15%)
+                } else if(this.player.musicGain) {
+                    this.player.musicGain.gain.value = 0.15; // Default 15% for other levels
+                }
+                this.player.load(url, (buffer) => {
+                    this.player.play(buffer);
+                });
+            }
+        }, 50);
+    }
+    
+    stopMusic() {
+        if(this.player) {
+            // Save current track before stopping
+            if(this.currentTrack) {
+                this.lastTrack = this.currentTrack;
+            }
+            this.player.stop();
+            this.currentTrack = "";
+        }
+    }
+
+    toggleMute() { 
+        this.isMuted = !this.isMuted;
+        if(this.player && this.player.context) {
+             if(this.isMuted) this.player.context.suspend();
+             else this.player.context.resume();
+        }
+        // Mute SFX too
+        if(this.masterGain) this.masterGain.gain.setTargetAtTime(this.isMuted ? 0 : 0.9, this.ctx.currentTime, 0.1);
+        
+        document.getElementById('audio-btn').classList.toggle('audio-off', this.isMuted);
+    }
+    
+    toggleMusic() {
+        this.isMusicMuted = !this.isMusicMuted;
+        if(this.isMusicMuted) {
+            this.stopMusic();
+        } else {
+            // Resume the last track that was playing
+            const trackToResume = this.lastTrack || 'level_1';
+            this.currentTrack = ""; // Reset to allow replay
+            this.playTrack(trackToResume);
+        }
+        document.getElementById('music-btn').classList.toggle('audio-off', this.isMusicMuted);
+    }
+    
+    // SFX from original logic
+    playSFX(type) {
+        if (!this.ctx || this.isMuted) return;
+        switch(type) {
+            case 'bounce': this.playTone('triangle', 250, 0.1, 0.2); break;
+            case 'collect': this.playTone('sine', 1500, 0.1, 0.4); break;
+            case 'damage': this.playTone('sawtooth', 100, 0.3, 0.4); break;
+            case 'buff': this.playTone('square', 600, 0.2, 0.3); break; 
+            case 'win': this.playWin(); break;
+        }
+    }
+
+    playTone(type, freq, dur, vol=0.5) {
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = type; osc.frequency.setValueAtTime(freq, t);
+        osc.connect(g); g.connect(this.masterGain);
+        g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.01, t+dur);
+        osc.start(t);
+        osc.stop(t+dur);
+    }
+
+    playWin() {
+        const t = this.ctx.currentTime;
+        [523.25, 659.25, 783.99, 1046.50].forEach((f,i) => setTimeout(() => this.playTone('triangle', f, 0.3, 0.3), i*100));
+    }
+}
+
+// --- 2. ASSET FACTORY ---
+const AssetFactory = {
+    textures: {},
+    init() {
+        try {
+            this.textures['apple'] = this.createEmojiTexture('🍎');
+            this.textures['banana'] = this.createEmojiTexture('🍌');
+            this.textures['choco'] = this.createEmojiTexture('🍫');
+            // Load rotten.gif as texture
+            const loader = new THREE.TextureLoader();
+            this.textures['rotten'] = loader.load('images/rotten.gif', undefined, undefined, (err) => {
+                console.warn('Could not load rotten.gif, using emoji fallback');
+            this.textures['rotten'] = this.createEmojiTexture('🤢'); 
+            }); 
+            this.textures['diamond'] = this.createEmojiTexture('💎');
+            this.textures['cockroach'] = this.createEmojiTexture('🪳');
+            this.texFloor = this.createFloorTexture();
+            this.texStone = this.createStoneTexture();
+            this.texPole = this.createPoleTexture();
+        } catch(e) {}
+    },
+    createEmojiTexture(emoji) {
+        try {
+            const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+            const ctx = c.getContext('2d'); ctx.font = '100px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(emoji, 64, 64); return new THREE.CanvasTexture(c);
+        } catch(e) { return null; }
+    },
+    createFloorTexture: () => {
+        const c = document.createElement('canvas'); c.width=256; c.height=256; const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0,0,256,256); ctx.fillStyle = '#ddd';
+        for(let i=0;i<8;i++) for(let j=0;j<8;j++) if((i+j)%2) ctx.fillRect(i*32,j*32,32,32);
+        ctx.strokeStyle = '#aaa'; ctx.lineWidth = 2; ctx.strokeRect(0,0,256,256);
+        const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2,2); return t;
+    },
+    createStoneTexture: () => {
+        const c = document.createElement('canvas'); c.width=256; c.height=256; const ctx = c.getContext('2d');
+        ctx.fillStyle = '#444'; ctx.fillRect(0,0,256,256);
+        for(let i=0;i<500;i++){ ctx.fillStyle = Math.random()>0.5 ? '#555':'#333'; ctx.fillRect(Math.random()*256, Math.random()*256, 8, 8); }
+        ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
+        for(let i=0;i<=8;i++) { ctx.beginPath(); ctx.moveTo(i*32,0); ctx.lineTo(i*32,256); ctx.stroke(); }
+        for(let i=0;i<=8;i++) { ctx.beginPath(); ctx.moveTo(0,i*32); ctx.lineTo(256,i*32); ctx.stroke(); }
+        const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(4,4); return t;
+    },
+    createPoleTexture: () => {
+        const c = document.createElement('canvas'); c.width=64; c.height=64; const ctx = c.getContext('2d');
+        ctx.fillStyle = '#E8DCC5'; ctx.fillRect(0,0,64,64); ctx.fillStyle = '#D4C3A3';
+        for(let i=0;i<50;i++) ctx.fillRect(Math.random()*64, Math.random()*64, 2, 2);
+        ctx.strokeStyle = '#C4B39A'; ctx.lineWidth = 1;
+        for(let i=0;i<4;i++) { ctx.beginPath(); ctx.moveTo(i*16,0); ctx.lineTo(i*16,64); ctx.stroke(); }
+        const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2,20); return t;
+    }
+};
+
+// --- 3. PARTICLE SYSTEM ---
+class ParticleSystem {
+    constructor(scene) {
+        this.scene = scene; this.pool = [];
+        const geo = new THREE.PlaneGeometry(0.2, 0.2);
+        const mat = new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.8, side:THREE.DoubleSide});
+        for(let i=0; i<30; i++) { const m = new THREE.Mesh(geo, mat.clone()); m.visible = false; this.scene.add(m); this.pool.push(m); }
+    }
+    spawn(pos, color) {
+        for(let i=0; i<5; i++) {
+            const m = this.pool.find(p => !p.visible); if(!m) return;
+            m.visible = true; m.position.copy(pos); m.position.y += 0.1;
+            m.material.color.setHex(color); m.material.opacity = 1.0; m.scale.setScalar(1);
+            const ang = Math.random() * 6.28; const spd = 0.05 + Math.random() * 0.05;
+            m.userData = { vx: Math.cos(ang)*spd, vy: 0.1+Math.random()*0.1, vz: Math.sin(ang)*spd, life: 1.0 };
+        }
+    }
+    update() {
+        for(let m of this.pool) {
+            if(!m.visible) continue;
+            const d = m.userData; m.position.x += d.vx; m.position.y += d.vy; m.position.z += d.vz;
+            d.vy -= 0.01; d.life -= 0.03; m.scale.setScalar(d.life);
+            if(d.life <= 0) m.visible = false; m.lookAt(this.scene.position); m.rotation.z += 0.1;
+        }
+    }
+}
+
+// --- 4. GAME CONTROLLER ---
+// WebP support detection
+let webpSupported = false;
+(function() {
+    const webp = new Image();
+    webp.onload = webp.onerror = function() {
+        webpSupported = (webp.height === 2);
+        // Update start screen background after detection
+        updateStartScreenBackground();
+    };
+    webp.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
+})();
+
+// Helper function to get background image with webp fallback
+function getBackgroundImage(level) {
+    if (level === 1 || level === 2 || level === 3 || level === 5) {
+        // Levels 1-3 and 5 use GIF
+        return `url("images/bg_level_${level}.gif")`;
+    } else {
+        // For other levels (level 4), try webp if supported, otherwise jpg
+        if (webpSupported) {
+            // Return webp - the setupLevel function will test if it exists
+            return `url("images/bg_level_${level}.webp")`;
+        } else {
+            return `url("images/bg_level_${level}.jpg")`;
+        }
+    }
+}
+
+// Leaderboard functions - Google Sheets integration
+
+async function getLeaderboard() {
+    try {
+        // TRICK: We add "?t=" + Date.now() to the URL.
+        // This forces the browser to fetch fresh data instead of using the cache.
+        const response = await fetch(`${APPS_SCRIPT_URL}?t=${Date.now()}`, {
+            method: 'GET',
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const leaderboardData = await response.json();
+        return leaderboardData;
+
+    } catch (error) {
+        console.error("Error loading leaderboard:", error);
+        // Return empty array so the game doesn't crash
+        return [];
+    }
+}
+
+async function saveToLeaderboard(playerName, playerScore) {
+    if (!playerName || playerScore === undefined) return;
+
+    try {
+        // CHANGED: We send JSON string, but tell browser it is text/plain
+        // This bypasses the CORS Preflight (OPTIONS) check
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            redirect: 'follow', // Important for Google Script redirects
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8', 
+            },
+            body: JSON.stringify({
+                name: playerName,
+                score: playerScore
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("Score submission successful:", result);
+        
+        // After successful submission, refresh the list:
+        await displayLeaderboard(); 
+
+    } catch (error) {
+        console.error("Error saving score to Google Sheets:", error);
+        // Rethrow so the UI knows it failed
+        throw error;
+    }
+}
+
+async function displayLeaderboard() {
+    const listEl = document.getElementById('leaderboard-list');
+    
+    // Show loading state
+    listEl.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.7);">Loading leaderboard...</p>';
+    
+    try {
+        const leaderboard = await getLeaderboard();
+        
+        if (leaderboard.length === 0) {
+            listEl.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.7);">No scores yet. Be the first!</p>';
+            return;
+        }
+        
+        const medals = ['🥇', '🥈', '🥉'];
+        listEl.innerHTML = leaderboard.slice(0, 20).map((entry, index) => {
+            const rank = index + 1;
+            const medal = rank <= 3 ? medals[rank - 1] : `${rank}.`;
+            const date = entry.timestamp ? new Date(entry.timestamp) : new Date();
+            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const score = typeof entry.score === 'number' ? entry.score : parseInt(entry.score) || 0;
+            return `
+                <div class="leaderboard-item">
+                    <span class="leaderboard-rank">${medal}</span>
+                    <div style="flex: 1;">
+                        <div class="leaderboard-name">${entry.name || 'Anonymous'}</div>
+                        <div class="leaderboard-date">${dateStr}</div>
+                    </div>
+                    <span class="leaderboard-score">${score.toLocaleString()}</span>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error displaying leaderboard:', error);
+        listEl.innerHTML = '<p style="text-align: center; color: rgba(255,100,100,0.8);">Failed to load leaderboard. Please try again later.</p>';
+    }
+}
+
+// Update start screen background based on webp support
+function updateStartScreenBackground() {
+    const startScreen = document.getElementById('start-screen');
+    if (!startScreen) return;
+    
+    const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+    if (isPortrait) {
+        // Use webp if available, otherwise use archived original
+        if (webpSupported) {
+            const img = new Image();
+            img.onerror = function() {
+                startScreen.style.backgroundImage = 'url("images/archived/start_screen_portrait_original_size.jpg")';
+            };
+            img.onload = function() {
+                startScreen.style.backgroundImage = 'url("images/start_screen.webp")';
+            };
+            img.src = 'images/start_screen.webp';
+        } else {
+            startScreen.style.backgroundImage = 'url("images/archived/start_screen_portrait_original_size.jpg")';
+        }
+    } else {
+        // Landscape - use .jpg file that exists
+        startScreen.style.backgroundImage = 'url("images/start_screen_Landscape.jpg")';
+    }
+}
+
+class Game {
+    constructor() {
+        this.audio = new SoundManager();
+        this.level = 1; this.lives = 3; this.score = 0; this.bestScore = 0; this.isPlaying = false;
+        this.stressMusicPlaying = false; // Track if stress music is currently playing
+        this.baseGravity = 0.012; this.jumpForce = 0.2268; this.gravity = this.baseGravity; this.velocity = 0;
+        this.currentScale = new THREE.Vector3(1,1,1); this.targetScale = new THREE.Vector3(1,1,1);
+        this.fastTimer = 0; this.slowTimer = 0; this.invincible = 0; this.drillFloors = 0;
+        this.hasCockroachDebuff = false; // Track cockroach debuff
+        this.drillColorTime = 0; // For colorful drill effect
+        this.isTransitioningToTop = false; // For smooth transition after timeout
+        this.transitionTargetY = 2; // Target Y position for transition
+        this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0, cockroach: 0 }; 
+        this.totalItems = 0; this.levelCollected = 0; this.previousLevelsScore = 0; this.currentLevelMaxDepth = 0;
+        
+        if (typeof THREE !== 'undefined') this.raycaster = new THREE.Raycaster();
+        this.floors = []; this.interactables = []; this.physicsMeshes = []; 
+        this.timeLeft = 60; this.maxTime = 60; this.lastTime = 0;
+        
+        // For Spiral Level
+        this.highestY = 0;
+
+        document.getElementById('btn-retry').onclick = () => this.restart(true);
+        
+        // Leaderboard buttons
+        // Leaderboard button (if it exists - removed from level complete screen)
+        const btnLeaderboard = document.getElementById('btn-leaderboard');
+        if (btnLeaderboard) {
+            btnLeaderboard.onclick = async () => {
+                await displayLeaderboard();
+                document.getElementById('leaderboard-screen').classList.remove('hidden');
+            };
+        }
+        document.getElementById('btn-close-leaderboard').onclick = () => {
+            document.getElementById('leaderboard-screen').classList.add('hidden');
+        };
+        document.getElementById('btn-restart-from-leaderboard').onclick = () => {
+            document.getElementById('leaderboard-screen').classList.add('hidden');
+            this.restart(true);
+        };
+        document.getElementById('btn-start-leaderboard').onclick = async () => {
+            await displayLeaderboard();
+            document.getElementById('leaderboard-screen').classList.remove('hidden');
+        };
+        document.getElementById('btn-help').onclick = () => {
+            document.getElementById('help-screen').classList.remove('hidden');
+        };
+        document.getElementById('btn-close-help').onclick = () => {
+            document.getElementById('help-screen').classList.add('hidden');
+        };
+        document.getElementById('btn-save-score').onclick = async () => {
+            const nameInput = document.getElementById('player-name-input');
+            const name = nameInput.value.trim() || 'Anonymous';
+            const score = this.score; // Use current score (saved when player dies)
+            const level = this.level;
+            
+            // Disable button and show saving state
+            const btn = document.getElementById('btn-save-score');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = 'SAVING...';
+            
+            try {
+                await saveToLeaderboard(name, score, level);
+                document.getElementById('name-input-screen').classList.add('hidden');
+                await displayLeaderboard();
+                document.getElementById('leaderboard-screen').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error saving score:', error);
+                btn.innerText = 'ERROR - TRY AGAIN';
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            }
+        };
+        document.getElementById('btn-skip-name').onclick = () => {
+            document.getElementById('name-input-screen').classList.add('hidden');
+        };
+        
+        // Level logic: goto next or loop at 6
+        document.getElementById('btn-next').onclick = () => { 
+            // Smooth music transition
+            if(this.audio.player) {
+                this.audio.player.stop();
+            }
+            setTimeout(() => {
+                if(this.level >= 5) this.restart(true); 
+                else if(this.level === 2) {
+                    // Show Pacman mini-game after level 2
+                    this.startPacmanMiniGame();
+                } else {
+                    this.level++; 
+                    this.restart(false);
+                }
+            }, 100);
+        };
+        
+        document.getElementById('btn-pacman-continue').onclick = () => {
+            this.level = 3;
+            this.restart(false);
+        };
+        document.getElementById('audio-btn').onclick = () => this.audio.toggleMute();
+        document.getElementById('music-btn').onclick = () => this.audio.toggleMusic();
+        
+        document.getElementById('btn-pacman-continue').onclick = () => {
+            document.getElementById('pacman-minigame-screen').classList.add('hidden');
+            this.level = 3;
+            this.restart(false);
+        };
+    }
+
+    start() {
+        try {
+            document.getElementById('start-screen').classList.add('hidden');
+            // AssetFactory.init() already called in DOMContentLoaded
+            this.audio.init();
+            // No start screen music
+            this.initThreeJS();
+        } catch (e) { console.error(e); }
+    }
+
+    initThreeJS() {
+        this.scene = new THREE.Scene(); this.scene.fog = new THREE.FogExp2(0x111, 0.03);
+        this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
+        this.camera.position.set(0, 8, 15); this.camera.lookAt(0, 0, 0);
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.getElementById('canvas-container').appendChild(this.renderer.domElement);
+        this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        // Add directional light for shadows
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(10, 20, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 50;
+        dirLight.shadow.camera.left = -20;
+        dirLight.shadow.camera.right = 20;
+        dirLight.shadow.camera.top = 20;
+        dirLight.shadow.camera.bottom = -20;
+        this.scene.add(dirLight);
+        this.particles = new ParticleSystem(this.scene);
+        this.createCharacter(); this.setupLevel();
+        
+        let dragging = false, lastX = 0;
+        const getX = e => e.clientX || (e.touches && e.touches[0].clientX);
+        window.addEventListener('mousedown', e => { dragging=true; lastX=getX(e); });
+        window.addEventListener('touchstart', e => { dragging=true; lastX=getX(e); });
+        window.addEventListener('mouseup', () => dragging=false);
+        window.addEventListener('touchend', () => dragging=false);
+        const onMove = (e) => { if(dragging && this.isPlaying && this.tower) { const x = getX(e); this.tower.rotation.y += (x - lastX) * 0.008; lastX = x; } }
+        window.addEventListener('mousemove', onMove); window.addEventListener('touchmove', onMove);
+        window.addEventListener('resize', () => { this.camera.aspect = window.innerWidth/window.innerHeight; this.camera.updateProjectionMatrix(); this.renderer.setSize(window.innerWidth, window.innerHeight); });
+        this.isPlaying = true; this.lastTime = Date.now(); this.loop();
+    }
+    
+    createCharacter() {
+        this.ballWrap = new THREE.Group(); this.ballWrap.position.set(0, 2, 2);
+        const geo = new THREE.SphereGeometry(0.4, 32, 32);
+        this.ballMat = new THREE.MeshBasicMaterial({ color: 0xFF9966 });
+        this.ballBody = new THREE.Mesh(geo, this.ballMat); 
+        this.ballBody.castShadow = true;
+        this.ballBody.receiveShadow = false;
+        this.ballWrap.add(this.ballBody);
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.15, 8), new THREE.MeshBasicMaterial({color:0x5D4037})); stem.position.set(0, 0.4, 0); this.ballBody.add(stem);
+        
+        this.ballFace = new THREE.Group();
+        const eyeWhiteGeo = new THREE.SphereGeometry(0.12, 16, 16); const eyeWhiteMat = new THREE.MeshBasicMaterial({color:0xffffff});
+        const eyeIrisGeo = new THREE.SphereGeometry(0.07, 16, 16); const eyeIrisMat = new THREE.MeshBasicMaterial({color:0x00aaff}); 
+        const eyePupilGeo = new THREE.SphereGeometry(0.035, 16, 16); const eyePupilMat = new THREE.MeshBasicMaterial({color:0x000000});
+        const eyeReflectGeo = new THREE.SphereGeometry(0.02, 8, 8);
+        const createEye = (x) => {
+            const g = new THREE.Group(); g.position.set(x, 0.08, 0.3);
+            g.add(new THREE.Mesh(eyeWhiteGeo, eyeWhiteMat));
+            const iris = new THREE.Mesh(eyeIrisGeo, eyeIrisMat); iris.position.z = 0.09; g.add(iris);
+            const pupil = new THREE.Mesh(eyePupilGeo, eyePupilMat); pupil.position.z = 0.13; g.add(pupil);
+            const reflect = new THREE.Mesh(eyeReflectGeo, eyeWhiteMat); reflect.position.set(0.03, 0.03, 0.15); g.add(reflect);
+            return g;
+        }
+        this.ballFace.add(createEye(-0.14), createEye(0.14));
+        this.mouthMesh = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.02, 8, 16, 3.14), new THREE.MeshBasicMaterial({color:'black'}));
+        this.mouthMesh.position.set(0, -0.12, 0.36); this.mouthMesh.rotation.z = 3.14; this.ballFace.add(this.mouthMesh);
+        this.ballBody.add(this.ballFace);
+
+        const limbGeo = typeof THREE.CapsuleGeometry === 'function' ? new THREE.CapsuleGeometry(0.04, 0.15, 4, 8) : new THREE.CylinderGeometry(0.04, 0.04, 0.23, 8);
+        const limbMat = new THREE.MeshBasicMaterial({color: 0xFF9966});
+        const armL = new THREE.Mesh(limbGeo, limbMat); armL.position.set(-0.38, -0.1, 0); armL.rotation.z = 0.5; this.ballBody.add(armL);
+        const armR = new THREE.Mesh(limbGeo, limbMat); armR.position.set(0.38, -0.1, 0); armR.rotation.z = -0.5; this.ballBody.add(armR);
+        const legL = new THREE.Mesh(limbGeo, limbMat); legL.position.set(-0.15, -0.4, 0); this.ballBody.add(legL);
+        const legR = new THREE.Mesh(limbGeo, limbMat); legR.position.set(0.15, -0.4, 0); this.ballBody.add(legR);
+        
+        // Character shadow will be rendered by shadow maps (no flat polygon needed)
+        
+        this.scene.add(this.ballWrap);
+    }
+
+    setupLevel() {
+        if(this.tower) this.scene.remove(this.tower);
+        this.tower = new THREE.Group(); this.scene.add(this.tower);
+        this.floors = []; this.interactables = []; this.physicsMeshes = []; 
+        this.totalItems = 0; this.levelCollected = 0;
+        this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0, cockroach: 0 };
+        this.lastFloorY = -9999; 
+        this.highestY = 0;      
+        
+        let grad = "";
+        if(this.level === 1) grad = "linear-gradient(to bottom, #87CEEB, #E0F7FA)";
+        else if(this.level === 2) grad = "linear-gradient(to bottom, #2c3e50, #000000)"; 
+        else if(this.level === 3) grad = "linear-gradient(to bottom, #134E5E, #71B280)";
+        else if(this.level === 4) grad = "linear-gradient(to bottom, #800000, #200122)";
+        else grad = "linear-gradient(to bottom, #ECE9E6, #FFFFFF)";
+        // Dramatically reduce black overlay - much lighter
+        const overlayGradient = (this.level === 4) ? "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%)" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 29%, rgba(0, 0, 0, 0.1) 100%)";
+        // Use getBackgroundImage helper which handles webp with jpg fallback
+        let texture = getBackgroundImage(this.level);
+        
+        // For level 4, test if webp exists and fallback to jpg if not (levels 1-3 and 5 use GIF)
+        if (this.level === 4 && webpSupported) {
+            const testImg = new Image();
+            const levelNum = this.level;
+            testImg.onerror = function() {
+                // Webp doesn't exist, use jpg
+                texture = `url("images/bg_level_${levelNum}.jpg")`;
+                document.body.style.backgroundImage = `${overlayGradient}, ${grad}, ${texture}`;
+            };
+            testImg.onload = function() {
+                // Webp exists, use it
+                texture = `url("images/bg_level_${levelNum}.webp")`;
+                document.body.style.backgroundImage = `${overlayGradient}, ${grad}, ${texture}`;
+            };
+            testImg.src = `images/bg_level_${this.level}.webp`;
+        }
+        
+        document.body.style.backgroundImage = `${overlayGradient}, ${grad}, ${texture}`;
+        document.body.style.backgroundRepeat = "no-repeat, no-repeat, repeat";
+        // Level 5: reduce background pattern size by 50%
+        const patternSize = (this.level === 5) ? "15%" : "30%";
+        document.body.style.backgroundSize = `cover, cover, ${patternSize}`;
+        document.body.style.backgroundBlendMode = "normal, multiply, normal";
+        document.body.style.height = "100%";
+        
+        let fogCol = 0x000000;
+        if(this.level === 1) fogCol = 0x88CCFF;
+        this.scene.fog.color.setHex(fogCol);
+        
+        let trackName = 'level_' + this.level;
+        this.audio.playTrack(trackName);
+        this.stressMusicPlaying = false; // Reset stress music flag for new level
+
+        this.timeLeft = this.maxTime;
+
+        const isBoss = this.level === 4; 
+        const isFinal = this.level === 5; 
+        
+        const floors = isFinal ? 50 : (isBoss ? 20 : (this.level===1 ? 25 : 40));
+        const matMap = (isBoss || isFinal) ? AssetFactory.texStone : AssetFactory.texFloor;
+        const hidePole = (this.level === 5 || this.level === 4); // Hide pole for level 4 and 5
+        
+        let palette;
+        if(this.level===1) palette=[0x00d2d3,0x54a0ff,0x5f27cd]; 
+        else if(this.level===3) palette=[0xbadc58,0x6ab04c,0xf6e58d]; 
+        else if(this.level===5) palette=[0xFFFFFF, 0xEEEEEE, 0xDDDDDD]; 
+        else palette=[0x555555, 0x333333];
+        
+        const core = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,200,32), new THREE.MeshBasicMaterial({map: isBoss?AssetFactory.texStone:AssetFactory.texPole, color: isBoss?0x888:0xddd}));
+        core.receiveShadow = true;
+        core.receiveShadow = true;
+        core.position.y = -80; if(hidePole) core.visible = false; 
+        core.receiveShadow = true;
+        this.tower.add(core);
+        
+        const alignedGapIndex = Math.floor(Math.random() * 12);
+        
+        for(let i=0; i<floors; i++) {
+            const y = -i*4; const grp = new THREE.Group(); grp.position.y = y;
+            let gap = Math.floor(Math.random()*12); if(i===0) gap=0;
+            if(this.level === 3 && i >= 10 && i <= 18) gap = alignedGapIndex;
+            let danger = (i>0 && i<floors-1 && Math.random()<0.1) ? Math.floor(Math.random()*12) : -1;
+            if(isBoss || isFinal) danger = Math.floor(Math.random()*12);
+            if(this.level === 3 && i >= 10 && i <= 18 && danger === gap) danger = -1;
+
+            const col = palette[i % palette.length];
+            const dangerColor = (isBoss || isFinal) ? 0xff4500 : 0xff4757;
+            
+            for(let j=0; j<12; j++) {
+                if(j===gap || j===(gap+1)%12) continue;
+                const isDanger = (j===danger);
+                const shape = new THREE.Shape(); const a = Math.PI*2/12;
+                shape.absarc(0,0, 1.6, j*a, (j+1)*a, false); shape.absarc(0,0, 2.5, (j+1)*a, j*a, true);
+                const geo = new THREE.ExtrudeGeometry(shape, {depth:0.4, bevelEnabled:true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 3}); 
+                geo.rotateX(-Math.PI/2);
+                const mat = new THREE.MeshBasicMaterial({ color: isDanger ? dangerColor : col, map: matMap, transparent: isFinal, opacity: isFinal ? 0.9 : 1.0 });
+                const m = new THREE.Mesh(geo, mat);
+                m.receiveShadow = true;
+                m.castShadow = false; 
+                m.userData = { type: isDanger?'danger':'safe', color: isDanger?dangerColor:new THREE.Color(col).getHex() };
+                this.physicsMeshes.push(m); grp.add(m);
+                if(!isDanger && !isBoss && i>0 && i<floors-1 && Math.random()<0.1) this.spawnItem(grp, Math.cos(j*a+a/2)*2, Math.sin(j*a+a/2)*2);
+            }
+            
+            // --- LEVEL 5 LOGIC (FINAL LEVEL - MORE GHOSTS, RED LARGER MONSTERS) ---
+            if(this.level === 5) { 
+                if(i>2 && Math.random()<0.6) {
+                    if(Math.random() > 0.4) this.spawnFlyingGhost(grp);
+                    else this.spawnMonster(grp, true); // Red and larger
+                } 
+            }
+            else { 
+                const ghostChance = isBoss ? 0.6 : 0.2; 
+                if(i>0 && Math.random()<ghostChance) this.spawnMonster(grp, isBoss); 
+            }
+            
+            // Add bats flying at upper part of floor (all levels except level 1)
+            if(this.level > 1 && i > 0 && Math.random() < 0.3) {
+                this.spawnBat(grp);
+            }
+
+            if(this.level === 3 && i >= 10 && i <= 18) grp.rotation.y = 0; else grp.rotation.y = Math.random()*6;
+            this.tower.add(grp); this.floors.push(grp);
+        }
+        
+        const lastY = -floors*4; this.lastFloorY = lastY; 
+        const fin = new THREE.Mesh(new THREE.CylinderGeometry(3,3,1,32), new THREE.MeshBasicMaterial({color:0x00ff00}));
+        fin.position.y = lastY; fin.userData = {type:'finish'}; this.tower.add(fin); this.physicsMeshes.push(fin); 
+        this.updateUI();
+    }
+    
+    spawnItem(parent, x, z) {
+        const r = Math.random(); let type = 'apple', tex = AssetFactory.textures['apple'];
+        if(r>0.6) { type='banana'; tex=AssetFactory.textures['banana']; }
+        if(r>0.75) { type='chocolate'; tex=AssetFactory.textures['choco']; } 
+        if(r>0.88) { type='rotten'; tex=AssetFactory.textures['rotten']; }
+        if(r>0.92) { type='cockroach'; tex=AssetFactory.textures['cockroach']; }
+        if(r>0.96) { type='diamond'; tex=AssetFactory.textures['diamond']; }
+        
+        const grp = new THREE.Group(); grp.position.set(x, 1.2, z);
+        const mat = new THREE.SpriteMaterial({ map: tex || null, color: tex ? 0xffffff : 0xff0000 });
+        const sprite = new THREE.Sprite(mat); sprite.scale.set(0.6, 0.6, 1);
+        if(type==='banana') sprite.scale.set(0.7, 0.7, 1); if(type==='chocolate') sprite.scale.set(0.7, 0.7, 1);
+        grp.add(sprite); grp.userData = { type: type }; parent.add(grp); this.interactables.push(grp);
+        if(type !== 'rotten' && type !== 'cockroach') this.totalItems++;
+    }
+    
+    // --- UPGRADE: MONSTER HANDS + FACING + NO SPIN ---
+    spawnMonster(parent, isFire) {
+        const isFinalLevel = this.level === 5;
+        // Level 5: monsters should look like other stages but 20% larger
+        const col = (isFire || isFinalLevel) ? 0xff4500 : (this.level===3 ? 0x8A2BE2 : 0x32CD32);
+        const scale = isFinalLevel ? 1.2 : 1.0; 
+        const g = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.6 * scale, 0.6 * scale, 0.6 * scale), new THREE.MeshBasicMaterial({color:col}));
+        g.add(body);
+        if(isFinalLevel) g.scale.set(scale, scale, scale);
+        const eyeMat = new THREE.MeshBasicMaterial({color:'yellow'}); const pupilMat = new THREE.MeshBasicMaterial({color:'black'});
+        // Eyes facing forward on floor plane (positive Z direction)
+        const eyeL = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), eyeMat); eyeL.position.set(-0.15, 0.1, 0.31);
+        eyeL.rotation.y = 0; // Face forward
+        const pupilL = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.05), pupilMat); pupilL.position.z = 0.01; eyeL.add(pupilL);
+        const eyeR = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), eyeMat); eyeR.position.set(0.15, 0.1, 0.31);
+        eyeR.rotation.y = 0; // Face forward
+        const pupilR = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.05), pupilMat); pupilR.position.z = 0.01; eyeR.add(pupilR);
+        // Store eye references for dynamic pupil movement
+        g.userData.eyeL = eyeL;
+        g.userData.eyeR = eyeR;
+        g.userData.pupilL = pupilL;
+        g.userData.pupilR = pupilR;
+        const browL = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.05), new THREE.MeshBasicMaterial({color:'black'})); browL.position.set(-0.15, 0.22, 0.31); browL.rotation.z = -0.3; browL.rotation.y = 0;
+        const browR = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.05), new THREE.MeshBasicMaterial({color:'black'})); browR.position.set(0.15, 0.22, 0.31); browR.rotation.z = 0.3; browR.rotation.y = 0;
+        const mouth = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.1), new THREE.MeshBasicMaterial({color:'black'})); mouth.position.set(0, -0.15, 0.31); mouth.rotation.y = 0;
+        g.add(eyeL, eyeR, browL, browR, mouth);
+        
+        // HORNS - Bigger and white
+        const hornGeo = new THREE.ConeGeometry(0.12, 0.3, 8);
+        const hornMat = new THREE.MeshBasicMaterial({color: 0xffffff});
+        const hornL = new THREE.Mesh(hornGeo, hornMat); hornL.position.set(-0.2, 0.35, 0.1); hornL.rotation.z = -0.3;
+        const hornR = new THREE.Mesh(hornGeo, hornMat); hornR.position.set(0.2, 0.35, 0.1); hornR.rotation.z = 0.3;
+        g.add(hornL, hornR);
+        
+        // HANDS STICKING OUT FRONT
+        const armGeo = new THREE.BoxGeometry(0.15, 0.15, 0.4); // Long in Z (forward)
+        const armMat = new THREE.MeshBasicMaterial({color: 0x005500}); 
+        const armL = new THREE.Mesh(armGeo, armMat); armL.position.set(-0.35, 0, 0.3); // Forward Z
+        const armR = new THREE.Mesh(armGeo, armMat); armR.position.set(0.35, 0, 0.3);
+        g.add(armL, armR);
+
+        const legGeo = new THREE.BoxGeometry(0.15, 0.2, 0.15); const legMat = new THREE.MeshBasicMaterial({color: 0x006400}); 
+        const legL = new THREE.Mesh(legGeo, legMat); legL.position.set(-0.15, -0.4, 0); const legR = new THREE.Mesh(legGeo, legMat); legR.position.set(0.15, -0.4, 0); g.add(legL, legR);
+        
+        const direction = Math.random() > 0.5 ? 1 : -1;
+        g.userData = { type:'ghost', angle:Math.random()*6, speed:0.02, baseColor: col, dir: direction };
+        // Level 5: ensure monsters don't enter floor - position higher
+        g.position.y = isFinalLevel ? 1.2 : 0.8; g.position.x = 2;
+        
+        // Monster will cast shadow using shadow maps
+        body.castShadow = true;
+        body.receiveShadow = false; 
+        // Rotate to face forward on floor plane (rotate around Y axis to face positive Z)
+        g.rotation.set(0, 0, 0); 
+        parent.add(g); this.interactables.push(g);
+    }
+    
+    spawnFlyingGhost(parent) {
+        const g = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.8}));
+        const skirt = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 0.3, 16, 1, true), new THREE.MeshBasicMaterial({color:0xffffff, side:THREE.DoubleSide, transparent:true, opacity:0.8})); 
+        skirt.position.y = -0.2; g.add(body, skirt);
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.08), new THREE.MeshBasicMaterial({color:0x000000})); eye.position.set(0.1, 0.05, 0.25);
+        const eye2 = eye.clone(); eye2.position.set(-0.1, 0.05, 0.25); g.add(eye, eye2);
+        
+        const direction = Math.random() > 0.5 ? 1 : -1;
+        g.userData = { type: 'white-ghost', angle: Math.random()*6, speed: 0.03, offset: Math.random()*3, baseColor: 0xffffff, dir: direction };
+        g.position.set(Math.cos(0)*3, 2, Math.sin(0)*3);
+        
+        // Flying ghost will cast shadow using shadow maps
+        body.castShadow = true;
+        body.receiveShadow = false;
+        skirt.castShadow = true;
+        skirt.receiveShadow = false;
+        
+        parent.add(g); this.interactables.push(g);
+    }
+    
+    spawnBat(parent) {
+        const g = new THREE.Group();
+        // Bat body (small dark sphere)
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 12), new THREE.MeshBasicMaterial({color:0x1a1a1a}));
+        g.add(body);
+        
+        // Bat wings (two triangles)
+        const wingGeo = new THREE.ConeGeometry(0.2, 0.3, 3);
+        const wingMat = new THREE.MeshBasicMaterial({color:0x2a2a2a, side:THREE.DoubleSide});
+        const wingL = new THREE.Mesh(wingGeo, wingMat);
+        wingL.position.set(-0.2, 0, 0);
+        wingL.rotation.z = Math.PI / 4;
+        wingL.rotation.y = -Math.PI / 2;
+        const wingR = new THREE.Mesh(wingGeo, wingMat);
+        wingR.position.set(0.2, 0, 0);
+        wingR.rotation.z = -Math.PI / 4;
+        wingR.rotation.y = -Math.PI / 2;
+        g.add(wingL, wingR);
+        
+        // Bat eyes (small red dots)
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), new THREE.MeshBasicMaterial({color:0xff0000}));
+        eye.position.set(0.05, 0.05, 0.12);
+        const eye2 = eye.clone();
+        eye2.position.set(-0.05, 0.05, 0.12);
+        g.add(eye, eye2);
+        
+        const direction = Math.random() > 0.5 ? 1 : -1;
+        g.userData = { type: 'bat', angle: Math.random()*6, speed: 0.04, offset: Math.random()*3, baseColor: 0x1a1a1a, dir: direction, wingFlap: 0 };
+        // Position at upper part of floor (higher Y)
+        g.position.set(Math.cos(0)*2.5, 2.5, Math.sin(0)*2.5);
+        
+        // Bat will cast shadow using shadow maps
+        body.castShadow = true;
+        body.receiveShadow = false;
+        wingL.castShadow = true;
+        wingR.castShadow = true;
+        
+        parent.add(g); this.interactables.push(g);
+    }
+
+    restart(full) {
+        if(full) { 
+            this.level = 1;
+            this.score = 0; this.lives = 3; 
+            this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0, cockroach: 0 };
+            this.previousLevelsScore = 0; 
+            this.currentLevelMaxDepth = 0;
+            // No start screen music
+        }
+        else {
+            this.lives = Math.max(1, this.lives);
+            if(this.floors) this.previousLevelsScore += 50; 
+            this.currentLevelMaxDepth = 0;
+        }
+        
+        this.ballWrap.position.y = 2; this.velocity = 0;
+        this.fastTimer = 0; this.slowTimer = 0; this.invincible = 0; this.drillFloors = 0; this.drillTimer = 0;
+        this.hasCockroachDebuff = false; // Reset cockroach debuff
+        this.drillColorTime = 0; // Reset drill color animation
+        this.isTransitioningToTop = false; // Reset transition flag
+        this.transitionTargetY = 2; // Reset transition target
+        this.lastTime = Date.now(); 
+        
+        this.ballMat.color.setHex(0xFF9966);
+        if(this.mouthMesh) this.mouthMesh.rotation.z = 3.14; 
+        
+        document.getElementById('game-over-screen').classList.add('hidden');
+        document.getElementById('level-complete-screen').classList.add('hidden');
+        
+        this.stressMusicPlaying = false; // Reset stress music flag
+        this.setupLevel();
+        this.updateUI();
+        this.isPlaying = true;
+    }
+    
+    updateUI() {
+        if(this.isPlaying) {
+            const now = Date.now();
+            const dt = (now - this.lastTime) / 1000;
+            this.lastTime = now;
+            if(dt < 1) { 
+                this.timeLeft -= dt;
+                if(this.timeLeft <= 0) { this.timeLeft = 0; this.handleTimeout(); }
+            }
+            
+            // Play stress music in last 10 seconds
+            if(this.timeLeft <= 10 && !this.stressMusicPlaying) {
+                this.audio.playTrack('stress');
+                this.stressMusicPlaying = true;
+            } else if(this.timeLeft > 10 && this.stressMusicPlaying) {
+                // Switch back to level music if time goes above 10 seconds (e.g., chocolate collected)
+                let trackName = 'level_' + this.level;
+                this.audio.playTrack(trackName);
+                this.stressMusicPlaying = false;
+            }
+        }
+        const m = Math.floor(this.timeLeft/60);
+        const s = Math.floor(this.timeLeft%60).toString().padStart(2,'0');
+        updateText('timer-display', `${m}:${s}`);
+        updateText('score-board', this.score);
+        
+        let levelTxt = "LEVEL " + this.level;
+        if(this.level === 4) levelTxt = "LAVA HELL";
+        else if(this.level === 5) levelTxt = "THE END";
+        updateText('level-indicator', levelTxt);
+
+        let h = "";
+        for(let i=0;i<Math.min(5,this.lives);i++) h+="❤️";
+        updateText('hearts', h);
+        
+        let b = "";
+        if(this.drillFloors > 0) {
+            const drillPct = Math.max(0, Math.min(100, (this.drillTimer / 300) * 100));
+            b+="<span class='buff-drill'>💎DRILL</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-drill' style='width:"+drillPct+"%'></span></span> ";
+        }
+        else if(this.fastTimer>0) {
+            const fastPct = Math.max(0, Math.min(100, (this.fastTimer / 300) * 100));
+            b+="<span class='buff-fast'>⚡FAST</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-fast' style='width:"+fastPct+"%'></span></span> ";
+        }
+        else if(this.slowTimer>0) {
+            const slowPct = Math.max(0, Math.min(100, (this.slowTimer / 150) * 100));
+            b+="<span class='buff-slow'>Ninja Turtle!</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-slow' style='width:"+slowPct+"%'></span></span>";
+        }
+        updateHTML('buffs-display', b);
+        
+        updateText('c-apple', this.collected.apple);
+        updateText('c-banana', this.collected.banana);
+        updateText('c-choco', this.collected.choco);
+    }
+    
+    handleTimeout() {
+        this.takeDamage(true);
+        if(this.lives > 0) {
+            // Start smooth transition to top instead of instant restart
+            this.isTransitioningToTop = true;
+            this.transitionTargetY = this.floors.length > 0 ? this.floors[0].position.y + 2 : 2;
+            // Don't call restart immediately - let the transition complete
+        }
+    }
+
+    loop() {
+        try {
+            requestAnimationFrame(() => this.loop());
+            // Don't hide overlays if level complete screen is showing
+            const levelCompleteScreen = document.getElementById('level-complete-screen');
+            if(!this.isPlaying && levelCompleteScreen && !levelCompleteScreen.classList.contains('hidden')) {
+                return; // Keep showing level complete screen
+            }
+            if(!this.isPlaying) return;
+            
+            this.particles.update();
+            
+            if(this.invincible > 0) { this.invincible--; if(this.invincible === 0) { this.ballMat.color.setHex(0xFF9966); if(this.mouthMesh) this.mouthMesh.rotation.z = 3.14; } }
+            if(this.fastTimer>0) this.fastTimer--; if(this.slowTimer>0) this.slowTimer--;
+            if(this.drillTimer>0) { this.drillTimer--; if(this.drillTimer <= 0) { this.drillFloors = 0; this.drillColorTime = 0; this.ballMat.color.setHex(0xFF9966); } }
+            
+            // Colorful drill effect - blink and glow with rainbow colors
+            if(this.drillFloors > 0) {
+                this.drillColorTime += 0.15;
+                const hue = (this.drillColorTime * 50) % 360;
+                const saturation = 0.8 + Math.sin(this.drillColorTime * 2) * 0.2; // Pulsing saturation
+                const lightness = 0.5 + Math.sin(this.drillColorTime * 3) * 0.3; // Blinking effect
+                const rgb = hslToRgb(hue / 360, saturation, lightness);
+                this.ballMat.color.setRGB(rgb[0], rgb[1], rgb[2]);
+            } else if(this.drillColorTime > 0) {
+                // Reset color when drill ends (if not already reset)
+                this.ballMat.color.setHex(0xFF9966);
+                this.drillColorTime = 0;
+            }
+            
+            let grav = this.gravity; let jump = this.jumpForce;
+            // Apply cockroach debuff if active
+            if(this.hasCockroachDebuff) {
+                grav *= 0.7;
+                jump *= 0.7;
+            }
+            if(this.drillFloors > 0) { grav = 0.03; } else { if(this.fastTimer>0) { grav *= 2.0; jump *= 1.4; } if(this.slowTimer>0) { grav = 0.005; jump = 0.25; } }
+            
+            // Smooth transition to top after timeout
+            if(this.isTransitioningToTop) {
+                const currentY = this.ballWrap.position.y;
+                const distance = this.transitionTargetY - currentY;
+                const transitionSpeed = 0.15; // Smooth transition speed
+                
+                if(Math.abs(distance) > 0.1) {
+                    // Smoothly move towards target
+                    this.ballWrap.position.y += distance * transitionSpeed;
+                    this.velocity = 0; // Stop physics during transition
+                } else {
+                    // Transition complete - finish the restart
+                    this.ballWrap.position.y = this.transitionTargetY;
+                    this.velocity = 0;
+                    this.isTransitioningToTop = false;
+                    this.restart(false);
+                }
+            } else {
+            this.velocity -= grav; if(this.velocity < -0.8) this.velocity = -0.8; this.ballWrap.position.y += this.velocity;
+            }
+            
+            if(this.ballWrap.position.y > this.highestY) this.highestY = this.ballWrap.position.y;
+
+            const speed = Math.abs(this.velocity);
+            if(this.velocity < 0) this.targetScale.set(1 - speed*0.3, 1 + speed*0.5, 1 - speed*0.3); else this.targetScale.set(1, 1, 1);
+            this.currentScale.lerp(this.targetScale, 0.2); this.ballBody.scale.copy(this.currentScale);
+            
+            this.ballBody.rotation.x -= 0.04; this.ballFace.rotation.copy(this.ballWrap.rotation); this.ballFace.rotation.z = Math.sin(Date.now()*0.01)*0.1;
+            
+            // --- FIX: PHYSICS RAYCAST START POINT (SKY RAY) ---
+            if(this.velocity < 0) {
+                // START RAYCAST FROM ABOVE THE BALL (y+1.5) to catch deep floors
+                const rayStart = this.ballWrap.position.clone();
+                rayStart.y += 1.5; 
+                this.raycaster.set(rayStart, new THREE.Vector3(0,-1,0));
+                
+                const hitsMain = this.raycaster.intersectObjects(this.physicsMeshes, false);
+                const rayLen = Math.abs(this.velocity) + 3.0; 
+                this.raycaster.far = rayLen;
+                
+                if(hitsMain.length > 0) {
+                    const dist = hitsMain[0].distance;
+                    // 1.5 (offset) + 0.4 (radius) = 1.9 approx distance to center
+                    if(dist < 1.9 + Math.abs(this.velocity) && dist > 0) { 
+                         const u = hitsMain[0].object.userData.type ? hitsMain[0].object.userData : (hitsMain[0].object.parent ? hitsMain[0].object.parent.userData : {});
+                         if(!['apple','banana','rotten','diamond','ghost','chocolate','white-ghost','bat','cockroach'].includes(u.type)) {
+                            this.ballWrap.position.y = hitsMain[0].point.y + 0.4; 
+                            if(u.type === 'safe') {
+                                this.velocity = jump; this.audio.playSFX('bounce'); this.currentScale.set(1.4, 0.6, 1.4);
+                                this.particles.spawn(this.ballWrap.position, u.color || 0xffffff);
+                            } else if(u.type === 'danger' && this.drillFloors <= 0) {
+                                this.takeDamage(); this.velocity = jump;
+                            } else if(u.type === 'finish') { this.levelComplete(); }
+                         }
+                    }
+                }
+            }
+            
+            // --- STANDARD DEATH CONDITION ---
+            if(this.ballWrap.position.y < this.lastFloorY - 20) { 
+                this.takeDamage(); 
+                if(this.lives > 0 && this.floors.length > 0) { 
+                    this.ballWrap.position.y = this.floors[0].position.y + 2; 
+                    this.velocity = 0; 
+                } 
+            }
+            
+            // --- INTERACTIONS (UPDATED MONSTER FACING LOGIC) ---
+            const pos = this.ballWrap.position;
+            for(let i=this.interactables.length-1; i>=0; i--) {
+                const o = this.interactables[i];
+                if(!o || !o.parent) { this.interactables.splice(i, 1); continue; }
+                
+                if (o.userData.type === 'ghost') {
+                    if (!o.userData.isStatic) {
+                        let dir = o.userData.dir || 1; 
+                        const prevAngle = o.userData.angle || 0;
+                        o.userData.angle += o.userData.speed * dir; 
+                        const r = 2; 
+                        o.position.x = Math.cos(o.userData.angle) * r; 
+                        o.position.z = Math.sin(o.userData.angle) * r; 
+                        // Face 90° to floor platform (perpendicular) - always face forward on floor plane
+                        // Don't rotate on Y axis - keep facing forward (positive Z direction)
+                        o.rotation.y = 0;
+                        // Keep X and Z rotations at 0 so it stands upright on floor
+                        o.rotation.x = 0;
+                        o.rotation.z = 0;
+                        
+                        // Update eye pupils to point in rotation direction
+                        if (o.userData.eyeL && o.userData.eyeR && o.userData.pupilL && o.userData.pupilR) {
+                            // Calculate direction of movement (tangent to the circle)
+                            const angleRad = o.userData.angle;
+                            const lookDirX = -Math.sin(angleRad) * dir; // Perpendicular to radius
+                            const lookDirZ = Math.cos(angleRad) * dir;
+                            
+                            // Move pupils within eyes (max offset 0.03 from center)
+                            const pupilOffset = 0.03;
+                            o.userData.pupilL.position.x = lookDirX * pupilOffset;
+                            o.userData.pupilL.position.z = lookDirZ * pupilOffset + 0.01;
+                            o.userData.pupilR.position.x = lookDirX * pupilOffset;
+                            o.userData.pupilR.position.z = lookDirZ * pupilOffset + 0.01;
+                        }
+                    } 
+                }
+                else if(o.userData.type === 'white-ghost') { 
+                    let dir = o.userData.dir || 1;
+                    o.userData.angle += o.userData.speed * dir; 
+                    const rad = 2.5 + Math.sin(Date.now() * 0.002 + o.userData.offset) * 1.5; 
+                    o.position.x = Math.cos(o.userData.angle) * rad; 
+                    o.position.z = Math.sin(o.userData.angle) * rad; 
+                    o.position.y = 2 + Math.sin(Date.now() * 0.002 + o.userData.offset) * 2; 
+                    o.lookAt(pos);
+                    // Shadow is now rendered by shadow maps (no manual update needed)
+                }
+                else if(o.userData.type === 'bat') {
+                    let dir = o.userData.dir || 1;
+                    o.userData.angle += o.userData.speed * dir;
+                    // Bats fly in circular pattern at upper part of floor
+                    const rad = 2.2 + Math.sin(Date.now() * 0.003 + o.userData.offset) * 0.8;
+                    o.position.x = Math.cos(o.userData.angle) * rad;
+                    o.position.z = Math.sin(o.userData.angle) * rad;
+                    // Keep bats at upper part (Y around 3-4)
+                    o.position.y = 2.5 + Math.sin(Date.now() * 0.004 + o.userData.offset) * 0.5;
+                    o.lookAt(pos);
+                    // Animate wing flapping
+                    o.userData.wingFlap += 0.3;
+                    o.children.forEach(child => {
+                        if(child.geometry && child.geometry.type === 'ConeGeometry') {
+                            child.rotation.x = Math.sin(o.userData.wingFlap) * 0.5;
+                        }
+                        // Update shadow position and scale based on height
+                        if(child.geometry && child.geometry.type === 'CircleGeometry') {
+                            const heightFactor = (o.position.y - 3.0) / 2.0;
+                            child.scale.setScalar(0.8 + heightFactor * 0.3);
+                            child.material.opacity = 0.2 - heightFactor * 0.1;
+                        }
+                    });
+                }
+                
+                const wPos = new THREE.Vector3(); o.getWorldPosition(wPos);
+                const dist = o.userData.type === 'white-ghost' ? 1.0 : (o.userData.type === 'bat' ? 0.9 : 0.8);
+                
+                // Check if ghost/bat is within floor area (radius ~2.5) before collision
+                const floorRadius = 2.5;
+                const distanceFromCenter = Math.sqrt(wPos.x * wPos.x + wPos.z * wPos.z);
+                const isWithinFloor = distanceFromCenter < floorRadius;
+                
+                // For bats, also check if character is at similar height (upper part)
+                const heightDiff = Math.abs(wPos.y - pos.y);
+                const isBatCollision = o.userData.type === 'bat' ? (heightDiff < 1.5 && isWithinFloor) : isWithinFloor;
+                
+                if(wPos.distanceTo(pos) < dist && isBatCollision) {
+                    const t = o.userData.type;
+                    if(t==='apple') { this.lives=Math.min(5,this.lives+1); this.collected.apple++; this.levelCollected++; this.audio.playSFX('collect'); o.parent.remove(o); this.interactables.splice(i,1); }
+                    else if(t==='banana') { 
+                        this.fastTimer+=300; 
+                        this.hasCockroachDebuff = false; // Clear cockroach debuff when eating banana
+                        this.collected.banana++; 
+                        this.levelCollected++; 
+                        this.audio.playSFX('buff'); 
+                        o.parent.remove(o); 
+                        this.interactables.splice(i,1); 
+                    }
+                    else if(t==='rotten') { this.slowTimer+=150; this.audio.playSFX('damage'); this.collected.rotten++; o.parent.remove(o); this.interactables.splice(i,1); }
+                    else if(t==='cockroach') { 
+                        this.hasCockroachDebuff = true; // Set cockroach debuff flag (persists until hit or banana)
+                        this.audio.playSFX('damage'); 
+                        this.collected.cockroach++; 
+                        o.parent.remove(o); 
+                        this.interactables.splice(i,1); 
+                    }
+                    else if(t==='diamond') { this.drillFloors = 3; this.drillTimer = 300; this.audio.playSFX('buff'); this.collected.diamond++; o.parent.remove(o); this.interactables.splice(i,1); }
+                    else if(t==='chocolate') { this.timeLeft += 5; this.collected.choco++; this.audio.playSFX('collect'); o.parent.remove(o); this.interactables.splice(i,1); }
+                    else if(t==='ghost' || t==='white-ghost' || t==='bat') { if(this.drillFloors<=0) this.takeDamage(); else { o.parent.remove(o); this.interactables.splice(i,1); } }
+                }
+            }
+            
+            const currentDepth = Math.floor(Math.abs((pos.y - 2) / 4));
+            if(currentDepth > this.currentLevelMaxDepth) { this.currentLevelMaxDepth = currentDepth; }
+            this.score = this.previousLevelsScore + this.currentLevelMaxDepth;
+            this.updateUI();
+
+            const ty = pos.y + 8; 
+            this.camera.position.y += (ty - this.camera.position.y) * 0.1;
+            this.camera.lookAt(0, this.camera.position.y - 8, 0);
+            
+            // Character shadow is now rendered by Three.js shadow maps (no manual update needed)
+
+            this.renderer.render(this.scene, this.camera);
+        } catch(e) { console.error("Loop Error:", e); }
+    }
+
+    takeDamage(isTimeout = false) {
+        if(this.invincible>0 || this.drillFloors>0) return;
+        this.lives--;
+        this.hasCockroachDebuff = false; // Clear cockroach debuff when taking damage
+        this.particles.spawn(this.ballWrap.position, 0xff0000);
+        this.ballMat.color.setHex(0xFF4444); if(this.mouthMesh) this.mouthMesh.rotation.z = 0; 
+        if(this.lives<=0) {
+            this.isPlaying=false; this.audio.stopMusic(); this.audio.playSFX('damage'); this.audio.playTrack('game_over');
+            document.getElementById('game-over-screen').classList.remove('hidden');
+            updateText('fail-reason', isTimeout ? "TIME UP!" : "SMASHED!"); updateText('go-score', this.score);
+            if(this.score > this.bestScore) this.bestScore = this.score; updateText('go-best', this.bestScore);
+            
+            // Show name input screen after a short delay (only if score > 0)
+            if (this.score > 0) {
+                setTimeout(() => {
+                    document.getElementById('game-over-screen').classList.add('hidden');
+                    updateText('name-input-score', this.score.toLocaleString());
+                    document.getElementById('name-input-screen').classList.remove('hidden');
+                    document.getElementById('player-name-input').focus();
+                    // Allow Enter key to submit
+                    document.getElementById('player-name-input').onkeypress = (e) => {
+                        if (e.key === 'Enter') {
+                            document.getElementById('btn-save-score').click();
+                        }
+                    };
+                }, 2000);
+            }
+        } else {
+            this.audio.playSFX('damage'); if(!isTimeout) { this.velocity = this.jumpForce; this.invincible = 60; }
+        }
+    }
+    
+    levelComplete() {
+        this.isPlaying = false;
+        if(this.level === 5) { updateText('btn-next', "RESTART GAME"); this.audio.playTrack('you_win'); } 
+        else { updateText('btn-next', "NEXT LEVEL"); this.audio.playTrack('you_win'); }
+        document.getElementById('level-complete-screen').classList.remove('hidden');
+        
+        // Display collected items
+        updateText('win-apples', this.collected.apple || 0);
+        updateText('win-bananas', this.collected.banana || 0);
+        updateText('win-choco', this.collected.choco || 0);
+        updateText('win-diamonds', this.collected.diamond || 0);
+        updateText('win-cockroaches', this.collected.cockroach || 0);
+        updateText('win-rotten', this.collected.rotten || 0);
+        
+        // Display floors passed
+        const floorsPassed = Math.max(0, this.currentLevelMaxDepth || 0);
+        updateText('win-floors', floorsPassed);
+        
+        // Calculate time taken and display
+        const timeTaken = Math.max(0, this.maxTime - this.timeLeft);
+        const m = Math.floor(timeTaken/60); const s = Math.floor(timeTaken%60).toString().padStart(2,'0'); 
+        updateText('win-time', `${m}:${s}`);
+        
+        // Calculate performance score (1-10)
+        const total = this.totalItems||1; 
+        const fruitPct = Math.min(100, Math.floor(this.levelCollected/total*100));
+        const timePct = Math.min(100, Math.floor((this.timeLeft / this.maxTime) * 100));
+        const maxFloors = this.floors.length || 1;
+        const floorsPct = Math.min(100, Math.floor((floorsPassed / maxFloors) * 100));
+        
+        // Weighted scoring: fruits 40%, time 30%, floors 30%
+        const rawScore = (fruitPct * 0.4) + (timePct * 0.3) + (floorsPct * 0.3);
+        const score1to10 = Math.max(1, Math.min(10, Math.floor(rawScore / 10) + 1));
+        
+        // Emoji mapping: 10=🐉, 9=🦕, 8=🐊, 7=🦖, 6=🐍, 5=🦎, 4=🐸, 3=🐢, 2=🐛, 1=🐜
+        const emojiMap = {10: '🐉', 9: '🦕', 8: '🐊', 7: '🦖', 6: '🐍', 5: '🦎', 4: '🐸', 3: '🐢', 2: '🐛', 1: '🐜'};
+        const scoreEmoji = emojiMap[score1to10] || '🐜';
+        
+        // Rating text
+        let rating = "Good"; 
+        let ratingVal = 50; 
+        if(score1to10 >= 9) { rating = "Perfect!"; ratingVal = 100; }
+        else if(score1to10 >= 7) { rating = "Great"; ratingVal = 75; }
+        else if(score1to10 >= 5) { rating = "Good"; ratingVal = 50; }
+        else { rating = "OK"; ratingVal = 25; }
+        
+        updateText('win-rating', rating);
+        updateText('win-score-emoji', scoreEmoji);
+        updateText('win-score', `${score1to10}/10`);
+        updateText('win-emoji', scoreEmoji);
+        
+        setTimeout(() => { 
+            updateBar('bar-time', timePct); 
+            updateBar('bar-rating', ratingVal);
+            updateBar('bar-score', score1to10 * 10); // Score bar 0-100%
+        }, 100);
+    }
+    
+    startPacmanMiniGame() {
+        document.getElementById('level-complete-screen').classList.add('hidden');
+        document.getElementById('pacman-minigame-screen').classList.remove('hidden');
+        document.getElementById('pacman-result').style.display = 'none';
+        
+        const canvas = document.getElementById('pacman-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // 1. Setup Game State
+        const gameState = {
+            player: { 
+                x: canvas.width / 2, 
+                y: canvas.height / 2, 
+                size: 25, 
+                speed: 6, // Slightly faster for better feel
+                mouthOpen: 0,
+                mouthSpeed: 0.2,
+                rotation: 0
+            },
+            apples: [],
+            score: 0,
+            timeLeft: 15, // Gave a bit more time
+            keys: { up: false, down: false, left: false, right: false },
+            walls: this.generateMaze(canvas.width, canvas.height)
+        };
+        
+        // 2. Generate Apples (Ensure they don't spawn in walls)
+        for(let i = 0; i < 20; i++) {
+            let x, y, valid = false, attempts = 0;
+            while(!valid && attempts < 100) {
+                x = Math.random() * (canvas.width - 100) + 50;
+                y = Math.random() * (canvas.height - 250) + 125;
+                // Check against walls
+                if (!this.isWallCollision(x, y, 30, gameState.walls)) {
+                    valid = true;
+                }
+                attempts++;
+            }
+            if(valid) gameState.apples.push({ x, y, size: 25, collected: false });
+        }
+        
+        // 3. Input Handling (Keyboard)
+        const handleKeyDown = (e) => {
+            const key = e.key.toLowerCase();
+            if(['arrowup', 'w'].includes(key)) { gameState.keys.up = true; }
+            if(['arrowdown', 's'].includes(key)) { gameState.keys.down = true; }
+            if(['arrowleft', 'a'].includes(key)) { gameState.keys.left = true; }
+            if(['arrowright', 'd'].includes(key)) { gameState.keys.right = true; }
+        };
+        
+        const handleKeyUp = (e) => {
+            const key = e.key.toLowerCase();
+            if(['arrowup', 'w'].includes(key)) gameState.keys.up = false;
+            if(['arrowdown', 's'].includes(key)) gameState.keys.down = false;
+            if(['arrowleft', 'a'].includes(key)) gameState.keys.left = false;
+            if(['arrowright', 'd'].includes(key)) gameState.keys.right = false;
+        };
+        
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        
+        // 4. Input Handling (Touch - Virtual Joystick Logic)
+        let touchStart = null;
+        const handleTouchStart = (e) => {
+            e.preventDefault();
+            touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        };
+        const handleTouchMove = (e) => {
+            e.preventDefault();
+            if(!touchStart) return;
+            const dx = e.touches[0].clientX - touchStart.x;
+            const dy = e.touches[0].clientY - touchStart.y;
+            
+            // Reset keys
+            gameState.keys.up = gameState.keys.down = gameState.keys.left = gameState.keys.right = false;
+            
+            // Simple threshold for direction
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 10) gameState.keys.right = true;
+                else if (dx < -10) gameState.keys.left = true;
+            } else {
+                if (dy > 10) gameState.keys.down = true;
+                else if (dy < -10) gameState.keys.up = true;
+            }
+        };
+        const handleTouchEnd = () => {
+            gameState.keys.up = gameState.keys.down = gameState.keys.left = gameState.keys.right = false;
+            touchStart = null;
+        };
+        
+        canvas.addEventListener('touchstart', handleTouchStart, {passive: false});
+        canvas.addEventListener('touchmove', handleTouchMove, {passive: false});
+        canvas.addEventListener('touchend', handleTouchEnd);
+        
+        // Mouse support for Pacman
+        let mouseDown = false;
+        let mouseStart = null;
+        const handleMouseDown = (e) => {
+            e.preventDefault();
+            mouseDown = true;
+            const rect = canvas.getBoundingClientRect();
+            mouseStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        };
+        const handleMouseMove = (e) => {
+            e.preventDefault();
+            if(!mouseDown || !mouseStart) return;
+            const rect = canvas.getBoundingClientRect();
+            const dx = (e.clientX - rect.left) - mouseStart.x;
+            const dy = (e.clientY - rect.top) - mouseStart.y;
+            
+            // Reset keys
+            gameState.keys.up = gameState.keys.down = gameState.keys.left = gameState.keys.right = false;
+            
+            // Simple threshold for direction
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 10) gameState.keys.right = true;
+                else if (dx < -10) gameState.keys.left = true;
+            } else {
+                if (dy > 10) gameState.keys.down = true;
+                else if (dy < -10) gameState.keys.up = true;
+            }
+        };
+        const handleMouseUp = () => {
+            gameState.keys.up = gameState.keys.down = gameState.keys.left = gameState.keys.right = false;
+            mouseDown = false;
+            mouseStart = null;
+        };
+        
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseup', handleMouseUp);
+        canvas.addEventListener('mouseleave', handleMouseUp); // Handle mouse leaving canvas
+        
+        // 5. Game Loop
+        const startTime = Date.now();
+        let animationId = null;
+        
+        const gameLoop = () => {
+            if(document.getElementById('pacman-minigame-screen').classList.contains('hidden')) {
+                // Cleanup listeners if game closed
+                window.removeEventListener('keydown', handleKeyDown);
+                window.removeEventListener('keyup', handleKeyUp);
+                canvas.removeEventListener('touchstart', handleTouchStart);
+                canvas.removeEventListener('touchmove', handleTouchMove);
+                canvas.removeEventListener('touchend', handleTouchEnd);
+                canvas.removeEventListener('mousedown', handleMouseDown);
+                canvas.removeEventListener('mousemove', handleMouseMove);
+                canvas.removeEventListener('mouseup', handleMouseUp);
+                canvas.removeEventListener('mouseleave', handleMouseUp);
+                if(animationId) cancelAnimationFrame(animationId);
+                return;
+            }
+            
+            // --- Logic Update ---
+            
+            // Time
+            const elapsed = (Date.now() - startTime) / 1000;
+            gameState.timeLeft = Math.max(0, 15 - elapsed);
+            updateText('pacman-timer', Math.ceil(gameState.timeLeft));
+            
+            // Movement Calculation (With Wall Sliding)
+            let dx = 0;
+            let dy = 0;
+            if (gameState.keys.up) dy = -1;
+            if (gameState.keys.down) dy = 1;
+            if (gameState.keys.left) dx = -1;
+            if (gameState.keys.right) dx = 1;
+
+            // Normalize diagonal speed
+            if (dx !== 0 && dy !== 0) {
+                const factor = 1 / Math.sqrt(2);
+                dx *= factor;
+                dy *= factor;
+            }
+
+            // Apply movement (Check X and Y independently for sliding)
+            const moveX = dx * gameState.player.speed;
+            const moveY = dy * gameState.player.speed;
+
+            // Try X movement
+            if (moveX !== 0) {
+                const nextX = gameState.player.x + moveX;
+                if (!this.isWallCollision(nextX, gameState.player.y, gameState.player.size, gameState.walls)) {
+                    gameState.player.x = nextX;
+                    // Clamp to screen
+                    gameState.player.x = Math.max(gameState.player.size, Math.min(canvas.width - gameState.player.size, gameState.player.x));
+                }
+            }
+
+            // Try Y movement
+            if (moveY !== 0) {
+                const nextY = gameState.player.y + moveY;
+                if (!this.isWallCollision(gameState.player.x, nextY, gameState.player.size, gameState.walls)) {
+                    gameState.player.y = nextY;
+                    // Clamp to screen
+                    gameState.player.y = Math.max(gameState.player.size, Math.min(canvas.height - gameState.player.size, gameState.player.y));
+                }
+            }
+
+            // Calculate Rotation for graphics
+            if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
+                gameState.player.rotation = Math.atan2(dy, dx);
+                // Animate mouth only when moving
+                gameState.player.mouthOpen += gameState.player.mouthSpeed;
+                if (gameState.player.mouthOpen > 0.25 || gameState.player.mouthOpen < 0) {
+                    gameState.player.mouthSpeed *= -1;
+                }
+            }
+
+            // Collision with Apples
+            gameState.apples.forEach(apple => {
+                if(!apple.collected) {
+                    const dist = Math.sqrt((apple.x - gameState.player.x)**2 + (apple.y - gameState.player.y)**2);
+                    if(dist < (gameState.player.size + apple.size) / 1.5) {
+                        apple.collected = true;
+                        gameState.score++;
+                        this.audio.playSFX('collect');
+                        updateText('pacman-score', gameState.score);
+                    }
+                }
+            });
+            
+            // --- Render ---
+            ctx.fillStyle = '#111'; // Dark background
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw Walls (with blue neon look)
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00ffff';
+            ctx.fillStyle = '#0055ff';
+            gameState.walls.forEach(wall => {
+                ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+            });
+            ctx.shadowBlur = 0;
+            
+            // Draw Apples
+            ctx.font = "24px serif";
+            ctx.textAlign = "center"; 
+            ctx.textBaseline = "middle";
+            gameState.apples.forEach(apple => {
+                if(!apple.collected) {
+                    ctx.fillText("🍎", apple.x, apple.y);
+                }
+            });
+            
+            // Draw Player
+            this.drawPacman(ctx, gameState.player);
+            
+            // Check End Condition
+            if(gameState.timeLeft <= 0 || gameState.score >= 20) {
+                document.getElementById('pacman-result').style.display = 'block';
+                updateText('pacman-final-score', gameState.score);
+                // Add score to main game
+                this.score += gameState.score * 10; 
+                
+                // Cleanup
+                window.removeEventListener('keydown', handleKeyDown);
+                window.removeEventListener('keyup', handleKeyUp);
+                canvas.removeEventListener('touchstart', handleTouchStart);
+                canvas.removeEventListener('touchmove', handleTouchMove);
+                canvas.removeEventListener('touchend', handleTouchEnd);
+                canvas.removeEventListener('mousedown', handleMouseDown);
+                canvas.removeEventListener('mousemove', handleMouseMove);
+                canvas.removeEventListener('mouseup', handleMouseUp);
+                canvas.removeEventListener('mouseleave', handleMouseUp);
+                if(animationId) cancelAnimationFrame(animationId);
+                return;
+            }
+            
+            animationId = requestAnimationFrame(gameLoop);
+        };
+        
+        animationId = requestAnimationFrame(gameLoop);
+    }
+
+    // New Helper: Draw Pacman with rotation and mouth animation
+    drawPacman(ctx, player) {
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        ctx.rotate(player.rotation);
+        
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        // The mouth wedge logic
+        // 0.2 is the max open mouth angle (in radians * PI approx)
+        const mouthSize = Math.max(0, player.mouthOpen); 
+        ctx.arc(0, 0, player.size/2, mouthSize * Math.PI, (2 - mouthSize) * Math.PI);
+        ctx.lineTo(0, 0);
+        ctx.fill();
+        
+        // Draw Eye
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(0, -player.size/4, 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+    }
+
+    generateMaze(width, height) {
+        const walls = [];
+        const cellSize = 60;
+        
+        // Add Border Walls (Arena style)
+        walls.push({x: 0, y: 0, w: width, h: 100}); // Top (covers UI area)
+        walls.push({x: 0, y: height-10, w: width, h: 10}); // Bottom
+        walls.push({x: 0, y: 0, w: 10, h: height}); // Left
+        walls.push({x: width-10, y: 0, w: 10, h: height}); // Right
+        
+        // Inner Walls
+        const cols = Math.floor(width / cellSize);
+        const rows = Math.floor((height - 100) / cellSize);
+        
+        for(let i = 2; i < rows - 1; i++) {
+            for(let j = 2; j < cols - 1; j++) {
+                // Keep center area clear for player spawn
+                const centerX = cols / 2;
+                const centerY = rows / 2;
+                if (Math.abs(j - centerX) < 3 && Math.abs(i - centerY) < 3) continue;
+
+                // Random blocks, but less dense than before
+                if(Math.random() > 0.85) {
+                    walls.push({
+                        x: j * cellSize,
+                        y: i * cellSize + 50, // Offset for top UI
+                        w: cellSize - 10, // Gaps between walls for smoother movement
+                        h: cellSize - 10
+                    });
+                }
+            }
+        }
+        return walls;
+    }
+
+    isWallCollision(x, y, size, walls) {
+        // slightly smaller radius for collision to be forgiving
+        const radius = (size / 2) * 0.8; 
+        
+        for(let wall of walls) {
+            // Find closest point on the rectangle to the circle center
+            const closestX = Math.max(wall.x, Math.min(x, wall.x + wall.w));
+            const closestY = Math.max(wall.y, Math.min(y, wall.y + wall.h));
+            
+            const dx = x - closestX;
+            const dy = y - closestY;
+            
+            // If distance is less than radius, we have a collision
+            if ((dx * dx + dy * dy) < (radius * radius)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    // Update start screen background on load
+    updateStartScreenBackground();
+    try { AssetFactory.init(); window.game = new Game(); const startBtn = document.getElementById('btn-start'); if(startBtn) { startBtn.onclick = function() { window.game.start(); }; } } catch(e) { console.error("Initialization failed:", e); }
+});
+</script>
+</body>
+</html>
+
