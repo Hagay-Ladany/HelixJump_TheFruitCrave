@@ -61,14 +61,17 @@
             width: 100%;
         }
         #start-screen { 
-            background-color: #000000; 
-            background-image: none !important;
+            background-color: #2c3e50; 
+            background-position: center; 
+            background-size: cover; 
+            background-color: rgba(0,0,0,0.3);
+            background-repeat: no-repeat;
         }
         
         /* Portrait orientation - will be updated by JavaScript based on webp support */
         @media (orientation: portrait) {
             #start-screen { 
-                background-image: none !important;
+                background-image: url('images/archived/start_screen_portrait_original_size.jpg'); 
             }
             #start-content .stat-box {
                 margin-top: auto !important;
@@ -92,7 +95,7 @@
         /* Landscape orientation - will be updated by JavaScript based on webp support */
         @media (orientation: landscape) {
             #start-screen { 
-                background-image: none !important;
+                background-image: url('images/start_screen_Landscape.jpg'); 
             }
             #start-content .stat-box {
                 margin-top: auto !important;
@@ -325,7 +328,6 @@
     </div>
     <button class="btn btn-start" id="btn-save-score" style="margin-top: 20px;">SAVE SCORE</button>
     <button class="btn" id="btn-skip-name" style="margin-top: 10px; background: #5352ed;">SKIP</button>
-    <button class="btn btn-start" id="btn-restart-after-name" style="margin-top: 10px; background: #ff4757;">RESTART GAME</button>
 </div>
 
 <div id="pacman-minigame-screen" class="overlay hidden">
@@ -742,9 +744,25 @@ function updateStartScreenBackground() {
     const startScreen = document.getElementById('start-screen');
     if (!startScreen) return;
     
-    // Remove all background images - only keep black background
-    startScreen.style.backgroundImage = 'none';
-    startScreen.style.backgroundColor = '#000000';
+    const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+    if (isPortrait) {
+        // Use webp if available, otherwise use archived original
+        if (webpSupported) {
+            const img = new Image();
+            img.onerror = function() {
+                startScreen.style.backgroundImage = 'url("images/archived/start_screen_portrait_original_size.jpg")';
+            };
+            img.onload = function() {
+                startScreen.style.backgroundImage = 'url("images/start_screen.webp")';
+            };
+            img.src = 'images/start_screen.webp';
+        } else {
+            startScreen.style.backgroundImage = 'url("images/archived/start_screen_portrait_original_size.jpg")';
+        }
+    } else {
+        // Landscape - use .jpg file that exists
+        startScreen.style.backgroundImage = 'url("images/start_screen_Landscape.jpg")';
+    }
 }
 
 class Game {
@@ -804,13 +822,10 @@ class Game {
             btn.innerText = 'SAVING...';
             
             try {
-                await saveToLeaderboard(name, score);
-                btn.innerText = 'SAVED!';
-                setTimeout(() => {
-                    document.getElementById('name-input-screen').classList.add('hidden');
-                    displayLeaderboard();
-                    document.getElementById('leaderboard-screen').classList.remove('hidden');
-                }, 500);
+                await saveToLeaderboard(name, score, level);
+                document.getElementById('name-input-screen').classList.add('hidden');
+                await displayLeaderboard();
+                document.getElementById('leaderboard-screen').classList.remove('hidden');
             } catch (error) {
                 console.error('Error saving score:', error);
                 btn.innerText = 'ERROR - TRY AGAIN';
@@ -822,10 +837,6 @@ class Game {
         };
         document.getElementById('btn-skip-name').onclick = () => {
             document.getElementById('name-input-screen').classList.add('hidden');
-        };
-        document.getElementById('btn-restart-after-name').onclick = () => {
-            document.getElementById('name-input-screen').classList.add('hidden');
-            this.restart(true);
         };
         
         // Level logic: goto next or loop at 6
@@ -1201,7 +1212,7 @@ class Game {
         g.add(eye, eye2);
         
         const direction = Math.random() > 0.5 ? 1 : -1;
-        g.userData = { type: 'bat', angle: Math.random()*6, speed: 0.02, offset: Math.random()*3, baseColor: 0x1a1a1a, dir: direction, wingFlap: 0 };
+        g.userData = { type: 'bat', angle: Math.random()*6, speed: 0.04, offset: Math.random()*3, baseColor: 0x1a1a1a, dir: direction, wingFlap: 0 };
         // Position at upper part of floor (higher Y)
         g.position.set(Math.cos(0)*2.5, 2.5, Math.sin(0)*2.5);
         
