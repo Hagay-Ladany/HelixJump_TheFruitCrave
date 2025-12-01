@@ -902,7 +902,7 @@ class Game {
     initThreeJS() {
         this.scene = new THREE.Scene(); this.scene.fog = new THREE.FogExp2(0x111, 0.03);
         this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
-        this.camera.position.set(0, 10, 13.5); this.camera.lookAt(0, 2, 0); // Start at y=10 (above character at y=2), look at character's starting position
+        this.camera.position.set(0, 8, 15); this.camera.lookAt(0, 0, 0);
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true;
@@ -1624,25 +1624,9 @@ class Game {
             this.score = this.previousLevelsScore + this.currentLevelMaxDepth;
             this.updateUI();
 
-            // --- FIXED CAMERA FOLLOWING LOGIC ---
-            // 1. Calculate where camera should be (always a fixed distance above character)
-            const cameraOffsetY = 12; // Keep camera 12 units above character
-            const lookAtOffsetY = -3; // Look 3 units below character to see floors ahead
-            
-            // 2. Calculate target positions
-            const targetCameraY = this.ballWrap.position.y + cameraOffsetY;
-            const targetLookAtY = this.ballWrap.position.y + lookAtOffsetY;
-            
-            // 3. Smoothly move camera (0.2 = responsive but not jittery)
-            this.camera.position.y += (targetCameraY - this.camera.position.y) * 0.2;
-            
-            // 4. Make camera look at character's level
-            this.camera.lookAt(0, targetLookAtY, 0);
-            
-            // 5. Keep camera from going too low
-            if (this.camera.position.y < 5) {
-                this.camera.position.y = 5;
-            }
+            const ty = pos.y + 8; 
+            this.camera.position.y += (ty - this.camera.position.y) * 0.1;
+            this.camera.lookAt(0, this.camera.position.y - 8, 0);
             
             // Character shadow is now rendered by Three.js shadow maps (no manual update needed)
 
@@ -2110,4 +2094,3 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
