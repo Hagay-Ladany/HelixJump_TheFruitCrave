@@ -1066,7 +1066,7 @@ class Game {
         const isFinal = this.level === 5; 
         
         const floors = isFinal ? 50 : (isBoss ? 20 : (this.level===1 ? 25 : 40));
-        const matMap = (isBoss || isFinal) ? AssetFactory.texStone : AssetFactory.texFloor;
+
         const hidePole = (this.level === 5 || this.level === 4); // Hide pole for level 4 and 5
         
         let palette;
@@ -1102,7 +1102,7 @@ class Game {
                 shape.absarc(0,0, 1.6, j*a, (j+1)*a, false); shape.absarc(0,0, 2.5, (j+1)*a, j*a, true);
                 const geo = new THREE.ExtrudeGeometry(shape, {depth:0.4, bevelEnabled:true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 3}); 
                 geo.rotateX(-Math.PI/2);
-                const mat = new THREE.MeshBasicMaterial({ color: isDanger ? dangerColor : col, map: matMap, transparent: isFinal, opacity: isFinal ? 0.9 : 1.0 });
+                const mat = new THREE.MeshBasicMaterial({ color: isDanger ? dangerColor : col, transparent: isFinal, opacity: isFinal ? 0.9 : 1.0 });
                 const m = new THREE.Mesh(geo, mat);
                 m.receiveShadow = true;
                 m.castShadow = false; 
