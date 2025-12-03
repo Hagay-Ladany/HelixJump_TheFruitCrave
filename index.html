@@ -219,7 +219,7 @@
 </div>
 
 <div id="start-screen" class="overlay">
-    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.2.1</div>
+    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.2.0</div>
     <div id="loading-container" style="display: none;">
         <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
         <div style="width: 300px; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
@@ -1246,9 +1246,6 @@ class Game {
             }
 
             if(this.level === 3 && i >= 10 && i <= 18) grp.rotation.y = 0; else grp.rotation.y = Math.random()*6;
-            // Store gap info for collision detection
-            grp.userData.gap = gap;
-            grp.userData.floorIndex = i;
             this.tower.add(grp); this.floors.push(grp);
         }
         
@@ -1634,59 +1631,6 @@ class Game {
                             } else if(u.type === 'finish') { this.levelComplete(); }
                          }
                     }
-                }
-            }
-            
-            // --- FLOOR SIDE COLLISION DETECTION ---
-            // Check if character is hitting floor sides (walls) when not in opening
-            const charY = this.ballWrap.position.y;
-            const charRadius = Math.sqrt(this.ballWrap.position.x * this.ballWrap.position.x + this.ballWrap.position.z * this.ballWrap.position.z);
-            
-            // Find the nearest floor
-            for(let i = 0; i < this.floors.length; i++) {
-                const floor = this.floors[i];
-                const floorY = floor.position.y;
-                // Check if character is near this floor (within 2 units vertically)
-                if(Math.abs(charY - floorY) < 2 && charRadius > 1.3 && charRadius < 2.8) {
-                    const gap = floor.userData.gap;
-                    const floorRotation = floor.rotation.y;
-                    
-                    // Calculate character's angle relative to floor rotation
-                    let charAngle = Math.atan2(this.ballWrap.position.z, this.ballWrap.position.x);
-                    charAngle -= floorRotation; // Adjust for floor rotation
-                    // Normalize to 0-2π
-                    if(charAngle < 0) charAngle += Math.PI * 2;
-                    
-                    // Calculate opening angles (opening spans 2 segments)
-                    const segmentAngle = Math.PI * 2 / 12;
-                    const gapStartAngle = gap * segmentAngle;
-                    const gapEndAngle = (gap + 2) * segmentAngle;
-                    
-                    // Check if character is in the opening
-                    let inOpening = false;
-                    if(gapEndAngle <= Math.PI * 2) {
-                        // Normal case: opening doesn't wrap around
-                        inOpening = (charAngle >= gapStartAngle && charAngle <= gapEndAngle);
-                    } else {
-                        // Opening wraps around 0
-                        inOpening = (charAngle >= gapStartAngle || charAngle <= (gapEndAngle - Math.PI * 2));
-                    }
-                    
-                    // If not in opening and character is on or near the floor, push back
-                    if(!inOpening && charRadius > 1.5) {
-                        // Push character back toward center
-                        const pushBack = 0.15;
-                        const angleToCenter = Math.atan2(-this.ballWrap.position.z, -this.ballWrap.position.x);
-                        this.ballWrap.position.x += Math.cos(angleToCenter) * pushBack;
-                        this.ballWrap.position.z += Math.sin(angleToCenter) * pushBack;
-                        
-                        // Also reduce horizontal velocity
-                        if(this.ballWrap.userData.horizontalVelocity) {
-                            this.ballWrap.userData.horizontalVelocity.x *= 0.5;
-                            this.ballWrap.userData.horizontalVelocity.z *= 0.5;
-                        }
-                    }
-                    break; // Only check the nearest floor
                 }
             }
             
