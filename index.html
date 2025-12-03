@@ -219,7 +219,7 @@
 </div>
 
 <div id="start-screen" class="overlay">
-    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.2.0</div>
+    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.2.1</div>
     <div id="loading-container" style="display: none;">
         <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
         <div style="width: 300px; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
@@ -1172,12 +1172,18 @@ class Game {
         
         let fogCol = 0x000000;
         if(this.level === 1) fogCol = 0x88CCFF;
+        else if(this.level === 5) fogCol = 0xFFF8E7; // Light cream/white fog for level 5
         this.scene.fog.color.setHex(fogCol);
         
         let trackName = 'level_' + this.level;
         this.audio.playTrack(trackName);
         this.stressMusicPlaying = false; // Reset stress music flag for new level
 
+        // Set maxTime based on level
+        if(this.level === 5) this.maxTime = 120; 
+        else if(this.level === 4) this.maxTime = 90; 
+        else this.maxTime = 60;
+        
         this.timeLeft = this.maxTime;
 
         const isBoss = this.level === 4; 
