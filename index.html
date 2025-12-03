@@ -218,7 +218,7 @@
 </div>
 
 <div id="start-screen" class="overlay">
-    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.1.8</div>
+    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.1.9</div>
     <div id="loading-container" style="display: none;">
         <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
         <div style="width: 300px; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
@@ -294,6 +294,11 @@
         </div>
     </div>
     <div class="big-emoji animate-pulse" id="win-emoji" style="font-size: clamp(3rem, 8vw, 6rem); margin: 10px 0 5px 0; text-align: center; flex-shrink: 0;">🎉</div>
+    <div id="happy-ending-message" class="hidden" style="color: white; font-size: clamp(1.2rem, 4vw, 1.8rem); font-weight: bold; text-align: center; margin: 15px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); padding: 10px; flex-shrink: 0;">
+        🎊 CONGRATULATIONS! YOU'VE CONQUERED THE HELIX! 🎊<br>
+        <span style="font-size: 0.9em; opacity: 0.9;">You are a true champion! Save your score to the leaderboard!</span>
+    </div>
+    <button class="btn" id="btn-save-to-leaderboard" style="background: rgba(83, 82, 237, 0.8); margin-top: 10px; margin-bottom: 10px; position: relative; z-index: 21; flex-shrink: 0; display: none;">🏆 SAVE TO LEADERBOARD</button>
     <button class="btn btn-start" id="btn-next" style="margin-top: 10px; margin-bottom: 10px; position: relative; z-index: 21; flex-shrink: 0;">NEXT LEVEL</button>
 </div>
 
@@ -927,6 +932,21 @@ class Game {
             this.restart(true);
         };
         
+        // Save to leaderboard button (for level 5 completion)
+        document.getElementById('btn-save-to-leaderboard').onclick = async () => {
+            // Hide level complete screen and show name input screen
+            document.getElementById('level-complete-screen').classList.add('hidden');
+            updateText('name-input-score', this.score.toLocaleString());
+            document.getElementById('name-input-screen').classList.remove('hidden');
+            document.getElementById('player-name-input').focus();
+            // Allow Enter key to submit
+            document.getElementById('player-name-input').onkeypress = (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('btn-save-score').click();
+                }
+            };
+        };
+        
         // Level logic: goto next or loop at 6
         document.getElementById('btn-next').onclick = () => { 
             // Smooth music transition
@@ -1049,7 +1069,7 @@ class Game {
         this.ballBody.castShadow = true;
         this.ballBody.receiveShadow = false;
         this.ballWrap.add(this.ballBody);
-        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.15, 8), new THREE.MeshBasicMaterial({color:0x5D4037})); stem.position.set(0, 0.4, 0); this.ballBody.add(stem);
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.15, 8), new THREE.MeshBasicMaterial({color:0x5D4037})); stem.position.set(0, 0.4, 0); stem.castShadow = true; this.ballBody.add(stem);
         
         this.ballFace = new THREE.Group();
         const eyeWhiteGeo = new THREE.SphereGeometry(0.12, 16, 16); const eyeWhiteMat = new THREE.MeshBasicMaterial({color:0xffffff});
@@ -1071,10 +1091,10 @@ class Game {
 
         const limbGeo = typeof THREE.CapsuleGeometry === 'function' ? new THREE.CapsuleGeometry(0.04, 0.15, 4, 8) : new THREE.CylinderGeometry(0.04, 0.04, 0.23, 8);
         const limbMat = new THREE.MeshBasicMaterial({color: 0xFF9966});
-        const armL = new THREE.Mesh(limbGeo, limbMat); armL.position.set(-0.38, -0.1, 0); armL.rotation.z = 0.5; this.ballBody.add(armL);
-        const armR = new THREE.Mesh(limbGeo, limbMat); armR.position.set(0.38, -0.1, 0); armR.rotation.z = -0.5; this.ballBody.add(armR);
-        const legL = new THREE.Mesh(limbGeo, limbMat); legL.position.set(-0.15, -0.4, 0); this.ballBody.add(legL);
-        const legR = new THREE.Mesh(limbGeo, limbMat); legR.position.set(0.15, -0.4, 0); this.ballBody.add(legR);
+        const armL = new THREE.Mesh(limbGeo, limbMat); armL.position.set(-0.38, -0.1, 0); armL.rotation.z = 0.5; armL.castShadow = true; this.ballBody.add(armL);
+        const armR = new THREE.Mesh(limbGeo, limbMat); armR.position.set(0.38, -0.1, 0); armR.rotation.z = -0.5; armR.castShadow = true; this.ballBody.add(armR);
+        const legL = new THREE.Mesh(limbGeo, limbMat); legL.position.set(-0.15, -0.4, 0); legL.castShadow = true; this.ballBody.add(legL);
+        const legR = new THREE.Mesh(limbGeo, limbMat); legR.position.set(0.15, -0.4, 0); legR.castShadow = true; this.ballBody.add(legR);
         
         // Character shadow will be rendered by shadow maps (no flat polygon needed)
         
@@ -1258,8 +1278,9 @@ class Game {
     // --- UPGRADE: MONSTER HANDS + FACING + NO SPIN ---
     spawnMonster(parent, isFire) {
         const isFinalLevel = this.level === 5;
-        // Level 5: monsters should look like other stages but 20% larger
-        const col = (isFire || isFinalLevel) ? 0xff4500 : (this.level===3 ? 0x8A2BE2 : 0x32CD32);
+        const isLevel4 = this.level === 4;
+        // Level 4: orange monsters, Level 5: red monsters (20% larger)
+        const col = (isFire || isFinalLevel) ? 0xff4500 : (isLevel4 ? 0xff8c00 : (this.level===3 ? 0x8A2BE2 : 0x32CD32));
         const scale = isFinalLevel ? 1.2 : 1.0; 
         const g = new THREE.Group();
         const body = new THREE.Mesh(new THREE.BoxGeometry(0.6 * scale, 0.6 * scale, 0.6 * scale), new THREE.MeshBasicMaterial({color:col}));
@@ -1290,15 +1311,52 @@ class Game {
         const hornR = new THREE.Mesh(hornGeo, hornMat); hornR.position.set(0.2, 0.35, 0.1); hornR.rotation.z = 0.3;
         g.add(hornL, hornR);
         
+        // LEVEL 5: ADD MORE DETAILS - Spikes on back, sharper teeth, glowing eyes
+        if(isFinalLevel) {
+            // Spikes on back
+            for(let i = 0; i < 5; i++) {
+                const spikeGeo = new THREE.ConeGeometry(0.05, 0.15, 6);
+                const spikeMat = new THREE.MeshBasicMaterial({color: 0xff2200});
+                const spike = new THREE.Mesh(spikeGeo, spikeMat);
+                spike.position.set((i - 2) * 0.12, 0.25, -0.25);
+                spike.rotation.x = Math.PI;
+                spike.castShadow = true;
+                g.add(spike);
+            }
+            
+            // Sharper teeth in mouth
+            for(let i = 0; i < 4; i++) {
+                const toothGeo = new THREE.ConeGeometry(0.03, 0.08, 6);
+                const toothMat = new THREE.MeshBasicMaterial({color: 0xffffff});
+                const tooth = new THREE.Mesh(toothGeo, toothMat);
+                tooth.position.set((i - 1.5) * 0.08, -0.18, 0.32);
+                tooth.rotation.x = Math.PI / 2;
+                g.add(tooth);
+            }
+            
+            // Glowing eye effect (brighter yellow)
+            eyeMat.color.setHex(0xffff00);
+            eyeMat.emissive = new THREE.Color(0xffff00);
+            eyeMat.emissiveIntensity = 0.5;
+        }
+        
         // HANDS STICKING OUT FRONT
         const armGeo = new THREE.BoxGeometry(0.15, 0.15, 0.4); // Long in Z (forward)
         const armMat = new THREE.MeshBasicMaterial({color: 0x005500}); 
-        const armL = new THREE.Mesh(armGeo, armMat); armL.position.set(-0.35, 0, 0.3); // Forward Z
-        const armR = new THREE.Mesh(armGeo, armMat); armR.position.set(0.35, 0, 0.3);
+        const armL = new THREE.Mesh(armGeo, armMat); armL.position.set(-0.35, 0, 0.3); armL.castShadow = true; // Forward Z
+        const armR = new THREE.Mesh(armGeo, armMat); armR.position.set(0.35, 0, 0.3); armR.castShadow = true;
         g.add(armL, armR);
 
         const legGeo = new THREE.BoxGeometry(0.15, 0.2, 0.15); const legMat = new THREE.MeshBasicMaterial({color: 0x006400}); 
-        const legL = new THREE.Mesh(legGeo, legMat); legL.position.set(-0.15, -0.4, 0); const legR = new THREE.Mesh(legGeo, legMat); legR.position.set(0.15, -0.4, 0); g.add(legL, legR);
+        const legL = new THREE.Mesh(legGeo, legMat); legL.position.set(-0.15, -0.4, 0); legL.castShadow = true; 
+        const legR = new THREE.Mesh(legGeo, legMat); legR.position.set(0.15, -0.4, 0); legR.castShadow = true; 
+        g.add(legL, legR);
+        
+        // Enable shadows on all monster parts
+        hornL.castShadow = true; hornR.castShadow = true;
+        eyeL.castShadow = true; eyeR.castShadow = true;
+        browL.castShadow = true; browR.castShadow = true;
+        mouth.castShadow = true;
         
         const direction = Math.random() > 0.5 ? 1 : -1;
         g.userData = { type:'ghost', angle:Math.random()*6, speed:0.02, baseColor: col, dir: direction };
@@ -1401,6 +1459,8 @@ class Game {
         
         document.getElementById('game-over-screen').classList.add('hidden');
         document.getElementById('level-complete-screen').classList.add('hidden');
+        document.getElementById('happy-ending-message').classList.add('hidden');
+        document.getElementById('btn-save-to-leaderboard').style.display = 'none';
         
         this.stressMusicPlaying = false; // Reset stress music flag
         this.setupLevel();
@@ -1743,8 +1803,20 @@ class Game {
     
     levelComplete() {
         this.isPlaying = false;
-        if(this.level === 5) { updateText('btn-next', "RESTART GAME"); this.audio.playTrack('you_win'); } 
-        else { updateText('btn-next', "NEXT LEVEL"); this.audio.playTrack('you_win'); }
+        const isGameComplete = this.level === 5;
+        if(isGameComplete) { 
+            updateText('btn-next', "RESTART GAME"); 
+            this.audio.playTrack('you_win');
+            // Show happy ending message and save button
+            document.getElementById('happy-ending-message').classList.remove('hidden');
+            document.getElementById('btn-save-to-leaderboard').style.display = 'block';
+        } else { 
+            updateText('btn-next', "NEXT LEVEL"); 
+            this.audio.playTrack('you_win');
+            // Hide happy ending message and save button for non-final levels
+            document.getElementById('happy-ending-message').classList.add('hidden');
+            document.getElementById('btn-save-to-leaderboard').style.display = 'none';
+        }
         document.getElementById('level-complete-screen').classList.remove('hidden');
         
         // Display collected items
