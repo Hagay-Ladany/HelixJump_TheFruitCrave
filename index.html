@@ -218,7 +218,7 @@
 </div>
 
 <div id="start-screen" class="overlay">
-    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.1.7</div>
+    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.1.8</div>
     <div id="loading-container" style="display: none;">
         <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
         <div style="width: 300px; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
@@ -263,7 +263,7 @@
             <span class="stat-val" id="win-diamonds">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.24s;">
-            <span class="stat-label">🪳 Cockroaches:</span>
+            <span class="stat-label">🪳🐛 Cockroaches:</span>
             <span class="stat-val" id="win-cockroaches">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.26s;">
@@ -327,7 +327,7 @@
             <p><strong>🍌 Banana</strong> - Increases speed & jump</p>
             <p><strong>🍫 Chocolate</strong> - Adds 5 seconds to timer</p>
             <p><strong>💎 Diamond</strong> - Drills through floors</p>
-            <p><strong>🪳 Cockroach</strong> - Reduces jump & speed</p>
+            <p><strong>🪳🐛 Cockroach</strong> - Reduces jump & speed</p>
             <p><strong>🤢 Rotten</strong> - Slows you down</p>
             <p style="margin-top: 15px; margin-bottom: 5px;"><strong>⚠️ DANGERS:</strong></p>
             <p><strong>👻 Ghosts</strong> - Avoid or use drill!</p>
@@ -556,7 +556,8 @@ const AssetFactory = {
             this.textures['rotten'] = this.createEmojiTexture('🤢'); 
             }); 
             this.textures['diamond'] = this.createEmojiTexture('💎');
-            this.textures['cockroach'] = this.createEmojiTexture('🪳');
+            // Try cockroach emoji first, fallback to bug emoji for better browser compatibility
+            this.textures['cockroach'] = this.createEmojiTextureWithFallback('🪳', '🐛');
             this.texFloor = this.createFloorTexture();
             this.texStone = this.createStoneTexture();
             this.texPole = this.createPoleTexture();
@@ -568,6 +569,45 @@ const AssetFactory = {
             const ctx = c.getContext('2d'); ctx.font = '100px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText(emoji, 64, 64); return new THREE.CanvasTexture(c);
         } catch(e) { return null; }
+    },
+    createEmojiTextureWithFallback(primaryEmoji, fallbackEmoji) {
+        try {
+            // Try primary emoji first
+            const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+            const ctx = c.getContext('2d'); ctx.font = '100px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(primaryEmoji, 64, 64);
+            
+            // Check if emoji rendered properly by sampling multiple pixels in the center area
+            const sampleSize = 20;
+            const startX = 64 - sampleSize/2;
+            const startY = 64 - sampleSize/2;
+            const imageData = ctx.getImageData(startX, startY, sampleSize, sampleSize);
+            let hasContent = false;
+            
+            // Check if any pixel has non-transparent content
+            for (let i = 3; i < imageData.data.length; i += 4) {
+                if (imageData.data[i] > 10) { // Alpha channel > 10 (some transparency threshold)
+                    hasContent = true;
+                    break;
+                }
+            }
+            
+            // If primary emoji didn't render properly, use fallback
+            if (!hasContent) {
+                ctx.clearRect(0, 0, 128, 128);
+                ctx.fillText(fallbackEmoji, 64, 64);
+            }
+            
+            return new THREE.CanvasTexture(c);
+        } catch(e) { 
+            // If error, try fallback emoji
+            try {
+                const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+                const ctx = c.getContext('2d'); ctx.font = '100px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(fallbackEmoji, 64, 64);
+                return new THREE.CanvasTexture(c);
+            } catch(e2) { return null; }
+        }
     },
     createFloorTexture: () => {
         const c = document.createElement('canvas'); c.width=256; c.height=256; const ctx = c.getContext('2d');
@@ -697,8 +737,20 @@ async function saveToLeaderboard(playerName, playerScore) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
-        const result = await response.json();
+        // Try to parse as JSON, but handle non-JSON responses gracefully
+        let result;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            result = await response.json();
+        } else {
+            const text = await response.text();
+            // If response is just text, consider it successful if status is OK
+            result = { success: true, message: text || 'Score saved successfully' };
+        }
         console.log("Score submission successful:", result);
+        
+        // Wait a moment to ensure the save has propagated to Google Sheets
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         // After successful submission, refresh the list:
         await displayLeaderboard(); 
@@ -831,21 +883,39 @@ class Game {
             
             // Disable button and show saving state
             const btn = document.getElementById('btn-save-score');
+            
+            // Prevent multiple simultaneous saves
+            if (btn.disabled || btn.dataset.saving === 'true') {
+                return;
+            }
+            
             const originalText = btn.innerText;
             btn.disabled = true;
+            btn.dataset.saving = 'true';
             btn.innerText = 'SAVING...';
             
             try {
+                // Ensure the save completes before proceeding
                 await saveToLeaderboard(name, score, level);
+                
+                // Only update UI after successful save
                 btn.innerText = 'SAVED!';
-                setTimeout(async () => {
-                    document.getElementById('name-input-screen').classList.add('hidden');
-                    await displayLeaderboard();
-                    document.getElementById('leaderboard-screen').classList.remove('hidden');
-                }, 1000);
+                btn.dataset.saving = 'false';
+                
+                // Wait a bit before transitioning to show the saved state
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Now transition to leaderboard
+                document.getElementById('name-input-screen').classList.add('hidden');
+                await displayLeaderboard();
+                document.getElementById('leaderboard-screen').classList.remove('hidden');
+                
             } catch (error) {
                 console.error('Error saving score:', error);
                 btn.innerText = 'ERROR - TRY AGAIN';
+                btn.dataset.saving = 'false';
+                
+                // Re-enable button after error
                 setTimeout(() => {
                     btn.innerText = originalText;
                     btn.disabled = false;
