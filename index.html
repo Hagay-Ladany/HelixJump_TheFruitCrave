@@ -205,6 +205,7 @@
             <div class="counter-item">🍎 <span id="c-apple">0</span></div>
             <div class="counter-item">🍌 <span id="c-banana">0</span></div>
             <div class="counter-item">🍫 <span id="c-choco">0</span></div>
+            <div class="counter-item">🏢 <span id="c-floors">0</span></div>
         </div>
     </div>
     <div id="score-board">0</div>
@@ -218,7 +219,7 @@
 </div>
 
 <div id="start-screen" class="overlay">
-    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.1.6</div>
+    <div style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">v.2.0</div>
     <div id="loading-container" style="display: none;">
         <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
         <div style="width: 300px; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
@@ -263,7 +264,7 @@
             <span class="stat-val" id="win-diamonds">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.24s;">
-            <span class="stat-label">🪳 Cockroaches:</span>
+            <span class="stat-label">🪳🐛 Cockroaches:</span>
             <span class="stat-val" id="win-cockroaches">0</span>
         </div>
         <div class="stat-row animate-pop" style="animation-delay: 0.26s;">
@@ -294,7 +295,27 @@
         </div>
     </div>
     <div class="big-emoji animate-pulse" id="win-emoji" style="font-size: clamp(3rem, 8vw, 6rem); margin: 10px 0 5px 0; text-align: center; flex-shrink: 0;">🎉</div>
+    <div id="happy-ending-message" class="hidden" style="color: white; font-size: clamp(1.2rem, 4vw, 1.8rem); font-weight: bold; text-align: center; margin: 15px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); padding: 10px; flex-shrink: 0;">
+        🎊 CONGRATULATIONS! YOU'VE CONQUERED THE HELIX! 🎊<br>
+        <span style="font-size: 0.9em; opacity: 0.9;">You are a true champion! Save your score to the leaderboard!</span>
+    </div>
+    <button class="btn" id="btn-save-to-leaderboard" style="background: rgba(83, 82, 237, 0.8); margin-top: 10px; margin-bottom: 10px; position: relative; z-index: 21; flex-shrink: 0; display: none;">🏆 SAVE TO LEADERBOARD</button>
     <button class="btn btn-start" id="btn-next" style="margin-top: 10px; margin-bottom: 10px; position: relative; z-index: 21; flex-shrink: 0;">NEXT LEVEL</button>
+</div>
+
+<div id="ending-screen" class="overlay hidden" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div style="text-align: center; color: white; max-width: 90vw;">
+        <h1 style="font-size: clamp(2rem, 6vw, 4rem); margin-bottom: 20px; text-shadow: 3px 3px 6px rgba(0,0,0,0.8);">🏆 VICTORY! 🏆</h1>
+        <div id="ending-gif-container" style="margin: 20px auto; max-width: 600px; max-height: 400px; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            <img id="ending-gif" src="" alt="Victory Animation" style="width: 100%; height: auto; display: block;">
+        </div>
+        <p style="font-size: clamp(1.2rem, 4vw, 2rem); margin: 30px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+            You have defeated the Final Boss!<br>
+            The Helix is yours to command!
+        </p>
+        <button class="btn btn-start" id="btn-ending-restart" style="margin-top: 20px; font-size: clamp(1rem, 3vw, 1.5rem);">🎮 PLAY AGAIN</button>
+        <button class="btn" id="btn-ending-leaderboard" style="background: rgba(83, 82, 237, 0.8); margin-top: 10px; font-size: clamp(1rem, 3vw, 1.5rem);">🏆 VIEW LEADERBOARD</button>
+    </div>
 </div>
 
 <div id="leaderboard-screen" class="overlay hidden">
@@ -323,16 +344,16 @@
     <div class="stat-box" style="max-height: 70vh; overflow-y: auto; -webkit-overflow-scrolling: touch; width: clamp(300px, 90vw, 500px);">
         <div style="text-align: left; font-size: 0.9rem; line-height: 1.8;">
             <h3 style="margin-top: 0; margin-bottom: 10px; text-align: center;">GAME ELEMENTS</h3>
-            <p><strong>🍎 Apple</strong> - Restores 1 life</p>
-            <p><strong>🍌 Banana</strong> - Increases speed & jump</p>
-            <p><strong>🍫 Chocolate</strong> - Adds 5 seconds to timer</p>
-            <p><strong>💎 Diamond</strong> - Drills through floors</p>
-            <p><strong>🪳 Cockroach</strong> - Reduces jump & speed</p>
-            <p><strong>🤢 Rotten</strong> - Slows you down</p>
-            <p style="margin-top: 15px; margin-bottom: 5px;"><strong>⚠️ DANGERS:</strong></p>
-            <p><strong>👻 Ghosts</strong> - Avoid or use drill!</p>
-            <p><strong>🦇 Bats</strong> - Fly at upper floors</p>
-            <p style="margin-top: 15px; color:#ff4500; font-weight:bold;">Level 5: THE END</p>
+              <p><strong>🍎 Apple</strong> - Restores 1 life (max 5)</p>
+              <p><strong>🍌 Banana</strong> - Increases speed and jump height</p>
+              <p><strong>🍫 Chocolate</strong> - Adds 5 seconds to timer</p>
+              <p><strong>💎 Diamond</strong> - Drill through enemies</p>
+                  <h3 style="margin-top: 20px; margin-bottom: 12px; color: #c0392b;">⚠️ Hazards</h3>
+              <p><strong>🪳 Cockroach</strong> - Reduces speed and jump height</p>
+              <p><strong>🤢 Rotten Food</strong> - Slows movement and causes wobbly jumps</p>
+              <p><strong>👻 Ghosts</strong> - Avoid at all costs or use your drill to escape</p>
+              <p><strong>🦇 Bats</strong> - Patrol the upper floors</p>
+              <p><strong>👹 Monsters</strong> - Lurk on the lower floors</p>
             <p style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); text-align: center; font-size: 0.85rem; color: rgba(255,255,255,0.7);">Game made by <strong>Hagay Ladany</strong></p>
         </div>
     </div>
@@ -556,7 +577,8 @@ const AssetFactory = {
             this.textures['rotten'] = this.createEmojiTexture('🤢'); 
             }); 
             this.textures['diamond'] = this.createEmojiTexture('💎');
-            this.textures['cockroach'] = this.createEmojiTexture('🪳');
+            // Try cockroach emoji first, fallback to bug emoji for better browser compatibility
+            this.textures['cockroach'] = this.createEmojiTextureWithFallback('🪳', '🐛');
             this.texFloor = this.createFloorTexture();
             this.texStone = this.createStoneTexture();
             this.texPole = this.createPoleTexture();
@@ -568,6 +590,45 @@ const AssetFactory = {
             const ctx = c.getContext('2d'); ctx.font = '100px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText(emoji, 64, 64); return new THREE.CanvasTexture(c);
         } catch(e) { return null; }
+    },
+    createEmojiTextureWithFallback(primaryEmoji, fallbackEmoji) {
+        try {
+            // Try primary emoji first
+            const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+            const ctx = c.getContext('2d'); ctx.font = '100px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(primaryEmoji, 64, 64);
+            
+            // Check if emoji rendered properly by sampling multiple pixels in the center area
+            const sampleSize = 20;
+            const startX = 64 - sampleSize/2;
+            const startY = 64 - sampleSize/2;
+            const imageData = ctx.getImageData(startX, startY, sampleSize, sampleSize);
+            let hasContent = false;
+            
+            // Check if any pixel has non-transparent content
+            for (let i = 3; i < imageData.data.length; i += 4) {
+                if (imageData.data[i] > 10) { // Alpha channel > 10 (some transparency threshold)
+                    hasContent = true;
+                    break;
+                }
+            }
+            
+            // If primary emoji didn't render properly, use fallback
+            if (!hasContent) {
+                ctx.clearRect(0, 0, 128, 128);
+                ctx.fillText(fallbackEmoji, 64, 64);
+            }
+            
+            return new THREE.CanvasTexture(c);
+        } catch(e) { 
+            // If error, try fallback emoji
+            try {
+                const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+                const ctx = c.getContext('2d'); ctx.font = '100px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(fallbackEmoji, 64, 64);
+                return new THREE.CanvasTexture(c);
+            } catch(e2) { return null; }
+        }
     },
     createFloorTexture: () => {
         const c = document.createElement('canvas'); c.width=256; c.height=256; const ctx = c.getContext('2d');
@@ -697,8 +758,20 @@ async function saveToLeaderboard(playerName, playerScore) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
-        const result = await response.json();
+        // Try to parse as JSON, but handle non-JSON responses gracefully
+        let result;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            result = await response.json();
+        } else {
+            const text = await response.text();
+            // If response is just text, consider it successful if status is OK
+            result = { success: true, message: text || 'Score saved successfully' };
+        }
         console.log("Score submission successful:", result);
+        
+        // Wait a moment to ensure the save has propagated to Google Sheets
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         // After successful submission, refresh the list:
         await displayLeaderboard(); 
@@ -791,6 +864,8 @@ class Game {
         if (typeof THREE !== 'undefined') this.raycaster = new THREE.Raycaster();
         this.floors = []; this.interactables = []; this.physicsMeshes = []; 
         this.timeLeft = 60; this.maxTime = 60; this.lastTime = 0;
+        this.endingGifPreloaded = false; // Flag for async GIF preloading
+        this.finalBoss = null; // Reference to final boss
         
         // For Spiral Level
         this.highestY = 0;
@@ -831,21 +906,39 @@ class Game {
             
             // Disable button and show saving state
             const btn = document.getElementById('btn-save-score');
+            
+            // Prevent multiple simultaneous saves
+            if (btn.disabled || btn.dataset.saving === 'true') {
+                return;
+            }
+            
             const originalText = btn.innerText;
             btn.disabled = true;
+            btn.dataset.saving = 'true';
             btn.innerText = 'SAVING...';
             
             try {
+                // Ensure the save completes before proceeding
                 await saveToLeaderboard(name, score, level);
+                
+                // Only update UI after successful save
                 btn.innerText = 'SAVED!';
-                setTimeout(async () => {
-                    document.getElementById('name-input-screen').classList.add('hidden');
-                    await displayLeaderboard();
-                    document.getElementById('leaderboard-screen').classList.remove('hidden');
-                }, 1000);
+                btn.dataset.saving = 'false';
+                
+                // Wait a bit before transitioning to show the saved state
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Now transition to leaderboard
+                document.getElementById('name-input-screen').classList.add('hidden');
+                await displayLeaderboard();
+                document.getElementById('leaderboard-screen').classList.remove('hidden');
+                
             } catch (error) {
                 console.error('Error saving score:', error);
                 btn.innerText = 'ERROR - TRY AGAIN';
+                btn.dataset.saving = 'false';
+                
+                // Re-enable button after error
                 setTimeout(() => {
                     btn.innerText = originalText;
                     btn.disabled = false;
@@ -855,6 +948,21 @@ class Game {
         document.getElementById('btn-skip-name').onclick = () => {
             document.getElementById('name-input-screen').classList.add('hidden');
             this.restart(true);
+        };
+        
+        // Save to leaderboard button (for level 5 completion)
+        document.getElementById('btn-save-to-leaderboard').onclick = async () => {
+            // Hide level complete screen and show name input screen
+            document.getElementById('level-complete-screen').classList.add('hidden');
+            updateText('name-input-score', this.score.toLocaleString());
+            document.getElementById('name-input-screen').classList.remove('hidden');
+            document.getElementById('player-name-input').focus();
+            // Allow Enter key to submit
+            document.getElementById('player-name-input').onkeypress = (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('btn-save-score').click();
+                }
+            };
         };
         
         // Level logic: goto next or loop at 6
@@ -886,6 +994,17 @@ class Game {
             document.getElementById('pacman-minigame-screen').classList.add('hidden');
             this.level = 3;
             this.restart(false);
+        };
+        
+        // Ending screen buttons
+        document.getElementById('btn-ending-restart').onclick = () => {
+            document.getElementById('ending-screen').classList.add('hidden');
+            this.restart(true);
+        };
+        document.getElementById('btn-ending-leaderboard').onclick = async () => {
+            await displayLeaderboard();
+            document.getElementById('ending-screen').classList.add('hidden');
+            document.getElementById('leaderboard-screen').classList.remove('hidden');
         };
     }
 
@@ -979,7 +1098,7 @@ class Game {
         this.ballBody.castShadow = true;
         this.ballBody.receiveShadow = false;
         this.ballWrap.add(this.ballBody);
-        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.15, 8), new THREE.MeshBasicMaterial({color:0x5D4037})); stem.position.set(0, 0.4, 0); this.ballBody.add(stem);
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.15, 8), new THREE.MeshBasicMaterial({color:0x5D4037})); stem.position.set(0, 0.4, 0); stem.castShadow = true; this.ballBody.add(stem);
         
         this.ballFace = new THREE.Group();
         const eyeWhiteGeo = new THREE.SphereGeometry(0.12, 16, 16); const eyeWhiteMat = new THREE.MeshBasicMaterial({color:0xffffff});
@@ -1001,10 +1120,10 @@ class Game {
 
         const limbGeo = typeof THREE.CapsuleGeometry === 'function' ? new THREE.CapsuleGeometry(0.04, 0.15, 4, 8) : new THREE.CylinderGeometry(0.04, 0.04, 0.23, 8);
         const limbMat = new THREE.MeshBasicMaterial({color: 0xFF9966});
-        const armL = new THREE.Mesh(limbGeo, limbMat); armL.position.set(-0.38, -0.1, 0); armL.rotation.z = 0.5; this.ballBody.add(armL);
-        const armR = new THREE.Mesh(limbGeo, limbMat); armR.position.set(0.38, -0.1, 0); armR.rotation.z = -0.5; this.ballBody.add(armR);
-        const legL = new THREE.Mesh(limbGeo, limbMat); legL.position.set(-0.15, -0.4, 0); this.ballBody.add(legL);
-        const legR = new THREE.Mesh(limbGeo, limbMat); legR.position.set(0.15, -0.4, 0); this.ballBody.add(legR);
+        const armL = new THREE.Mesh(limbGeo, limbMat); armL.position.set(-0.38, -0.1, 0); armL.rotation.z = 0.5; armL.castShadow = true; this.ballBody.add(armL);
+        const armR = new THREE.Mesh(limbGeo, limbMat); armR.position.set(0.38, -0.1, 0); armR.rotation.z = -0.5; armR.castShadow = true; this.ballBody.add(armR);
+        const legL = new THREE.Mesh(limbGeo, limbMat); legL.position.set(-0.15, -0.4, 0); legL.castShadow = true; this.ballBody.add(legL);
+        const legR = new THREE.Mesh(limbGeo, limbMat); legR.position.set(0.15, -0.4, 0); legR.castShadow = true; this.ballBody.add(legR);
         
         // Character shadow will be rendered by shadow maps (no flat polygon needed)
         
@@ -1018,13 +1137,16 @@ class Game {
         this.totalItems = 0; this.levelCollected = 0;
         this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0, cockroach: 0 };
         this.lastFloorY = -9999; 
-        this.highestY = 0;      
+        this.highestY = 0;
+        // Reset floor counter for new level
+        this.currentLevelMaxDepth = 0;      
         
         let grad = "";
         if(this.level === 1) grad = "linear-gradient(to bottom, #87CEEB, #E0F7FA)";
-        else if(this.level === 2) grad = "linear-gradient(to bottom, #2c3e50, #000000)"; 
+        else if(this.level === 2) grad = "linear-gradient(to bottom, #4a5568, #2d3748)"; 
         else if(this.level === 3) grad = "linear-gradient(to bottom, #134E5E, #71B280)";
         else if(this.level === 4) grad = "linear-gradient(to bottom, #cc4444, #400044)";
+        else if(this.level === 5) grad = "linear-gradient(to bottom, #1a0033, #4a00e0, #8e2de2)"; // Level 5: Dark purple to bright purple
         else grad = "linear-gradient(to bottom, #ECE9E6, #FFFFFF)";
         // Dramatically reduce black overlay - much lighter
         const overlayGradient = (this.level === 4) ? "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%)" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 29%, rgba(0, 0, 0, 0.1) 100%)";
@@ -1079,26 +1201,48 @@ class Game {
         
         let fogCol = 0x000000;
         if(this.level === 1) fogCol = 0x88CCFF;
+        else if(this.level === 5) fogCol = 0x2d1b4e; // Dark purple fog for level 5
         this.scene.fog.color.setHex(fogCol);
         
         let trackName = 'level_' + this.level;
         this.audio.playTrack(trackName);
         this.stressMusicPlaying = false; // Reset stress music flag for new level
 
+        // Set maxTime based on level
+        if(this.level === 5) this.maxTime = 120; 
+        else if(this.level === 4) this.maxTime = 90; 
+        else this.maxTime = 60;
+        
         this.timeLeft = this.maxTime;
 
         const isBoss = this.level === 4; 
         const isFinal = this.level === 5; 
         
-        const floors = isFinal ? 50 : (isBoss ? 20 : (this.level===1 ? 25 : 40));
+        // Level 5: Completely rebuilt - 30 floors with boss at the end
+        const floors = isFinal ? 30 : (isBoss ? 20 : (this.level===1 ? 25 : 40));
         const hidePole = (this.level === 5 || this.level === 4); // Hide pole for level 4 and 5
         
         let palette;
         if(this.level===1) palette=[0x00d2d3,0x54a0ff,0x5f27cd]; 
         else if(this.level===3) palette=[0xbadc58,0x6ab04c,0xf6e58d]; 
-        else if(this.level===5) palette=[0xFFFFFF, 0xEEEEEE, 0xDDDDDD]; 
+        else if(this.level===5) palette=[0x4a00e0, 0x8e2de2, 0x667eea]; // Level 5: Purple/blue futuristic palette
         else if(this.level === 4) palette=[0xcc6666, 0xaa4444, 0x884444]; // Level 4: Lighter, more distinct colors
         else palette=[0x555555, 0x333333];
+        
+        // Preload ending GIF asynchronously for level 5
+        if(isFinal && !this.endingGifPreloaded) {
+            this.endingGifPreloaded = true;
+            const endingGif = new Image();
+            endingGif.onload = () => {
+                console.log("Ending GIF preloaded successfully");
+                document.getElementById('ending-gif').src = 'images/ending_victory.gif';
+            };
+            endingGif.onerror = () => {
+                console.warn("Ending GIF not found, using placeholder");
+                document.getElementById('ending-gif').src = '';
+            };
+            endingGif.src = 'images/ending_victory.gif';
+        }
         
         const core = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,200,32), new THREE.MeshBasicMaterial({color: isBoss?0x888:0xddd}));
         core.receiveShadow = true;
@@ -1126,7 +1270,13 @@ class Game {
                 shape.absarc(0,0, 1.6, j*a, (j+1)*a, false); shape.absarc(0,0, 2.5, (j+1)*a, j*a, true);
                 const geo = new THREE.ExtrudeGeometry(shape, {depth:0.28, bevelEnabled:true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 3}); 
                 geo.rotateX(-Math.PI/2);
-                const mat = new THREE.MeshBasicMaterial({ color: isDanger ? dangerColor : col, transparent: isFinal, opacity: isFinal ? 0.9 : 1.0 });
+                // Level 5: Use fully opaque material (no transparency) to prevent floors from disappearing with white fog
+                // Other levels: normal opaque material
+                const mat = new THREE.MeshBasicMaterial({ 
+                    color: isDanger ? dangerColor : col, 
+                    transparent: false,
+                    opacity: 1.0
+                });
                 const m = new THREE.Mesh(geo, mat);
                 m.receiveShadow = true;
                 m.castShadow = true; 
@@ -1135,12 +1285,17 @@ class Game {
                 if(!isDanger && !isBoss && i>0 && i<floors-1 && Math.random()<0.1) this.spawnItem(grp, Math.cos(j*a+a/2)*2, Math.sin(j*a+a/2)*2);
             }
             
-            // --- LEVEL 5 LOGIC (FINAL LEVEL - MORE GHOSTS, RED LARGER MONSTERS) ---
+            // --- LEVEL 5 LOGIC (COMPLETELY REBUILT - FUTURISTIC FINAL LEVEL) ---
             if(this.level === 5) { 
-                if(i>2 && Math.random()<0.6) {
-                    if(Math.random() > 0.4) this.spawnFlyingGhost(grp);
+                // Level 5: Strategic enemy placement - fewer but more dangerous
+                if(i > 3 && i < floors - 5 && Math.random() < 0.3) {
+                    if(Math.random() > 0.5) this.spawnFlyingGhost(grp);
                     else this.spawnMonster(grp, true); // Red and larger
-                } 
+                }
+                // Add items more frequently on level 5
+                if(!isDanger && i>0 && i<floors-1 && Math.random()<0.15) {
+                    this.spawnItem(grp, Math.cos(j*a+a/2)*2, Math.sin(j*a+a/2)*2);
+                }
             }
             else { 
                 const ghostChance = isBoss ? 0.6 : 0.2; 
@@ -1148,12 +1303,18 @@ class Game {
             }
             
             // Add bats flying at upper part of floor (all levels except level 1)
-            if(this.level > 1 && i > 0 && Math.random() < 0.3) {
+            if(this.level > 1 && this.level !== 5 && i > 0 && Math.random() < 0.3) {
                 this.spawnBat(grp);
             }
 
             if(this.level === 3 && i >= 10 && i <= 18) grp.rotation.y = 0; else grp.rotation.y = Math.random()*6;
             this.tower.add(grp); this.floors.push(grp);
+        }
+        
+        // Level 5: Add Final Boss at the last floor before finish
+        if(isFinal) {
+            const bossFloorY = -(floors-1)*4;
+            this.spawnFinalBoss(bossFloorY);
         }
         
         const lastY = -floors*4; this.lastFloorY = lastY; 
@@ -1188,8 +1349,9 @@ class Game {
     // --- UPGRADE: MONSTER HANDS + FACING + NO SPIN ---
     spawnMonster(parent, isFire) {
         const isFinalLevel = this.level === 5;
-        // Level 5: monsters should look like other stages but 20% larger
-        const col = (isFire || isFinalLevel) ? 0xff4500 : (this.level===3 ? 0x8A2BE2 : 0x32CD32);
+        const isLevel4 = this.level === 4;
+        // Level 4: orange monsters, Level 5: red monsters (20% larger)
+        const col = (isFire || isFinalLevel) ? 0xff4500 : (isLevel4 ? 0xff8c00 : (this.level===3 ? 0x8A2BE2 : 0x32CD32));
         const scale = isFinalLevel ? 1.2 : 1.0; 
         const g = new THREE.Group();
         const body = new THREE.Mesh(new THREE.BoxGeometry(0.6 * scale, 0.6 * scale, 0.6 * scale), new THREE.MeshBasicMaterial({color:col}));
@@ -1220,15 +1382,52 @@ class Game {
         const hornR = new THREE.Mesh(hornGeo, hornMat); hornR.position.set(0.2, 0.35, 0.1); hornR.rotation.z = 0.3;
         g.add(hornL, hornR);
         
+        // LEVEL 5: ADD MORE DETAILS - Spikes on back, sharper teeth, glowing eyes
+        if(isFinalLevel) {
+            // Spikes on back
+            for(let i = 0; i < 5; i++) {
+                const spikeGeo = new THREE.ConeGeometry(0.05, 0.15, 6);
+                const spikeMat = new THREE.MeshBasicMaterial({color: 0xff2200});
+                const spike = new THREE.Mesh(spikeGeo, spikeMat);
+                spike.position.set((i - 2) * 0.12, 0.25, -0.25);
+                spike.rotation.x = Math.PI;
+                spike.castShadow = true;
+                g.add(spike);
+            }
+            
+            // Sharper teeth in mouth
+            for(let i = 0; i < 4; i++) {
+                const toothGeo = new THREE.ConeGeometry(0.03, 0.08, 6);
+                const toothMat = new THREE.MeshBasicMaterial({color: 0xffffff});
+                const tooth = new THREE.Mesh(toothGeo, toothMat);
+                tooth.position.set((i - 1.5) * 0.08, -0.18, 0.32);
+                tooth.rotation.x = Math.PI / 2;
+                g.add(tooth);
+            }
+            
+            // Glowing eye effect (brighter yellow)
+            eyeMat.color.setHex(0xffff00);
+            eyeMat.emissive = new THREE.Color(0xffff00);
+            eyeMat.emissiveIntensity = 0.5;
+        }
+        
         // HANDS STICKING OUT FRONT
         const armGeo = new THREE.BoxGeometry(0.15, 0.15, 0.4); // Long in Z (forward)
         const armMat = new THREE.MeshBasicMaterial({color: 0x005500}); 
-        const armL = new THREE.Mesh(armGeo, armMat); armL.position.set(-0.35, 0, 0.3); // Forward Z
-        const armR = new THREE.Mesh(armGeo, armMat); armR.position.set(0.35, 0, 0.3);
+        const armL = new THREE.Mesh(armGeo, armMat); armL.position.set(-0.35, 0, 0.3); armL.castShadow = true; // Forward Z
+        const armR = new THREE.Mesh(armGeo, armMat); armR.position.set(0.35, 0, 0.3); armR.castShadow = true;
         g.add(armL, armR);
 
         const legGeo = new THREE.BoxGeometry(0.15, 0.2, 0.15); const legMat = new THREE.MeshBasicMaterial({color: 0x006400}); 
-        const legL = new THREE.Mesh(legGeo, legMat); legL.position.set(-0.15, -0.4, 0); const legR = new THREE.Mesh(legGeo, legMat); legR.position.set(0.15, -0.4, 0); g.add(legL, legR);
+        const legL = new THREE.Mesh(legGeo, legMat); legL.position.set(-0.15, -0.4, 0); legL.castShadow = true; 
+        const legR = new THREE.Mesh(legGeo, legMat); legR.position.set(0.15, -0.4, 0); legR.castShadow = true; 
+        g.add(legL, legR);
+        
+        // Enable shadows on all monster parts
+        hornL.castShadow = true; hornR.castShadow = true;
+        eyeL.castShadow = true; eyeR.castShadow = true;
+        browL.castShadow = true; browR.castShadow = true;
+        mouth.castShadow = true;
         
         const direction = Math.random() > 0.5 ? 1 : -1;
         g.userData = { type:'ghost', angle:Math.random()*6, speed:0.02, baseColor: col, dir: direction };
@@ -1241,6 +1440,95 @@ class Game {
         // Rotate to face forward on floor plane (rotate around Y axis to face positive Z)
         g.rotation.set(0, 0, 0); 
         parent.add(g); this.interactables.push(g);
+    }
+    
+    spawnFinalBoss(yPosition) {
+        // Create massive final boss enemy
+        const boss = new THREE.Group();
+        boss.position.y = yPosition;
+        boss.position.x = 0;
+        boss.position.z = 0;
+        
+        // Main body - large and menacing
+        const bodyScale = 2.5;
+        const bodyGeo = new THREE.BoxGeometry(1.2 * bodyScale, 1.2 * bodyScale, 1.2 * bodyScale);
+        const bodyMat = new THREE.MeshBasicMaterial({color: 0x8B0000, emissive: 0xff0000, emissiveIntensity: 0.3});
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.castShadow = true;
+        body.receiveShadow = false;
+        boss.add(body);
+        
+        // Multiple glowing eyes
+        const eyeMat = new THREE.MeshBasicMaterial({color: 0xffff00, emissive: 0xffff00, emissiveIntensity: 1.0});
+        for(let i = 0; i < 6; i++) {
+            const eye = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), eyeMat);
+            const angle = (i / 6) * Math.PI * 2;
+            eye.position.set(Math.cos(angle) * 0.8, Math.sin(i * 0.5) * 0.4, 0.7);
+            eye.castShadow = true;
+            boss.add(eye);
+        }
+        
+        // Massive horns/spikes
+        for(let i = 0; i < 8; i++) {
+            const hornGeo = new THREE.ConeGeometry(0.15, 0.8, 8);
+            const hornMat = new THREE.MeshBasicMaterial({color: 0x4a0000});
+            const horn = new THREE.Mesh(hornGeo, hornMat);
+            const angle = (i / 8) * Math.PI * 2;
+            horn.position.set(Math.cos(angle) * 0.6, 0.8, Math.sin(angle) * 0.6);
+            horn.rotation.z = Math.PI / 4;
+            horn.castShadow = true;
+            boss.add(horn);
+        }
+        
+        // Rotating energy rings
+        for(let ring = 0; ring < 3; ring++) {
+            const ringGeo = new THREE.TorusGeometry(0.8 + ring * 0.3, 0.1, 8, 16);
+            const ringMat = new THREE.MeshBasicMaterial({color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 0.5, transparent: true, opacity: 0.7});
+            const energyRing = new THREE.Mesh(ringGeo, ringMat);
+            energyRing.rotation.x = Math.PI / 2;
+            energyRing.position.y = -0.5 + ring * 0.3;
+            energyRing.userData.ringIndex = ring;
+            energyRing.userData.rotationSpeed = 0.02 + ring * 0.01;
+            boss.add(energyRing);
+        }
+        
+        // Arms with claws
+        const armGeo = new THREE.BoxGeometry(0.3, 0.3, 1.2);
+        const armMat = new THREE.MeshBasicMaterial({color: 0x660000});
+        const armL = new THREE.Mesh(armGeo, armMat);
+        armL.position.set(-1.5, 0, 0.8);
+        armL.rotation.z = 0.3;
+        armL.castShadow = true;
+        const armR = new THREE.Mesh(armGeo, armMat);
+        armR.position.set(1.5, 0, 0.8);
+        armR.rotation.z = -0.3;
+        armR.castShadow = true;
+        boss.add(armL, armR);
+        
+        // Claws
+        for(let side = 0; side < 2; side++) {
+            for(let i = 0; i < 3; i++) {
+                const clawGeo = new THREE.ConeGeometry(0.08, 0.3, 6);
+                const clawMat = new THREE.MeshBasicMaterial({color: 0x000000});
+                const claw = new THREE.Mesh(clawGeo, clawMat);
+                claw.position.set((side === 0 ? -1.5 : 1.5) + (i - 1) * 0.15, -0.3, 1.4);
+                claw.rotation.x = Math.PI;
+                claw.castShadow = true;
+                boss.add(claw);
+            }
+        }
+        
+        boss.userData = {
+            type: 'final-boss',
+            health: 3, // Boss takes 3 hits to defeat
+            hitCount: 0,
+            isDefeated: false,
+            rotationSpeed: 0.005
+        };
+        
+        this.tower.add(boss);
+        this.interactables.push(boss);
+        this.finalBoss = boss; // Store reference
     }
     
     spawnFlyingGhost(parent) {
@@ -1331,6 +1619,10 @@ class Game {
         
         document.getElementById('game-over-screen').classList.add('hidden');
         document.getElementById('level-complete-screen').classList.add('hidden');
+        document.getElementById('ending-screen').classList.add('hidden');
+        document.getElementById('happy-ending-message').classList.add('hidden');
+        document.getElementById('btn-save-to-leaderboard').style.display = 'none';
+        this.endingGifPreloaded = false; // Reset GIF preload flag
         
         this.stressMusicPlaying = false; // Reset stress music flag
         this.setupLevel();
@@ -1391,6 +1683,7 @@ class Game {
         updateText('c-apple', this.collected.apple);
         updateText('c-banana', this.collected.banana);
         updateText('c-choco', this.collected.choco);
+        updateText('c-floors', this.currentLevelMaxDepth || 0);
     }
     
     handleTimeout() {
@@ -1487,14 +1780,23 @@ class Game {
                     // 1.5 (offset) + 0.4 (radius) = 1.9 approx distance to center
                     if(dist < 1.9 + Math.abs(this.velocity) && dist > 0) { 
                          const u = hitsMain[0].object.userData.type ? hitsMain[0].object.userData : (hitsMain[0].object.parent ? hitsMain[0].object.parent.userData : {});
-                         if(!['apple','banana','rotten','diamond','ghost','chocolate','white-ghost','bat','cockroach'].includes(u.type)) {
+                         if(!['apple','banana','rotten','diamond','ghost','chocolate','white-ghost','bat','cockroach','final-boss'].includes(u.type)) {
                             this.ballWrap.position.y = hitsMain[0].point.y + 0.4; 
                             if(u.type === 'safe') {
                                 this.velocity = jump; this.audio.playSFX('bounce'); this.currentScale.set(1.4, 0.6, 1.4);
                                 this.particles.spawn(this.ballWrap.position, u.color || 0xffffff);
                             } else if(u.type === 'danger' && this.drillFloors <= 0) {
                                 this.takeDamage();
-                            } else if(u.type === 'finish') { this.levelComplete(); }
+                            } else if(u.type === 'finish') { 
+                                // Level 5: Check if boss is defeated before allowing finish
+                                if(this.level === 5 && this.finalBoss && !this.finalBoss.userData.isDefeated) {
+                                    // Boss not defeated yet - bounce back
+                                    this.velocity = this.jumpForce * 0.5;
+                                    this.audio.playSFX('damage');
+                                } else {
+                                    this.levelComplete(); 
+                                }
+                            }
                          }
                     }
                 }
@@ -1546,6 +1848,18 @@ class Game {
                         }
                     } 
                 }
+                else if(o.userData.type === 'final-boss') {
+                    // Boss slowly rotates and energy rings spin
+                    if(!o.userData.isDefeated) {
+                        o.rotation.y += o.userData.rotationSpeed;
+                        // Animate energy rings
+                        o.children.forEach(child => {
+                            if(child.userData && child.userData.ringIndex !== undefined) {
+                                child.rotation.y += child.userData.rotationSpeed;
+                            }
+                        });
+                    }
+                }
                 else if(o.userData.type === 'white-ghost') { 
                     let dir = o.userData.dir || 1;
                     o.userData.angle += o.userData.speed * dir; 
@@ -1582,7 +1896,7 @@ class Game {
                 }
                 
                 const wPos = new THREE.Vector3(); o.getWorldPosition(wPos);
-                const dist = o.userData.type === 'white-ghost' ? 1.0 : (o.userData.type === 'bat' ? 0.9 : 0.8);
+                const dist = o.userData.type === 'white-ghost' ? 1.0 : (o.userData.type === 'bat' ? 0.9 : (o.userData.type === 'final-boss' ? 2.5 : 0.8));
                 
                 // Check if ghost/bat is within floor area (radius ~2.5) before collision
                 const floorRadius = 2.5;
@@ -1592,10 +1906,43 @@ class Game {
                 // For bats, also check if character is at similar height (upper part)
                 const heightDiff = Math.abs(wPos.y - pos.y);
                 const isBatCollision = o.userData.type === 'bat' ? (heightDiff < 1.5 && isWithinFloor) : isWithinFloor;
+                const isBossCollision = o.userData.type === 'final-boss' ? (heightDiff < 3.0 && distanceFromCenter < 3.0) : isBatCollision;
                 
-                if(wPos.distanceTo(pos) < dist && isBatCollision) {
+                if(wPos.distanceTo(pos) < dist && isBossCollision) {
                     const t = o.userData.type;
-                    if(t==='apple') { this.lives=Math.min(5,this.lives+1); this.collected.apple++; this.levelCollected++; this.audio.playSFX('collect'); o.parent.remove(o); this.interactables.splice(i,1); }
+                    if(t==='final-boss') {
+                        // Boss collision - takes multiple hits to defeat
+                        if(this.drillFloors > 0 && !o.userData.isDefeated) {
+                            // Using drill - damage boss
+                            o.userData.hitCount = (o.userData.hitCount || 0) + 1;
+                            this.audio.playSFX('buff');
+                            this.particles.spawn(wPos, 0xff0000);
+                            
+                            if(o.userData.hitCount >= o.userData.health) {
+                                // Boss defeated!
+                                o.userData.isDefeated = true;
+                                this.audio.playSFX('collect');
+                                this.particles.spawn(wPos, 0x00ff00);
+                                // Make boss fade out
+                                o.children.forEach(child => {
+                                    if(child.material) {
+                                        child.material.transparent = true;
+                                        child.material.opacity = 0.3;
+                                    }
+                                });
+                                // Remove boss after delay
+                                setTimeout(() => {
+                                    if(o.parent) o.parent.remove(o);
+                                    const idx = this.interactables.indexOf(o);
+                                    if(idx >= 0) this.interactables.splice(idx, 1);
+                                }, 1000);
+                            }
+                        } else if(!o.userData.isDefeated) {
+                            // No drill - take damage
+                            this.takeDamage();
+                        }
+                    }
+                    else if(t==='apple') { this.lives=Math.min(5,this.lives+1); this.collected.apple++; this.levelCollected++; this.audio.playSFX('collect'); o.parent.remove(o); this.interactables.splice(i,1); }
                     else if(t==='banana') { 
                         this.fastTimer+=300; 
                         this.hasCockroachDebuff = false; // Clear cockroach debuff when eating banana
@@ -1673,9 +2020,20 @@ class Game {
     
     levelComplete() {
         this.isPlaying = false;
-        if(this.level === 5) { updateText('btn-next', "RESTART GAME"); this.audio.playTrack('you_win'); } 
-        else { updateText('btn-next', "NEXT LEVEL"); this.audio.playTrack('you_win'); }
-        document.getElementById('level-complete-screen').classList.remove('hidden');
+        const isGameComplete = this.level === 5;
+        if(isGameComplete) { 
+            // Level 5: Show special ending screen with animated GIF
+            this.audio.playTrack('you_win');
+            document.getElementById('level-complete-screen').classList.add('hidden');
+            document.getElementById('ending-screen').classList.remove('hidden');
+        } else { 
+            updateText('btn-next', "NEXT LEVEL"); 
+            this.audio.playTrack('you_win');
+            // Hide happy ending message and save button for non-final levels
+            document.getElementById('happy-ending-message').classList.add('hidden');
+            document.getElementById('btn-save-to-leaderboard').style.display = 'none';
+            document.getElementById('level-complete-screen').classList.remove('hidden');
+        }
         
         // Display collected items
         updateText('win-apples', this.collected.apple || 0);
