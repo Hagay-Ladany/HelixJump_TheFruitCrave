@@ -1035,12 +1035,14 @@ class Game {
         dirLight.shadow.mapSize.width = 2048;
         dirLight.shadow.mapSize.height = 2048;
         dirLight.shadow.camera.near = 0.5;
-        dirLight.shadow.camera.far = 50;
-        dirLight.shadow.camera.left = -20;
-        dirLight.shadow.camera.right = 20;
-        dirLight.shadow.camera.top = 20;
-        dirLight.shadow.camera.bottom = -20;
+        dirLight.shadow.camera.far = 150; // Extended for deeper levels
+        dirLight.shadow.camera.left = -25;
+        dirLight.shadow.camera.right = 25;
+        dirLight.shadow.camera.top = 50;
+        dirLight.shadow.camera.bottom = -100; // Extended to cover deeper floors
+        this.dirLight = dirLight; // Store reference for dynamic updates
         this.scene.add(dirLight);
+        this.scene.add(dirLight.target); // Add target to scene for dynamic updates
         this.particles = new ParticleSystem(this.scene);
         this.createCharacter(); this.setupLevel();
         
@@ -1200,9 +1202,14 @@ class Game {
         });
         
         let fogCol = 0x000000;
+        let fogDensity = 0.03; // Default fog density
         if(this.level === 1) fogCol = 0x88CCFF;
-        else if(this.level === 5) fogCol = 0x2d1b4e; // Dark purple fog for level 5
+        else if(this.level === 5) {
+            fogCol = 0x2d1b4e; // Dark purple fog for level 5
+            fogDensity = 0.01; // Much lower density so floors don't disappear at depth
+        }
         this.scene.fog.color.setHex(fogCol);
+        this.scene.fog.density = fogDensity;
         
         let trackName = 'level_' + this.level;
         this.audio.playTrack(trackName);
@@ -1223,11 +1230,13 @@ class Game {
         const hidePole = (this.level === 5 || this.level === 4); // Hide pole for level 4 and 5
         
         let palette;
-        if(this.level===1) palette=[0x00d2d3,0x54a0ff,0x5f27cd]; 
-        else if(this.level===3) palette=[0xbadc58,0x6ab04c,0xf6e58d]; 
-        else if(this.level===5) palette=[0x4a00e0, 0x8e2de2, 0x667eea]; // Level 5: Purple/blue futuristic palette
-        else if(this.level === 4) palette=[0xcc6666, 0xaa4444, 0x884444]; // Level 4: Lighter, more distinct colors
-        else palette=[0x555555, 0x333333];
+        // Improved color palettes with better contrast and visual appeal
+        if(this.level===1) palette=[0x00e5e5, 0x5cb8ff, 0x7c4dff, 0x00d4aa]; // Cyan, Sky Blue, Purple, Teal
+        else if(this.level===2) palette=[0x7b8794, 0x5a6a7a, 0x94a3b8]; // Slate grays with better distinction
+        else if(this.level===3) palette=[0xc8e858, 0x7ec850, 0xffd93d, 0x6abf69]; // Vibrant greens and yellow
+        else if(this.level===5) palette=[0x6c2bd9, 0xa855f7, 0x7c3aed, 0x8b5cf6]; // Vibrant purples for Level 5
+        else if(this.level === 4) palette=[0xe86a6a, 0xcc5555, 0xf08080, 0xd47979]; // Warmer reds for lava level
+        else palette=[0x6b7280, 0x4b5563, 0x9ca3af]; // Gray fallback
         
         // Preload ending GIF asynchronously for level 5
         if(isFinal && !this.endingGifPreloaded) {
@@ -1244,7 +1253,7 @@ class Game {
             endingGif.src = 'images/ending_victory.gif';
         }
         
-        const core = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,200,32), new THREE.MeshBasicMaterial({color: isBoss?0x888:0xddd}));
+        const core = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,200,32), new THREE.MeshLambertMaterial({color: isBoss?0x888888:0xdddddd}));
         core.receiveShadow = true;
         core.castShadow = true;
         core.position.y = -80; if(hidePole) core.visible = false; 
@@ -1261,7 +1270,8 @@ class Game {
             if(this.level === 3 && i >= 10 && i <= 18 && danger === gap) danger = -1;
 
             const col = palette[i % palette.length];
-            const dangerColor = (isBoss || isFinal) ? 0xff4500 : 0xff4757;
+            // Improved danger colors with better contrast
+            const dangerColor = (isBoss || isFinal) ? 0xff3333 : 0xff4040; // Brighter red for visibility
             
             for(let j=0; j<12; j++) {
                 if(j===gap || j===(gap+1)%12) continue;
@@ -1272,8 +1282,10 @@ class Game {
                 geo.rotateX(-Math.PI/2);
                 // Level 5: Use fully opaque material (no transparency) to prevent floors from disappearing with white fog
                 // Other levels: normal opaque material
-                const mat = new THREE.MeshBasicMaterial({ 
+                // Use MeshLambertMaterial for proper shadow rendering with subtle emissive glow
+                const mat = new THREE.MeshLambertMaterial({ 
                     color: isDanger ? dangerColor : col, 
+                    emissive: isDanger ? 0x330000 : new THREE.Color(col).multiplyScalar(0.15).getHex(), // Subtle glow
                     transparent: false,
                     opacity: 1.0
                 });
@@ -1319,8 +1331,10 @@ class Game {
         }
         
         const lastY = -floors*4; this.lastFloorY = lastY; 
-        const fin = new THREE.Mesh(new THREE.CylinderGeometry(3,3,1,32), new THREE.MeshBasicMaterial({color:0x00ff00}));
-        fin.position.y = lastY; fin.userData = {type:'finish'}; this.tower.add(fin); this.physicsMeshes.push(fin); 
+        const fin = new THREE.Mesh(new THREE.CylinderGeometry(3,3,1,32), new THREE.MeshLambertMaterial({color:0x00ff00, emissive: 0x00aa00, emissiveIntensity: 0.3}));
+        fin.position.y = lastY; fin.userData = {type:'finish'}; 
+        fin.receiveShadow = true; fin.castShadow = true;
+        this.tower.add(fin); this.physicsMeshes.push(fin); 
         this.updateUI();
     }
     
@@ -1975,6 +1989,13 @@ class Game {
             const ty = pos.y + 8; 
             this.camera.position.y += (ty - this.camera.position.y) * 0.1;
             this.camera.lookAt(0, this.camera.position.y - 8, 0);
+            
+            // Update directional light position to follow camera for consistent shadows
+            if(this.dirLight) {
+                this.dirLight.position.y = this.camera.position.y + 20;
+                this.dirLight.target.position.y = pos.y;
+                this.dirLight.target.updateMatrixWorld();
+            }
             
             // Character shadow is now rendered by Three.js shadow maps (no manual update needed)
 
