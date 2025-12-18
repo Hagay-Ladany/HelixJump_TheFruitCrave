@@ -1331,7 +1331,7 @@ class Game {
         }
         
         const lastY = -floors*4; this.lastFloorY = lastY; 
-        const fin = new THREE.Mesh(new THREE.CylinderGeometry(3,3,1,32), new THREE.MeshLambertMaterial({color:0x00ff00, emissive: 0x00aa00, emissiveIntensity: 0.3}));
+        const fin = new THREE.Mesh(new THREE.CylinderGeometry(3,3,1,32), new THREE.MeshLambertMaterial({color:0x00ff00, emissive: 0x005500}));
         fin.position.y = lastY; fin.userData = {type:'finish'}; 
         fin.receiveShadow = true; fin.castShadow = true;
         this.tower.add(fin); this.physicsMeshes.push(fin); 
