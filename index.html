@@ -1292,9 +1292,10 @@ class Game {
                     if(Math.random() > 0.5) this.spawnFlyingGhost(grp);
                     else this.spawnMonster(grp, true); // Red and larger
                 }
-                // Add items more frequently on level 5
-                if(!isDanger && i>0 && i<floors-1 && Math.random()<0.15) {
-                    this.spawnItem(grp, Math.cos(j*a+a/2)*2, Math.sin(j*a+a/2)*2);
+                // Add items more frequently on level 5 (spawn at random positions)
+                if(i > 0 && i < floors - 1 && Math.random() < 0.15) {
+                    const randomAngle = Math.random() * Math.PI * 2;
+                    this.spawnItem(grp, Math.cos(randomAngle) * 2, Math.sin(randomAngle) * 2);
                 }
             }
             else { 
