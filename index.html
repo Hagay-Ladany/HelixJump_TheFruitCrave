@@ -734,7 +734,7 @@
     <div id="start-screen" class="overlay">
         <div
             style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">
-            v.2.6</div>
+            v.2.7</div>
         <div id="loading-container" style="display: none;">
             <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
             <div
@@ -865,21 +865,24 @@
             <h1
                 style="font-size: clamp(2rem, 6vw, 4rem); margin-bottom: 20px; text-shadow: 3px 3px 6px rgba(0,0,0,0.8);">
                 🏆 VICTORY! 🏆</h1>
-            style="margin: 20px auto; max-width: 600px; max-height: 400px; border-radius: 15px; overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
-            <video id="ending-video" src="images/ending_screen.mp4" playsinline preload="auto"
-                style="width: 100%; height: auto; display: block; min-height: 200px;"></video>
+            <div id="ending-gif-container"
+                style="margin: 20px auto; max-width: 600px; max-height: 400px; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+                <video id="ending-video" src="images/ending_screen.mp4" playsinline preload="auto"
+                    style="width: 100%; height: auto; display: block; min-height: 200px;"></video>
+            </div>
+            <p style="font-size: clamp(1.2rem, 4vw, 2rem); margin: 30px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+                You have completed all levels!<br>
+                The Helix is yours to command!
+            </p>
+            <button class="btn" id="btn-ending-save"
+                style="margin-top: 20px; font-size: clamp(1rem, 3vw, 1.5rem); background: rgba(46, 213, 115, 0.9);">💾
+                SAVE SCORE</button>
+            <button class="btn btn-start" id="btn-ending-restart"
+                style="margin-top: 20px; font-size: clamp(1rem, 3vw, 1.5rem);">🎮 PLAY AGAIN</button>
+            <button class="btn" id="btn-ending-leaderboard"
+                style="background: rgba(83, 82, 237, 0.8); margin-top: 10px; font-size: clamp(1rem, 3vw, 1.5rem);">🏆
+                VIEW LEADERBOARD</button>
         </div>
-        <p style="font-size: clamp(1.2rem, 4vw, 2rem); margin: 30px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-            You have completed all levels!<br>
-            The Helix is yours to command!
-        </p>
-        <button class="btn btn-start" id="btn-ending-restart"
-            style="margin-top: 20px; font-size: clamp(1rem, 3vw, 1.5rem);">🎮 PLAY AGAIN</button>
-        <button class="btn" id="btn-ending-leaderboard"
-            style="background: rgba(83, 82, 237, 0.8); margin-top: 10px; font-size: clamp(1rem, 3vw, 1.5rem);">🏆
-            VIEW LEADERBOARD</button>
-    </div>
     </div>
 
     <div id="post-game-menu" class="overlay hidden" style="background-color: rgba(0,0,0,0.85);">
@@ -1630,6 +1633,14 @@
                 };
 
                 // Ending screen buttons
+                document.getElementById('btn-ending-save').onclick = () => {
+                    const video = document.getElementById('ending-video');
+                    video.pause();
+                    document.getElementById('ending-screen').classList.add('hidden');
+                    updateText('name-input-score', this.score.toLocaleString());
+                    document.getElementById('name-input-screen').classList.remove('hidden');
+                    document.getElementById('player-name-input').focus();
+                };
                 document.getElementById('btn-ending-restart').onclick = () => {
                     const video = document.getElementById('ending-video');
                     video.pause();
