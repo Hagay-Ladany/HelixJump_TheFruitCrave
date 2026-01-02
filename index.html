@@ -148,6 +148,12 @@
             font-weight: bold;
         }
 
+        /* Floor counter smaller styling */
+        .counter-item.floor-counter {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
         #score-board {
             position: absolute;
             top: 120px;
@@ -347,6 +353,18 @@
 
         #leaderboard-screen {
             background-color: rgba(0, 0, 0, 0.85) !important;
+        }
+
+        /* Ending screen needs highest z-index to appear above canvas */
+        #ending-screen {
+            z-index: 100 !important;
+        }
+
+        #ending-video {
+            width: 100%;
+            height: auto;
+            display: block;
+            min-height: 200px;
         }
 
         /* Remove transparency from leaderboard */
@@ -696,7 +714,7 @@
                 <div class="counter-item">🍎 <span id="c-apple">0</span></div>
                 <div class="counter-item">🍌 <span id="c-banana">0</span></div>
                 <div class="counter-item">🍫 <span id="c-choco">0</span></div>
-                <div class="counter-item">🏢 <span id="c-floors">0</span></div>
+                <div class="counter-item floor-counter">🏢 <span id="c-floors">0</span></div>
             </div>
             <div id="current-emoji-score">
                 <span id="current-emoji">🐜</span>
@@ -716,7 +734,7 @@
     <div id="start-screen" class="overlay">
         <div
             style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">
-            v.2.4</div>
+            v.2.5</div>
         <div id="loading-container" style="display: none;">
             <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
             <div
