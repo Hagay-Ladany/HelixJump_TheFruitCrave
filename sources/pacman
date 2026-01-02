@@ -1,0 +1,308 @@
+startPacmanMiniGame() {
+        document.getElementById('level-complete-screen').classList.add('hidden');
+        document.getElementById('pacman-minigame-screen').classList.remove('hidden');
+        document.getElementById('pacman-result').style.display = 'none';
+        
+        const canvas = document.getElementById('pacman-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // 1. Setup Game State
+        const gameState = {
+            player: { 
+                x: canvas.width / 2, 
+                y: canvas.height / 2, 
+                size: 25, 
+                speed: 6, // Slightly faster for better feel
+                mouthOpen: 0,
+                mouthSpeed: 0.2,
+                rotation: 0
+            },
+            apples: [],
+            score: 0,
+            timeLeft: 15, // Gave a bit more time
+            keys: { up: false, down: false, left: false, right: false },
+            walls: this.generateMaze(canvas.width, canvas.height)
+        };
+        
+        // 2. Generate Apples (Ensure they don't spawn in walls)
+        for(let i = 0; i < 20; i++) {
+            let x, y, valid = false, attempts = 0;
+            while(!valid && attempts < 100) {
+                x = Math.random() * (canvas.width - 100) + 50;
+                y = Math.random() * (canvas.height - 250) + 125;
+                // Check against walls
+                if (!this.isWallCollision(x, y, 30, gameState.walls)) {
+                    valid = true;
+                }
+                attempts++;
+            }
+            if(valid) gameState.apples.push({ x, y, size: 25, collected: false });
+        }
+        
+        // 3. Input Handling (Keyboard)
+        const handleKeyDown = (e) => {
+            const key = e.key.toLowerCase();
+            if(['arrowup', 'w'].includes(key)) { gameState.keys.up = true; }
+            if(['arrowdown', 's'].includes(key)) { gameState.keys.down = true; }
+            if(['arrowleft', 'a'].includes(key)) { gameState.keys.left = true; }
+            if(['arrowright', 'd'].includes(key)) { gameState.keys.right = true; }
+        };
+        
+        const handleKeyUp = (e) => {
+            const key = e.key.toLowerCase();
+            if(['arrowup', 'w'].includes(key)) gameState.keys.up = false;
+            if(['arrowdown', 's'].includes(key)) gameState.keys.down = false;
+            if(['arrowleft', 'a'].includes(key)) gameState.keys.left = false;
+            if(['arrowright', 'd'].includes(key)) gameState.keys.right = false;
+        };
+        
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        
+        // 4. Input Handling (Touch - Virtual Joystick Logic)
+        let touchStart = null;
+        const handleTouchStart = (e) => {
+            e.preventDefault();
+            touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        };
+        const handleTouchMove = (e) => {
+            e.preventDefault();
+            if(!touchStart) return;
+            const dx = e.touches[0].clientX - touchStart.x;
+            const dy = e.touches[0].clientY - touchStart.y;
+            
+            // Reset keys
+            gameState.keys.up = gameState.keys.down = gameState.keys.left = gameState.keys.right = false;
+            
+            // Simple threshold for direction
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 10) gameState.keys.right = true;
+                else if (dx < -10) gameState.keys.left = true;
+            } else {
+                if (dy > 10) gameState.keys.down = true;
+                else if (dy < -10) gameState.keys.up = true;
+            }
+        };
+        const handleTouchEnd = () => {
+            gameState.keys.up = gameState.keys.down = gameState.keys.left = gameState.keys.right = false;
+            touchStart = null;
+        };
+        
+        canvas.addEventListener('touchstart', handleTouchStart, {passive: false});
+        canvas.addEventListener('touchmove', handleTouchMove, {passive: false});
+        canvas.addEventListener('touchend', handleTouchEnd);
+        
+        // 5. Game Loop
+        const startTime = Date.now();
+        let animationId = null;
+        
+        const gameLoop = () => {
+            if(document.getElementById('pacman-minigame-screen').classList.contains('hidden')) {
+                // Cleanup listeners if game closed
+                window.removeEventListener('keydown', handleKeyDown);
+                window.removeEventListener('keyup', handleKeyUp);
+                canvas.removeEventListener('touchstart', handleTouchStart);
+                canvas.removeEventListener('touchmove', handleTouchMove);
+                canvas.removeEventListener('touchend', handleTouchEnd);
+                if(animationId) cancelAnimationFrame(animationId);
+                return;
+            }
+            
+            // --- Logic Update ---
+            
+            // Time
+            const elapsed = (Date.now() - startTime) / 1000;
+            gameState.timeLeft = Math.max(0, 15 - elapsed);
+            updateText('pacman-timer', Math.ceil(gameState.timeLeft));
+            
+            // Movement Calculation (With Wall Sliding)
+            let dx = 0;
+            let dy = 0;
+            if (gameState.keys.up) dy = -1;
+            if (gameState.keys.down) dy = 1;
+            if (gameState.keys.left) dx = -1;
+            if (gameState.keys.right) dx = 1;
+
+            // Normalize diagonal speed
+            if (dx !== 0 && dy !== 0) {
+                const factor = 1 / Math.sqrt(2);
+                dx *= factor;
+                dy *= factor;
+            }
+
+            // Apply movement (Check X and Y independently for sliding)
+            const moveX = dx * gameState.player.speed;
+            const moveY = dy * gameState.player.speed;
+
+            // Try X movement
+            if (moveX !== 0) {
+                const nextX = gameState.player.x + moveX;
+                if (!this.isWallCollision(nextX, gameState.player.y, gameState.player.size, gameState.walls)) {
+                    gameState.player.x = nextX;
+                    // Clamp to screen
+                    gameState.player.x = Math.max(gameState.player.size, Math.min(canvas.width - gameState.player.size, gameState.player.x));
+                }
+            }
+
+            // Try Y movement
+            if (moveY !== 0) {
+                const nextY = gameState.player.y + moveY;
+                if (!this.isWallCollision(gameState.player.x, nextY, gameState.player.size, gameState.walls)) {
+                    gameState.player.y = nextY;
+                    // Clamp to screen
+                    gameState.player.y = Math.max(gameState.player.size, Math.min(canvas.height - gameState.player.size, gameState.player.y));
+                }
+            }
+
+            // Calculate Rotation for graphics
+            if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
+                gameState.player.rotation = Math.atan2(dy, dx);
+                // Animate mouth only when moving
+                gameState.player.mouthOpen += gameState.player.mouthSpeed;
+                if (gameState.player.mouthOpen > 0.25 || gameState.player.mouthOpen < 0) {
+                    gameState.player.mouthSpeed *= -1;
+                }
+            }
+
+            // Collision with Apples
+            gameState.apples.forEach(apple => {
+                if(!apple.collected) {
+                    const dist = Math.sqrt((apple.x - gameState.player.x)**2 + (apple.y - gameState.player.y)**2);
+                    if(dist < (gameState.player.size + apple.size) / 1.5) {
+                        apple.collected = true;
+                        gameState.score++;
+                        this.audio.playSFX('collect');
+                        updateText('pacman-score', gameState.score);
+                    }
+                }
+            });
+            
+            // --- Render ---
+            ctx.fillStyle = '#111'; // Dark background
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw Walls (with blue neon look)
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00ffff';
+            ctx.fillStyle = '#0055ff';
+            gameState.walls.forEach(wall => {
+                ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+            });
+            ctx.shadowBlur = 0;
+            
+            // Draw Apples
+            ctx.font = "24px serif";
+            ctx.textAlign = "center"; 
+            ctx.textBaseline = "middle";
+            gameState.apples.forEach(apple => {
+                if(!apple.collected) {
+                    ctx.fillText("??", apple.x, apple.y);
+                }
+            });
+            
+            // Draw Player
+            this.drawPacman(ctx, gameState.player);
+            
+            // Check End Condition
+            if(gameState.timeLeft <= 0 || gameState.score >= 20) {
+                document.getElementById('pacman-result').style.display = 'block';
+                updateText('pacman-final-score', gameState.score);
+                // Add score to main game
+                this.score += gameState.score * 10; 
+                
+                // Cleanup
+                window.removeEventListener('keydown', handleKeyDown);
+                window.removeEventListener('keyup', handleKeyUp);
+                canvas.removeEventListener('touchstart', handleTouchStart);
+                canvas.removeEventListener('touchmove', handleTouchMove);
+                canvas.removeEventListener('touchend', handleTouchEnd);
+                if(animationId) cancelAnimationFrame(animationId);
+                return;
+            }
+            
+            animationId = requestAnimationFrame(gameLoop);
+        };
+        
+        animationId = requestAnimationFrame(gameLoop);
+    }
+
+    // New Helper: Draw Pacman with rotation and mouth animation
+    drawPacman(ctx, player) {
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        ctx.rotate(player.rotation);
+        
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        // The mouth wedge logic
+        // 0.2 is the max open mouth angle (in radians * PI approx)
+        const mouthSize = Math.max(0, player.mouthOpen); 
+        ctx.arc(0, 0, player.size/2, mouthSize * Math.PI, (2 - mouthSize) * Math.PI);
+        ctx.lineTo(0, 0);
+        ctx.fill();
+        
+        // Draw Eye
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(0, -player.size/4, 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+    }
+
+    generateMaze(width, height) {
+        const walls = [];
+        const cellSize = 60;
+        
+        // Add Border Walls (Arena style)
+        walls.push({x: 0, y: 0, w: width, h: 100}); // Top (covers UI area)
+        walls.push({x: 0, y: height-10, w: width, h: 10}); // Bottom
+        walls.push({x: 0, y: 0, w: 10, h: height}); // Left
+        walls.push({x: width-10, y: 0, w: 10, h: height}); // Right
+        
+        // Inner Walls
+        const cols = Math.floor(width / cellSize);
+        const rows = Math.floor((height - 100) / cellSize);
+        
+        for(let i = 2; i < rows - 1; i++) {
+            for(let j = 2; j < cols - 1; j++) {
+                // Keep center area clear for player spawn
+                const centerX = cols / 2;
+                const centerY = rows / 2;
+                if (Math.abs(j - centerX) < 3 && Math.abs(i - centerY) < 3) continue;
+
+                // Random blocks, but less dense than before
+                if(Math.random() > 0.85) {
+                    walls.push({
+                        x: j * cellSize,
+                        y: i * cellSize + 50, // Offset for top UI
+                        w: cellSize - 10, // Gaps between walls for smoother movement
+                        h: cellSize - 10
+                    });
+                }
+            }
+        }
+        return walls;
+    }
+
+    isWallCollision(x, y, size, walls) {
+        // slightly smaller radius for collision to be forgiving
+        const radius = (size / 2) * 0.8; 
+        
+        for(let wall of walls) {
+            // Find closest point on the rectangle to the circle center
+            const closestX = Math.max(wall.x, Math.min(x, wall.x + wall.w));
+            const closestY = Math.max(wall.y, Math.min(y, wall.y + wall.h));
+            
+            const dx = x - closestX;
+            const dy = y - closestY;
+            
+            // If distance is less than radius, we have a collision
+            if ((dx * dx + dy * dy) < (radius * radius)) {
+                return true;
+            }
+        }
+        return false;
+    }
