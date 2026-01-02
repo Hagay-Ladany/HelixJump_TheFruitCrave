@@ -734,7 +734,7 @@
     <div id="start-screen" class="overlay">
         <div
             style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">
-            v.2.5</div>
+            v.2.6</div>
         <div id="loading-container" style="display: none;">
             <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
             <div
@@ -865,21 +865,21 @@
             <h1
                 style="font-size: clamp(2rem, 6vw, 4rem); margin-bottom: 20px; text-shadow: 3px 3px 6px rgba(0,0,0,0.8);">
                 🏆 VICTORY! 🏆</h1>
-            <div id="ending-gif-container"
-                style="margin: 20px auto; max-width: 600px; max-height: 400px; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
-                <video id="ending-video" src="images/ending_screen.mp4" playsinline
-                    style="width: 100%; height: auto; display: block;"></video>
-            </div>
-            <p style="font-size: clamp(1.2rem, 4vw, 2rem); margin: 30px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                You have completed all levels!<br>
-                The Helix is yours to command!
-            </p>
-            <button class="btn btn-start" id="btn-ending-restart"
-                style="margin-top: 20px; font-size: clamp(1rem, 3vw, 1.5rem);">🎮 PLAY AGAIN</button>
-            <button class="btn" id="btn-ending-leaderboard"
-                style="background: rgba(83, 82, 237, 0.8); margin-top: 10px; font-size: clamp(1rem, 3vw, 1.5rem);">🏆
-                VIEW LEADERBOARD</button>
+            style="margin: 20px auto; max-width: 600px; max-height: 400px; border-radius: 15px; overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            <video id="ending-video" src="images/ending_screen.mp4" playsinline preload="auto"
+                style="width: 100%; height: auto; display: block; min-height: 200px;"></video>
         </div>
+        <p style="font-size: clamp(1.2rem, 4vw, 2rem); margin: 30px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+            You have completed all levels!<br>
+            The Helix is yours to command!
+        </p>
+        <button class="btn btn-start" id="btn-ending-restart"
+            style="margin-top: 20px; font-size: clamp(1rem, 3vw, 1.5rem);">🎮 PLAY AGAIN</button>
+        <button class="btn" id="btn-ending-leaderboard"
+            style="background: rgba(83, 82, 237, 0.8); margin-top: 10px; font-size: clamp(1rem, 3vw, 1.5rem);">🏆
+            VIEW LEADERBOARD</button>
+    </div>
     </div>
 
     <div id="post-game-menu" class="overlay hidden" style="background-color: rgba(0,0,0,0.85);">
@@ -1779,6 +1779,7 @@
             }
 
             setupLevel() {
+                this.easyModeEnemyCount = 0; // Reset enemy counter for easy mode
                 if (this.tower) this.scene.remove(this.tower);
                 this.tower = new THREE.Group(); this.scene.add(this.tower);
                 this.floors = []; this.interactables = []; this.physicsMeshes = [];
@@ -1948,14 +1949,22 @@
                     let batChance = 0.3; // Default (medium)
 
                     if (this.difficulty === 'easy') {
-                        ghostChance = isBoss ? 0.3 : 0.1;
-                        batChance = 0.15;
+                        // Easy mode: spawn ghosts only up to max limit per level
+                        // Max enemies per level: 1, 4, 6, 8 for levels 1-4
+                        const maxEnemiesEasy = { 1: 1, 2: 4, 3: 6, 4: 8, 5: 10 };
+                        const maxEnemies = maxEnemiesEasy[this.level] || 4;
+                        if (!this.easyModeEnemyCount) this.easyModeEnemyCount = 0;
+                        ghostChance = (this.easyModeEnemyCount < maxEnemies) ? (isBoss ? 0.4 : 0.15) : 0;
+                        batChance = 0.1;
                     } else if (this.difficulty === 'hard') {
                         ghostChance = isBoss ? 0.7 : 0.4;
                         batChance = 0.5;
                     }
 
-                    if (i > 0 && Math.random() < ghostChance) this.spawnMonster(grp, isBoss);
+                    if (i > 0 && Math.random() < ghostChance) {
+                        this.spawnMonster(grp, isBoss);
+                        if (this.difficulty === 'easy') this.easyModeEnemyCount++;
+                    }
 
                     // Add bats flying at upper part of floor (all levels except level 1)
                     if (this.level > 1 && i > 0 && Math.random() < batChance) {
@@ -1987,10 +1996,10 @@
                     if (r > 0.95) { type = 'diamond'; tex = AssetFactory.textures['diamond']; }
                     if (r > 0.99) { type = 'rotten'; tex = AssetFactory.textures['rotten']; }
                 } else if (this.difficulty === 'hard') {
-                    // Hard: 40% apples, 20% bananas, 15% chocolate, 3% diamond, 20% rotten, 2% cockroach
-                    if (r > 0.4) { type = 'banana'; tex = AssetFactory.textures['banana']; }
-                    if (r > 0.6) { type = 'chocolate'; tex = AssetFactory.textures['choco']; }
-                    if (r > 0.75) { type = 'rotten'; tex = AssetFactory.textures['rotten']; }
+                    // Hard: 25% apples, 25% bananas, 20% chocolate, 3% diamond, 25% rotten, 2% cockroach
+                    if (r > 0.25) { type = 'banana'; tex = AssetFactory.textures['banana']; }
+                    if (r > 0.5) { type = 'chocolate'; tex = AssetFactory.textures['choco']; }
+                    if (r > 0.7) { type = 'rotten'; tex = AssetFactory.textures['rotten']; }
                     if (r > 0.95) { type = 'cockroach'; tex = AssetFactory.textures['cockroach']; }
                     if (r > 0.97) { type = 'diamond'; tex = AssetFactory.textures['diamond']; }
                 } else {
@@ -2728,9 +2737,8 @@
                 } else {
                     updateText('btn-next', "NEXT LEVEL");
                     this.audio.playTrack('you_win');
-                    // Hide happy ending message, show save button for all levels
+                    // Hide happy ending message (leaderboard button removed from level complete)
                     document.getElementById('happy-ending-message').classList.add('hidden');
-                    document.getElementById('btn-save-to-leaderboard').style.display = 'block';
                     document.getElementById('level-complete-screen').classList.remove('hidden');
                 }
 
