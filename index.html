@@ -1810,7 +1810,7 @@
                 else if (this.level === 5) grad = "linear-gradient(to bottom, #1a0033, #4a00e0, #8e2de2)"; // Level 5: Dark purple to bright purple
                 else grad = "linear-gradient(to bottom, #ECE9E6, #FFFFFF)";
                 // Dramatically reduce black overlay - much lighter
-                const overlayGradient = (this.level === 4) ? "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%)" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 29%, rgba(0, 0, 0, 0.1) 100%)";
+                const overlayGradient = (this.level === 4) ? "linear-gradient(to bottom, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.25) 100%)" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 29%, rgba(0, 0, 0, 0.1) 100%)";
                 // Preload background image before setting it
                 const preloadBackground = (callback) => {
                     let texture = getBackgroundImage(this.level);
