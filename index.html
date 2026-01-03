@@ -283,17 +283,21 @@
         /* Difficulty Badge in HUD */
         #difficulty-badge {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: clamp(8px, 2vw, 20px);
+            left: clamp(8px, 2vw, 20px);
             background: rgba(0, 0, 0, 0.7);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
+            padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 15px);
+            border-radius: clamp(12px, 3vw, 20px);
+            font-size: clamp(0.7rem, 2vw, 0.9rem);
             font-weight: bold;
             border: 2px solid rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(4px);
-            z-index: 10;
+            z-index: 5;
             display: none;
+            max-width: calc(100vw - 16px);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         #difficulty-badge.easy {
@@ -870,27 +874,27 @@
     </div>
 
     <div id="ending-screen" class="overlay hidden"
-        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-        <div style="text-align: center; color: white; max-width: 90vw;">
+        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: clamp(15px, 3vw, 30px);">
+        <div style="text-align: center; color: white; max-width: min(90vw, 800px); width: 100%; margin: 0 auto; overflow-y: auto; max-height: 100vh; padding: clamp(10px, 2vw, 20px);">
             <h1
-                style="font-size: clamp(2rem, 6vw, 4rem); margin-bottom: 20px; text-shadow: 3px 3px 6px rgba(0,0,0,0.8);">
+                style="font-size: clamp(1.5rem, 5vw, 4rem); margin-bottom: clamp(15px, 3vw, 20px); text-shadow: 3px 3px 6px rgba(0,0,0,0.8); word-wrap: break-word;">
                 🏆 VICTORY! 🏆</h1>
             <div id="ending-gif-container"
-                style="margin: 20px auto; max-width: 600px; max-height: 400px; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+                style="margin: clamp(15px, 3vw, 20px) auto; max-width: min(100%, 600px); max-height: 400px; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
                 <video id="ending-video" src="images/ending_screen.mp4" playsinline preload="auto"
-                    style="width: 100%; height: auto; display: block; min-height: 200px;"></video>
+                    style="width: 100%; height: auto; display: block; min-height: clamp(150px, 30vw, 200px);"></video>
             </div>
-            <p style="font-size: clamp(1.2rem, 4vw, 2rem); margin: 30px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+            <p style="font-size: clamp(1rem, 3.5vw, 2rem); margin: clamp(20px, 4vw, 30px) 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); word-wrap: break-word;">
                 You have completed all levels!<br>
                 The Helix is yours to command!
             </p>
             <button class="btn" id="btn-ending-save"
-                style="margin-top: 20px; font-size: clamp(1rem, 3vw, 1.5rem); background: rgba(46, 213, 115, 0.9);">💾
+                style="margin-top: clamp(15px, 3vw, 20px); font-size: clamp(0.9rem, 2.8vw, 1.5rem); background: rgba(46, 213, 115, 0.9);">💾
                 SAVE SCORE</button>
             <button class="btn btn-start" id="btn-ending-restart"
-                style="margin-top: 20px; font-size: clamp(1rem, 3vw, 1.5rem);">🎮 PLAY AGAIN</button>
+                style="margin-top: clamp(15px, 3vw, 20px); font-size: clamp(0.9rem, 2.8vw, 1.5rem);">🎮 PLAY AGAIN</button>
             <button class="btn" id="btn-ending-leaderboard"
-                style="background: rgba(83, 82, 237, 0.8); margin-top: 10px; font-size: clamp(1rem, 3vw, 1.5rem);">🏆
+                style="background: rgba(83, 82, 237, 0.8); margin-top: clamp(8px, 1.5vw, 10px); font-size: clamp(0.9rem, 2.8vw, 1.5rem);">🏆
                 VIEW LEADERBOARD</button>
         </div>
     </div>
