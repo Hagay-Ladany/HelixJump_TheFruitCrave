@@ -325,8 +325,8 @@ h1 {
 /* Difficulty Badge in HUD */
 #difficulty-badge {
     position: absolute;
-    top: 20px;
-    left: 20px;
+    bottom: 80px;
+    right: 20px;
     background: rgba(0, 0, 0, 0.7);
     padding: 8px 15px;
     border-radius: 20px;
@@ -605,11 +605,13 @@ h1 {
 }
 
 .stat-val {
-    width: 50px;
+    width: auto;
+    min-width: 50px;
     text-align: right;
     font-weight: bold;
     color: white;
     flex-shrink: 0;
+    font-size: 0.9rem;
 }
 
 .bar-track {
@@ -851,6 +853,13 @@ button.btn-start {
         font-size: 22px;
         bottom: 10px;
         right: 10px;
+    }
+    
+    #difficulty-badge {
+        bottom: 60px;
+        right: 10px;
+        font-size: 0.8rem;
+        padding: 6px 12px;
     }
     
     .audio-controls {
