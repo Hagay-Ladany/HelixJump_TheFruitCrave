@@ -67,18 +67,22 @@ h1 {
 #top-bar {
     display: flex;
     justify-content: space-between;
-    padding: 20px;
+    align-items: flex-start;
+    padding: clamp(10px, 2vw, 20px);
     width: 100%;
     box-sizing: border-box;
     pointer-events: none;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 #level-info {
     text-align: left;
+    flex-shrink: 0;
 }
 
 #level-indicator {
-    font-size: 1.8rem;
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
     font-weight: 900;
     color: white;
     text-shadow: 2px 2px 0 #000;
@@ -86,7 +90,7 @@ h1 {
 }
 
 #timer-display {
-    font-size: 1.5rem;
+    font-size: clamp(1rem, 3vw, 1.5rem);
     color: #00ffff;
     font-family: monospace;
     font-weight: bold;
@@ -94,14 +98,14 @@ h1 {
 }
 
 #hearts {
-    font-size: 1.2rem;
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
     margin-top: 5px;
     letter-spacing: 1px;
     white-space: nowrap;
 }
 
 #buffs-display {
-    font-size: 1rem;
+    font-size: clamp(0.8rem, 2vw, 1rem);
     font-weight: bold;
     margin-top: 5px;
     text-shadow: 1px 1px 0 #000;
@@ -157,43 +161,63 @@ h1 {
 /* Item Counters */
 #item-counters {
     background: rgba(0, 0, 0, 0.6);
-    padding: 10px 20px;
-    border-radius: 20px;
+    padding: clamp(6px, 1.5vw, 10px) clamp(10px, 2vw, 20px);
+    border-radius: 15px;
     backdrop-filter: blur(4px);
     display: flex;
-    gap: 15px;
+    flex-wrap: wrap;
+    gap: clamp(8px, 2vw, 15px);
     height: fit-content;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 50vw;
 }
 
 .counter-item {
-    font-size: 1.2rem;
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
     color: white;
     font-weight: bold;
+    white-space: nowrap;
 }
 
 .counter-item.floor-counter {
-    font-size: 0.9rem;
+    font-size: clamp(0.75rem, 2vw, 0.9rem);
     opacity: 0.8;
 }
 
-/* Score Board */
+/* Score Board - Hidden, replaced by top menu score */
 #score-board {
-    position: absolute;
-    top: 120px;
-    width: 100%;
+    display: none;
+}
+
+/* Game Score Display in Top Menu */
+#game-score-display {
+    background: rgba(0, 0, 0, 0.7);
+    padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 15px);
+    border-radius: 15px;
+    backdrop-filter: blur(4px);
     text-align: center;
-    font-size: 5rem;
-    font-weight: 900;
-    color: rgba(255, 255, 255, 0.2);
-    pointer-events: none;
+    border: 2px solid rgba(255, 215, 0, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#game-score-display .score-icon {
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+}
+
+#game-score-display .score-value {
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    color: #ffd700;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 #000;
 }
 
 /* Current Emoji Score Display */
 #current-emoji-score {
     background: rgba(0, 0, 0, 0.7);
-    padding: 15px 20px;
-    border-radius: 20px;
+    padding: clamp(8px, 2vw, 15px) clamp(12px, 2.5vw, 20px);
+    border-radius: 15px;
     backdrop-filter: blur(4px);
     text-align: center;
     border: 2px solid rgba(255, 255, 255, 0.3);
@@ -201,13 +225,13 @@ h1 {
 }
 
 #current-emoji {
-    font-size: 2.5rem;
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
     display: block;
     margin-bottom: 5px;
 }
 
 #current-score-text {
-    font-size: 1rem;
+    font-size: clamp(0.7rem, 2vw, 1rem);
     color: white;
     font-weight: bold;
     text-shadow: 1px 1px 0 #000;
@@ -226,8 +250,8 @@ h1 {
 }
 
 .difficulty-btn {
-    padding: 20px 25px;
-    font-size: 1.4rem;
+    padding: clamp(12px, 3vw, 20px) clamp(15px, 4vw, 25px);
+    font-size: clamp(1rem, 3vw, 1.4rem);
     border-radius: 15px;
     border: 3px solid rgba(255, 255, 255, 0.3);
     cursor: pointer;
@@ -745,4 +769,157 @@ button.btn-start {
 
 .animate-pulse {
     animation: pulse 1s infinite;
+}
+
+/* ==========================================================================
+   Mobile Responsive Styles
+   ========================================================================== */
+
+/* Small screens (mobile phones) */
+@media screen and (max-width: 480px) {
+    #top-bar {
+        padding: 8px;
+        gap: 5px;
+    }
+    
+    #item-counters {
+        padding: 5px 8px;
+        gap: 6px;
+        max-width: 45vw;
+        border-radius: 10px;
+    }
+    
+    .counter-item {
+        font-size: 0.85rem;
+    }
+    
+    #current-emoji-score {
+        padding: 6px 10px;
+        border-radius: 10px;
+    }
+    
+    #current-emoji {
+        font-size: 1.5rem;
+        margin-bottom: 2px;
+    }
+    
+    #current-score-text {
+        font-size: 0.65rem;
+    }
+    
+    .stat-box {
+        padding: 12px;
+        width: 90vw;
+        max-width: 300px;
+    }
+    
+    .stat-row {
+        font-size: 0.85rem;
+        margin: 5px 0;
+        padding-bottom: 3px;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+        min-width: 90px;
+    }
+    
+    h1 {
+        font-size: 1.4rem;
+    }
+    
+    .big-emoji {
+        font-size: 4rem;
+    }
+    
+    .overlay {
+        padding: 10px;
+    }
+    
+    button.btn {
+        padding: 10px 25px;
+        font-size: 0.9rem;
+        min-height: 40px;
+    }
+    
+    .pause-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 22px;
+        top: 10px;
+        right: 10px;
+    }
+    
+    .audio-controls {
+        bottom: 10px;
+        left: 10px;
+        gap: 10px;
+    }
+    
+    .audio-icon {
+        font-size: 26px;
+    }
+}
+
+/* Medium screens (tablets) */
+@media screen and (min-width: 481px) and (max-width: 768px) {
+    #top-bar {
+        padding: 12px;
+    }
+    
+    #item-counters {
+        max-width: 48vw;
+    }
+    
+    .stat-box {
+        width: 85vw;
+        max-width: 320px;
+    }
+}
+
+/* Landscape mode on mobile */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    #top-bar {
+        padding: 5px 10px;
+    }
+    
+    #item-counters {
+        padding: 4px 8px;
+    }
+    
+    #current-emoji-score {
+        padding: 4px 8px;
+    }
+    
+    #current-emoji {
+        font-size: 1.3rem;
+    }
+    
+    .stat-box {
+        padding: 10px;
+        margin: 10px auto;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .stat-row {
+        margin: 4px 0;
+        padding-bottom: 2px;
+    }
+    
+    h1 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+    
+    .big-emoji {
+        font-size: 3rem;
+        margin: 5px 0;
+    }
+    
+    button.btn {
+        padding: 8px 20px;
+        font-size: 0.85rem;
+        margin: 5px auto;
+    }
 }
