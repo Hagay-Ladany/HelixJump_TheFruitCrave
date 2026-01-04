@@ -1,0 +1,937 @@
+/* ==========================================================================
+   Helix Jump: The Fruit Crave - Main Stylesheet
+   ========================================================================== */
+
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #222;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background-image 0.5s ease-in-out;
+}
+
+#canvas-container {
+    width: 100%;
+    height: 100dvh;
+    display: block;
+}
+
+.hidden {
+    display: none !important;
+}
+
+h1 {
+    color: white;
+    font-size: 2rem;
+    margin: 0 0 20px 0;
+    text-transform: uppercase;
+    text-shadow: none;
+    font-weight: 900;
+    letter-spacing: 2px;
+}
+
+.big-emoji {
+    font-size: 6rem;
+    margin: 10px 0;
+}
+
+/* ==========================================================================
+   UI Layer
+   ========================================================================== */
+
+#ui-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* ==========================================================================
+   HUD Components
+   ========================================================================== */
+
+#top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: clamp(10px, 2vw, 20px);
+    width: 100%;
+    box-sizing: border-box;
+    pointer-events: none;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#level-info {
+    text-align: left;
+    flex-shrink: 0;
+}
+
+#level-indicator {
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
+    font-weight: 900;
+    color: white;
+    text-shadow: 2px 2px 0 #000;
+    margin: 0;
+}
+
+#timer-display {
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    color: #00ffff;
+    font-family: monospace;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+#hearts {
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    margin-top: 5px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+#buffs-display {
+    font-size: clamp(0.8rem, 2vw, 1rem);
+    font-weight: bold;
+    margin-top: 5px;
+    text-shadow: 1px 1px 0 #000;
+    min-height: 1.2em;
+}
+
+/* Buff Status Styles */
+.buff-fast {
+    color: #ffff00;
+}
+
+.buff-slow {
+    color: #76ff03;
+    font-style: italic;
+}
+
+.buff-drill {
+    color: #00ffff;
+    text-shadow: 0 0 5px cyan;
+}
+
+/* Effect Bar Styles */
+.effect-bar-container {
+    display: inline-block;
+    margin-left: 10px;
+    width: 80px;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 3px;
+    overflow: hidden;
+    vertical-align: middle;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.effect-bar-fill {
+    height: 100%;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+.effect-bar-fast {
+    background: linear-gradient(90deg, #ffff00, #ffaa00);
+}
+
+.effect-bar-slow {
+    background: linear-gradient(90deg, #76ff03, #4caf50);
+}
+
+.effect-bar-drill {
+    background: linear-gradient(90deg, #00ffff, #0099ff);
+}
+
+/* Item Counters */
+#item-counters {
+    background: rgba(0, 0, 0, 0.6);
+    padding: clamp(6px, 1.5vw, 10px) clamp(10px, 2vw, 20px);
+    border-radius: 15px;
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(8px, 2vw, 15px);
+    height: fit-content;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 50vw;
+}
+
+.counter-item {
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    color: white;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.counter-item.floor-counter {
+    font-size: clamp(0.75rem, 2vw, 0.9rem);
+    opacity: 0.8;
+}
+
+/* Score Board - Hidden, replaced by top menu score */
+#score-board {
+    display: none;
+}
+
+/* Game Score Display in Top Menu */
+#game-score-display {
+    background: rgba(0, 0, 0, 0.7);
+    padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 15px);
+    border-radius: 15px;
+    backdrop-filter: blur(4px);
+    text-align: center;
+    border: 2px solid rgba(255, 215, 0, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#game-score-display .score-icon {
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+}
+
+#game-score-display .score-value {
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    color: #ffd700;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 #000;
+}
+
+/* Current Emoji Score Display */
+#current-emoji-score {
+    background: rgba(0, 0, 0, 0.7);
+    padding: clamp(8px, 2vw, 15px) clamp(12px, 2.5vw, 20px);
+    border-radius: 15px;
+    backdrop-filter: blur(4px);
+    text-align: center;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    margin-top: 10px;
+}
+
+#current-emoji {
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+    display: block;
+    margin-bottom: 5px;
+}
+
+#current-score-text {
+    font-size: clamp(0.7rem, 2vw, 1rem);
+    color: white;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 #000;
+}
+
+/* ==========================================================================
+   Difficulty Selection
+   ========================================================================== */
+
+.difficulty-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 20px 0;
+    width: clamp(280px, 90vw, 350px);
+}
+
+.difficulty-btn {
+    padding: clamp(12px, 3vw, 20px) clamp(15px, 4vw, 25px);
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    border-radius: 15px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    text-transform: uppercase;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.difficulty-btn::before {
+    content: attr(data-multiplier);
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 0.7rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.difficulty-btn:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.difficulty-btn.selected {
+    border-color: #fff;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
+    transform: scale(1.05);
+    animation: pulse 2s infinite;
+}
+
+.difficulty-btn.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    font-size: 1.2rem;
+    color: white;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.difficulty-easy {
+    background: linear-gradient(135deg, rgba(46, 213, 115, 0.9), rgba(46, 213, 115, 0.7));
+    color: white;
+}
+
+.difficulty-medium {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.9), rgba(255, 193, 7, 0.7));
+    color: white;
+}
+
+.difficulty-hard {
+    background: linear-gradient(135deg, rgba(255, 71, 87, 0.9), rgba(255, 71, 87, 0.7));
+    color: white;
+}
+
+.difficulty-desc {
+    font-size: 0.65rem;
+    margin-top: 8px;
+    opacity: 0.95;
+    font-weight: normal;
+    text-transform: none;
+    line-height: 1.3;
+}
+
+/* Difficulty Badge in HUD */
+#difficulty-badge {
+    position: absolute;
+    bottom: 80px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(4px);
+    z-index: 10;
+    display: none;
+}
+
+#difficulty-badge.easy {
+    border-color: rgba(46, 213, 115, 0.8);
+    color: #2ed573;
+}
+
+#difficulty-badge.medium {
+    border-color: rgba(255, 193, 7, 0.8);
+    color: #ffc107;
+}
+
+#difficulty-badge.hard {
+    border-color: rgba(255, 71, 87, 0.8);
+    color: #ff4757;
+}
+
+/* ==========================================================================
+   Audio Controls
+   ========================================================================== */
+
+.audio-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    gap: 15px;
+    z-index: 30;
+    pointer-events: auto;
+}
+
+.audio-icon {
+    font-size: 32px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    opacity: 0.8;
+    color: white;
+    text-shadow: 0 2px 4px black;
+    transition: transform 0.1s;
+}
+
+.audio-icon:active {
+    transform: scale(0.9);
+}
+
+.audio-off {
+    opacity: 0.4;
+}
+
+/* ==========================================================================
+   Overlay Screens
+   ========================================================================== */
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    pointer-events: auto;
+    transition: opacity 0.3s;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.overlay:not(.hidden) {
+    display: flex !important;
+}
+
+#leaderboard-screen {
+    background-color: rgba(0, 0, 0, 0.85) !important;
+}
+
+#ending-screen {
+    z-index: 100 !important;
+}
+
+#ending-video {
+    width: 100%;
+    height: auto;
+    display: block;
+    min-height: 200px;
+}
+
+/* Level Complete Screen */
+#level-complete-screen {
+    justify-content: flex-start !important;
+    padding-top: max(20px, env(safe-area-inset-top)) !important;
+}
+
+#level-complete-screen .stat-box {
+    margin-top: 10px;
+}
+
+#level-complete-screen .big-emoji {
+    margin: 10px 0 5px 0;
+}
+
+/* Pause Screen */
+#pause-screen {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    z-index: 50 !important;
+}
+
+#pause-screen h1 {
+    font-size: 3rem;
+    margin-bottom: 30px;
+}
+
+.pause-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    font-size: 28px;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-shadow: 0 2px 4px black;
+    transition: all 0.2s ease;
+    z-index: 35;
+    pointer-events: auto;
+}
+
+.pause-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(1.1);
+}
+
+.pause-btn:active {
+    transform: scale(0.95);
+}
+
+/* Start Screen */
+#start-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100%;
+    padding-bottom: 5vh;
+    width: 100%;
+    gap: 10px;
+}
+
+#start-screen {
+    background-color: #2c3e50;
+    background-position: center;
+    background-size: cover;
+    background-color: rgba(0, 0, 0, 0.3);
+    background-repeat: no-repeat;
+}
+
+/* Portrait orientation */
+@media (orientation: portrait) {
+    #start-screen {
+        background-image: url('../images/archived/start_screen_portrait_original_size.jpg');
+    }
+
+    #start-content .stat-box {
+        margin-top: auto !important;
+        margin-bottom: 15vh !important;
+        backdrop-filter: none !important;
+        font-size: 0.85rem !important;
+    }
+
+    #start-content .stat-box h3 {
+        font-size: 1.1rem !important;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    #start-content .stat-box p {
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+    }
+
+    #start-content .btn-start {
+        margin-top: 2vh !important;
+        margin-bottom: 5vh !important;
+    }
+}
+
+/* Landscape orientation */
+@media (orientation: landscape) {
+    #start-screen {
+        background-image: url('../images/start_screen_Landscape.jpg');
+    }
+
+    #start-content .stat-box {
+        margin-top: auto !important;
+        margin-bottom: 10vh !important;
+        backdrop-filter: none !important;
+        font-size: 0.85rem !important;
+    }
+
+    #start-content .stat-box h3 {
+        font-size: 1.1rem !important;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    #start-content .stat-box p {
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+    }
+
+    #start-content .btn-start {
+        margin-top: 2vh !important;
+        margin-bottom: 3vh !important;
+    }
+}
+
+#start-content .stat-box {
+    backdrop-filter: none !important;
+}
+
+/* ==========================================================================
+   Stat Box & Stats
+   ========================================================================== */
+
+.stat-box {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 20px;
+    border-radius: 10px;
+    width: clamp(280px, 90vw, 350px);
+    max-width: 90vw;
+    margin: 20px auto;
+    flex-shrink: 0;
+    text-align: center;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 8px 0;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 5px;
+    color: white;
+}
+
+.stat-label {
+    width: auto;
+    min-width: 120px;
+    text-align: left;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.stat-val {
+    width: auto;
+    min-width: 50px;
+    text-align: right;
+    font-weight: bold;
+    color: white;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+}
+
+.bar-track {
+    flex-grow: 1;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.5);
+    margin: 0 10px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 1s ease-out;
+}
+
+/* ==========================================================================
+   Leaderboard Styles
+   ========================================================================== */
+
+#leaderboard-list .leaderboard-item {
+    padding: 12px 15px;
+    margin: 8px 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid transparent;
+}
+
+#leaderboard-list .leaderboard-item:nth-child(1) {
+    border-left-color: #ffd700;
+    background: rgba(255, 215, 0, 0.15);
+}
+
+#leaderboard-list .leaderboard-item:nth-child(2) {
+    border-left-color: #c0c0c0;
+    background: rgba(192, 192, 192, 0.15);
+}
+
+#leaderboard-list .leaderboard-item:nth-child(3) {
+    border-left-color: #cd7f32;
+    background: rgba(205, 127, 50, 0.15);
+}
+
+.leaderboard-rank {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-right: 15px;
+    min-width: 30px;
+}
+
+.leaderboard-name {
+    flex: 1;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.leaderboard-score {
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: #2ed573;
+}
+
+.leaderboard-date {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 3px;
+}
+
+/* ==========================================================================
+   Form Elements
+   ========================================================================== */
+
+input[type="text"]::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #2ed573;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+button.btn {
+    background: rgba(255, 71, 87, 0.8);
+    color: white;
+    border: none;
+    padding: clamp(9.6px, 1.6vh, 16px) clamp(32px, 6.4vw, 48px);
+    font-size: clamp(0.96rem, 3.2vw, 1.44rem);
+    border-radius: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(255, 71, 87, 0.32);
+    transition: transform 0.1s;
+    margin: 8px auto;
+    flex-shrink: 0;
+    min-height: 35.2px;
+    display: block;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+button.btn:active {
+    transform: scale(0.95);
+}
+
+button.btn-start {
+    background: rgba(46, 213, 115, 0.8);
+    box-shadow: 0 5px 15px rgba(46, 213, 115, 0.32);
+}
+
+/* ==========================================================================
+   Tutorial
+   ========================================================================== */
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+
+@keyframes popIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    80% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2) rotate(5deg);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.animate-pop {
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    opacity: 1 !important;
+}
+
+.animate-pulse {
+    animation: pulse 1s infinite;
+}
+
+/* ==========================================================================
+   Mobile Responsive Styles
+   ========================================================================== */
+
+/* Small screens (mobile phones) */
+@media screen and (max-width: 480px) {
+    #top-bar {
+        padding: 8px;
+        gap: 5px;
+    }
+    
+    #item-counters {
+        padding: 5px 8px;
+        gap: 6px;
+        max-width: 45vw;
+        border-radius: 10px;
+    }
+    
+    .counter-item {
+        font-size: 0.85rem;
+    }
+    
+    #current-emoji-score {
+        padding: 6px 10px;
+        border-radius: 10px;
+    }
+    
+    #current-emoji {
+        font-size: 1.5rem;
+        margin-bottom: 2px;
+    }
+    
+    #current-score-text {
+        font-size: 0.65rem;
+    }
+    
+    .stat-box {
+        padding: 12px;
+        width: 90vw;
+        max-width: 300px;
+    }
+    
+    .stat-row {
+        font-size: 0.85rem;
+        margin: 5px 0;
+        padding-bottom: 3px;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+        min-width: 90px;
+    }
+    
+    h1 {
+        font-size: 1.4rem;
+    }
+    
+    .big-emoji {
+        font-size: 4rem;
+    }
+    
+    .overlay {
+        padding: 10px;
+    }
+    
+    button.btn {
+        padding: 10px 25px;
+        font-size: 0.9rem;
+        min-height: 40px;
+    }
+    
+    .pause-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 22px;
+        bottom: 10px;
+        right: 10px;
+    }
+    
+    #difficulty-badge {
+        bottom: 60px;
+        right: 10px;
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+    
+    .audio-controls {
+        bottom: 10px;
+        left: 10px;
+        gap: 10px;
+    }
+    
+    .audio-icon {
+        font-size: 26px;
+    }
+}
+
+/* Medium screens (tablets) */
+@media screen and (min-width: 481px) and (max-width: 768px) {
+    #top-bar {
+        padding: 12px;
+    }
+    
+    #item-counters {
+        max-width: 48vw;
+    }
+    
+    .stat-box {
+        width: 85vw;
+        max-width: 320px;
+    }
+}
+
+/* Landscape mode on mobile */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    #top-bar {
+        padding: 5px 10px;
+    }
+    
+    #item-counters {
+        padding: 4px 8px;
+    }
+    
+    #current-emoji-score {
+        padding: 4px 8px;
+    }
+    
+    #current-emoji {
+        font-size: 1.3rem;
+    }
+    
+    .stat-box {
+        padding: 10px;
+        margin: 10px auto;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .stat-row {
+        margin: 4px 0;
+        padding-bottom: 2px;
+    }
+    
+    h1 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+    
+    .big-emoji {
+        font-size: 3rem;
+        margin: 5px 0;
+    }
+    
+    button.btn {
+        padding: 8px 20px;
+        font-size: 0.85rem;
+        margin: 5px auto;
+    }
+}

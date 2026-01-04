@@ -10,668 +10,7 @@
     <link rel="icon" type="image/svg+xml" href="images/favicons/favicon.svg">
     <link rel="apple-touch-icon" href="images/favicons/apple-touch-icon.png">
     <link rel="manifest" href="site.webmanifest">
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #222;
-            background-position: center;
-            background-size: cover;
-            background-repeat: no-repeat;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            user-select: none;
-            -webkit-user-select: none;
-            transition: background-image 0.5s ease-in-out;
-        }
-
-        #canvas-container {
-            width: 100%;
-            height: 100dvh;
-            display: block;
-        }
-
-        #ui-layer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        /* HUD */
-        #top-bar {
-            display: flex;
-            justify-content: space-between;
-            padding: 20px;
-            width: 100%;
-            box-sizing: border-box;
-            pointer-events: none;
-        }
-
-        #level-info {
-            text-align: left;
-        }
-
-        #level-indicator {
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: white;
-            text-shadow: 2px 2px 0 #000;
-            margin: 0;
-        }
-
-        #timer-display {
-            font-size: 1.5rem;
-            color: #00ffff;
-            font-family: monospace;
-            font-weight: bold;
-            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
-        }
-
-        #hearts {
-            font-size: 1.2rem;
-            margin-top: 5px;
-            letter-spacing: 1px;
-            white-space: nowrap;
-        }
-
-        #buffs-display {
-            font-size: 1rem;
-            font-weight: bold;
-            margin-top: 5px;
-            text-shadow: 1px 1px 0 #000;
-            min-height: 1.2em;
-        }
-
-        .buff-fast {
-            color: #ffff00;
-        }
-
-        .buff-slow {
-            color: #76ff03;
-            font-style: italic;
-        }
-
-        .buff-drill {
-            color: #00ffff;
-            text-shadow: 0 0 5px cyan;
-        }
-
-        .effect-bar-container {
-            display: inline-block;
-            margin-left: 10px;
-            width: 80px;
-            height: 6px;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 3px;
-            overflow: hidden;
-            vertical-align: middle;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .effect-bar-fill {
-            height: 100%;
-            transition: width 0.1s linear;
-            box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
-        }
-
-        .effect-bar-fast {
-            background: linear-gradient(90deg, #ffff00, #ffaa00);
-        }
-
-        .effect-bar-slow {
-            background: linear-gradient(90deg, #76ff03, #4caf50);
-        }
-
-        .effect-bar-drill {
-            background: linear-gradient(90deg, #00ffff, #0099ff);
-        }
-
-        #item-counters {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 10px 20px;
-            border-radius: 20px;
-            backdrop-filter: blur(4px);
-            display: flex;
-            gap: 15px;
-            height: fit-content;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .counter-item {
-            font-size: 1.2rem;
-            color: white;
-            font-weight: bold;
-        }
-
-        /* Floor counter smaller styling */
-        .counter-item.floor-counter {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        #score-board {
-            position: absolute;
-            top: 120px;
-            width: 100%;
-            text-align: center;
-            font-size: 5rem;
-            font-weight: 900;
-            color: rgba(255, 255, 255, 0.2);
-            pointer-events: none;
-        }
-
-        /* Current Emoji Score Display */
-        #current-emoji-score {
-            background: rgba(0, 0, 0, 0.7);
-            padding: 15px 20px;
-            border-radius: 20px;
-            backdrop-filter: blur(4px);
-            text-align: center;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            margin-top: 10px;
-        }
-
-        #current-emoji {
-            font-size: 2.5rem;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        #current-score-text {
-            font-size: 1rem;
-            color: white;
-            font-weight: bold;
-            text-shadow: 1px 1px 0 #000;
-        }
-
-        /* Difficulty Selection */
-        .difficulty-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin: 20px 0;
-            width: clamp(280px, 90vw, 350px);
-        }
-
-        .difficulty-btn {
-            padding: 20px 25px;
-            font-size: 1.4rem;
-            border-radius: 15px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            text-transform: uppercase;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .difficulty-btn::before {
-            content: attr(data-multiplier);
-            position: absolute;
-            top: 8px;
-            right: 12px;
-            font-size: 0.7rem;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-weight: bold;
-        }
-
-        .difficulty-btn:hover {
-            transform: translateY(-3px);
-            border-color: rgba(255, 255, 255, 0.6);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-        }
-
-        .difficulty-btn.selected {
-            border-color: #fff;
-            box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
-            transform: scale(1.05);
-            animation: pulse 2s infinite;
-        }
-
-        .difficulty-btn.selected::after {
-            content: '✓';
-            position: absolute;
-            top: 8px;
-            left: 12px;
-            font-size: 1.2rem;
-            color: white;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-        }
-
-        .difficulty-easy {
-            background: linear-gradient(135deg, rgba(46, 213, 115, 0.9), rgba(46, 213, 115, 0.7));
-            color: white;
-        }
-
-        .difficulty-medium {
-            background: linear-gradient(135deg, rgba(255, 193, 7, 0.9), rgba(255, 193, 7, 0.7));
-            color: white;
-        }
-
-        .difficulty-hard {
-            background: linear-gradient(135deg, rgba(255, 71, 87, 0.9), rgba(255, 71, 87, 0.7));
-            color: white;
-        }
-
-        .difficulty-desc {
-            font-size: 0.65rem;
-            margin-top: 8px;
-            opacity: 0.95;
-            font-weight: normal;
-            text-transform: none;
-            line-height: 1.3;
-        }
-
-        /* Difficulty Badge in HUD */
-        #difficulty-badge {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(4px);
-            z-index: 10;
-            display: none;
-        }
-
-        #difficulty-badge.easy {
-            border-color: rgba(46, 213, 115, 0.8);
-            color: #2ed573;
-        }
-
-        #difficulty-badge.medium {
-            border-color: rgba(255, 193, 7, 0.8);
-            color: #ffc107;
-        }
-
-        #difficulty-badge.hard {
-            border-color: rgba(255, 71, 87, 0.8);
-            color: #ff4757;
-        }
-
-        /* Audio Controls */
-        .audio-controls {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            display: flex;
-            gap: 15px;
-            z-index: 30;
-            pointer-events: auto;
-        }
-
-        .audio-icon {
-            font-size: 32px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            opacity: 0.8;
-            color: white;
-            text-shadow: 0 2px 4px black;
-            transition: transform 0.1s;
-        }
-
-        .audio-icon:active {
-            transform: scale(0.9);
-        }
-
-        .audio-off {
-            opacity: 0.4;
-        }
-
-        /* Overlays */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.4);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 20;
-            pointer-events: auto;
-            transition: opacity 0.3s;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        #leaderboard-screen {
-            background-color: rgba(0, 0, 0, 0.85) !important;
-        }
-
-        /* Ending screen needs highest z-index to appear above canvas */
-        #ending-screen {
-            z-index: 100 !important;
-        }
-
-        #ending-video {
-            width: 100%;
-            height: auto;
-            display: block;
-            min-height: 200px;
-        }
-
-        /* Remove transparency from leaderboard */
-        .overlay:not(.hidden) {
-            display: flex !important;
-        }
-
-        #start-content {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            height: 100%;
-            padding-bottom: 5vh;
-            width: 100%;
-            gap: 10px;
-        }
-
-        #start-screen {
-            background-color: #2c3e50;
-            background-position: center;
-            background-size: cover;
-            background-color: rgba(0, 0, 0, 0.3);
-            background-repeat: no-repeat;
-        }
-
-        /* Portrait orientation - will be updated by JavaScript based on webp support */
-        @media (orientation: portrait) {
-            #start-screen {
-                background-image: url('images/archived/start_screen_portrait_original_size.jpg');
-            }
-
-            #start-content .stat-box {
-                margin-top: auto !important;
-                margin-bottom: 15vh !important;
-                backdrop-filter: none !important;
-                font-size: 0.85rem !important;
-            }
-
-            #start-content .stat-box h3 {
-                font-size: 1.1rem !important;
-                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-            }
-
-            #start-content .stat-box p {
-                text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-            }
-
-            #start-content .btn-start {
-                margin-top: 2vh !important;
-                margin-bottom: 5vh !important;
-            }
-        }
-
-        /* Landscape orientation - will be updated by JavaScript based on webp support */
-        @media (orientation: landscape) {
-            #start-screen {
-                background-image: url('images/start_screen_Landscape.jpg');
-            }
-
-            #start-content .stat-box {
-                margin-top: auto !important;
-                margin-bottom: 10vh !important;
-                backdrop-filter: none !important;
-                font-size: 0.85rem !important;
-            }
-
-            #start-content .stat-box h3 {
-                font-size: 1.1rem !important;
-                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-            }
-
-            #start-content .stat-box p {
-                text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-            }
-
-            #start-content .btn-start {
-                margin-top: 2vh !important;
-                margin-bottom: 3vh !important;
-            }
-        }
-
-        /* Remove blur from start screen stat-box */
-        #start-content .stat-box {
-            backdrop-filter: none !important;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        h1 {
-            color: white;
-            font-size: 2rem;
-            margin: 0 0 20px 0;
-            text-transform: uppercase;
-            text-shadow: none;
-            font-weight: 900;
-            letter-spacing: 2px;
-        }
-
-        .big-emoji {
-            font-size: 6rem;
-            margin: 10px 0;
-        }
-
-        /* Animations */
-        @keyframes popIn {
-            0% {
-                transform: scale(0);
-                opacity: 0;
-            }
-
-            80% {
-                transform: scale(1.1);
-                opacity: 1;
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.2) rotate(5deg);
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-
-        .animate-pop {
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            opacity: 1 !important;
-        }
-
-        /* Leaderboard styles */
-        #leaderboard-list .leaderboard-item {
-            padding: 12px 15px;
-            margin: 8px 0;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 4px solid transparent;
-        }
-
-        #leaderboard-list .leaderboard-item:nth-child(1) {
-            border-left-color: #ffd700;
-            background: rgba(255, 215, 0, 0.15);
-        }
-
-        #leaderboard-list .leaderboard-item:nth-child(2) {
-            border-left-color: #c0c0c0;
-            background: rgba(192, 192, 192, 0.15);
-        }
-
-        #leaderboard-list .leaderboard-item:nth-child(3) {
-            border-left-color: #cd7f32;
-            background: rgba(205, 127, 50, 0.15);
-        }
-
-        .leaderboard-rank {
-            font-size: 1.3rem;
-            font-weight: bold;
-            margin-right: 15px;
-            min-width: 30px;
-        }
-
-        .leaderboard-name {
-            flex: 1;
-            font-size: 1.1rem;
-            font-weight: bold;
-        }
-
-        .leaderboard-score {
-            font-size: 1.2rem;
-            font-weight: 900;
-            color: #2ed573;
-        }
-
-        .leaderboard-date {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.6);
-            margin-top: 3px;
-        }
-
-        input[type="text"]::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #2ed573;
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .animate-pulse {
-            animation: pulse 1s infinite;
-        }
-
-        .stat-box {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 20px;
-            border-radius: 10px;
-            width: clamp(280px, 90vw, 350px);
-            max-width: 90vw;
-            margin: 20px auto;
-            flex-shrink: 0;
-            text-align: center;
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            flex-shrink: 0;
-        }
-
-        .stat-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin: 8px 0;
-            font-size: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            padding-bottom: 5px;
-            color: white;
-        }
-
-        .stat-label {
-            width: auto;
-            min-width: 120px;
-            text-align: left;
-            font-size: 0.9rem;
-            opacity: 0.8;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .stat-val {
-            width: 50px;
-            text-align: right;
-            font-weight: bold;
-            color: white;
-            flex-shrink: 0;
-        }
-
-        .bar-track {
-            flex-grow: 1;
-            height: 6px;
-            background: rgba(0, 0, 0, 0.5);
-            margin: 0 10px;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .bar-fill {
-            height: 100%;
-            width: 0%;
-            transition: width 1s ease-out;
-        }
-
-        button.btn {
-            background: rgba(255, 71, 87, 0.8);
-            color: white;
-            border: none;
-            padding: clamp(9.6px, 1.6vh, 16px) clamp(32px, 6.4vw, 48px);
-            font-size: clamp(0.96rem, 3.2vw, 1.44rem);
-            border-radius: 50px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.32);
-            transition: transform 0.1s;
-            margin: 8px auto;
-            flex-shrink: 0;
-            min-height: 35.2px;
-            display: block;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-        }
-
-        button.btn:active {
-            transform: scale(0.95);
-        }
-
-        button.btn-start {
-            background: rgba(46, 213, 115, 0.8);
-            box-shadow: 0 5px 15px rgba(46, 213, 115, 0.32);
-        }
-
-        .tutorial {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            text-align: right;
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 1rem;
-            font-weight: bold;
-            pointer-events: none;
-        }
-    </style>
+    <link rel="stylesheet" href="css/styles.css">
 
     <script src="js/three.min.js"></script>
 
@@ -710,6 +49,10 @@
                 <div id="hearts">❤️❤️❤️</div>
                 <div id="buffs-display"></div>
             </div>
+            <div id="game-score-display">
+                <span class="score-icon">⭐</span>
+                <span class="score-value" id="total-score">0</span>
+            </div>
             <div id="item-counters">
                 <div class="counter-item">🍎 <span id="c-apple">0</span></div>
                 <div class="counter-item">🍌 <span id="c-banana">0</span></div>
@@ -717,8 +60,8 @@
                 <div class="counter-item floor-counter">🏢 <span id="c-floors">0</span></div>
             </div>
             <div id="current-emoji-score">
-                <span id="current-emoji">🐜</span>
-                <div id="current-score-text">Current Rating</div>
+                <span id="current-emoji">🐛</span>
+                <div id="current-score-text">Level Rating</div>
             </div>
         </div>
         <div id="score-board">0</div>
@@ -728,7 +71,18 @@
             <button id="audio-btn" class="audio-icon">🔊</button>
         </div>
 
-        <div class="tutorial">DRAG TO ROTATE</div>
+        <button id="pause-btn" class="pause-btn">⏸️</button>
+    </div>
+
+    <div id="pause-screen" class="overlay hidden">
+        <h1>⏸️ PAUSED</h1>
+        <div class="stat-box">
+            <p style="font-size: 1.2rem; margin-bottom: 20px;">Game is paused</p>
+            <p style="font-size: 0.9rem; opacity: 0.8;">Press ESC or tap Resume to continue</p>
+        </div>
+        <button class="btn btn-start" id="btn-resume">▶️ RESUME</button>
+        <button class="btn" id="btn-pause-restart">🔄 RESTART</button>
+        <button class="btn" id="btn-pause-menu" style="background: rgba(83, 82, 237, 0.8);">🏠 MAIN MENU</button>
     </div>
 
     <div id="start-screen" class="overlay">
@@ -784,9 +138,9 @@
     </div>
 
     <div id="level-complete-screen" class="overlay hidden"
-        style="padding: 10px; box-sizing: border-box; justify-content: center; align-items: center;">
+        style="padding: 20px 10px; box-sizing: border-box; justify-content: flex-start; align-items: center; padding-top: max(20px, env(safe-area-inset-top));">
         <div class="stat-box"
-            style="max-height: 50vh; overflow-y: auto; -webkit-overflow-scrolling: touch; flex-shrink: 0;">
+            style="max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch; flex-shrink: 0; margin-top: 10px;">
             <div class="stat-row animate-pop" style="animation-delay: 0.1s;">
                 <span class="stat-label">🍎 Apples:</span>
                 <span class="stat-val" id="win-apples">0</span>
@@ -979,6 +333,110 @@
          * 2. Level 2: Reverted to Standard Level (Dark Theme).
          * 3. Upgrades: Monsters (Hands + Direction), Physics (Sky Ray), Level 6 (Final).
          */
+
+        // ==========================================================================
+        // GAME CONSTANTS & CONFIGURATION
+        // ==========================================================================
+        const CONFIG = {
+            // Physics constants
+            PHYSICS: {
+                BASE_GRAVITY: 0.012,
+                JUMP_FORCE: 0.2268,
+                MAX_VELOCITY: -0.8,
+                FAST_GRAVITY_MULT: 2.5,      // Increased from 2.0 for more noticeable banana effect
+                FAST_JUMP_MULT: 1.6,         // Increased from 1.4 for more noticeable banana effect
+                SLOW_GRAVITY: 0.005,
+                SLOW_JUMP: 0.25,
+                DRILL_GRAVITY: 0.03,
+                COCKROACH_MULT: 0.2
+            },
+            // Game timing
+            TIMING: {
+                STRESS_MUSIC_THRESHOLD: 10,  // seconds
+                INVINCIBILITY_FRAMES: 120,   // 2 seconds at 60fps
+                FAST_BUFF_DURATION: 450,     // Increased from 300 for more noticeable banana effect
+                SLOW_DEBUFF_DURATION: 150,   // frames
+                DRILL_DURATION: 600,         // Doubled from 300 (2x diamond effect)
+                CHOCOLATE_TIME_BONUS: 5      // seconds
+            },
+            // Game balance
+            BALANCE: {
+                MAX_LIVES: 5,
+                STARTING_LIVES: 3,
+                DRILL_FLOORS: 5              // Increased from 3 for 2x diamond effect
+            },
+            // Difficulty settings
+            DIFFICULTY: {
+                easy: { multiplier: 1.0, label: 'EASY ×1.0' },
+                medium: { multiplier: 1.5, label: 'MEDIUM ×1.5' },
+                hard: { multiplier: 2.0, label: 'HARD ×2.0' }
+            },
+            // Level configuration
+            LEVELS: {
+                1: { floors: 25, maxTime: 60, name: 'LEVEL 1' },
+                2: { floors: 40, maxTime: 60, name: 'LEVEL 2' },
+                3: { floors: 40, maxTime: 60, name: 'LEVEL 3' },
+                4: { floors: 20, maxTime: 90, name: 'LAVA HELL' },
+                5: { floors: 30, maxTime: 120, name: 'LEVEL 5' }
+            },
+            // Leaderboard
+            LEADERBOARD: {
+                MAX_NAME_LENGTH: 20,
+                SUBMIT_COOLDOWN: 5000  // ms
+            },
+            // Per-level emoji system based on percentage of apples + bananas collected
+            // Emojis: 🐛 (0-19%) → 🐸 (20-39%) → 🦎 (40-59%) → 🦕 (60-79%) → 🦖 (80-99%) → 🐉 (100%)
+            EMOJI_SYSTEM: {
+                thresholds: [0, 20, 40, 60, 80, 100],  // Percentage thresholds for each emoji
+                emojis: ['🐛', '🐸', '🦎', '🦕', '🦖', '🐉']
+            }
+        };
+
+        // ==========================================================================
+        // SECURITY UTILITIES
+        // ==========================================================================
+        
+        /**
+         * Sanitizes player name input for leaderboard submission
+         * @param {string} name - Raw player name input
+         * @returns {string} - Sanitized name
+         */
+        function sanitizeName(name) {
+            if (!name || typeof name !== 'string') return 'Anonymous';
+            return name
+                .replace(/<[^>]*>/g, '')           // Remove HTML tags
+                .replace(/[^\w\s\-'.]/g, '')       // Only allow word chars (a-zA-Z0-9_), whitespace, hyphen, apostrophe, period
+                .trim()
+                .substring(0, CONFIG.LEADERBOARD.MAX_NAME_LENGTH) || 'Anonymous';
+        }
+
+        /**
+         * Validates score is within acceptable range
+         * @param {number} score - Score to validate
+         * @param {number} level - Current level
+         * @param {number} multiplier - Difficulty multiplier
+         * @returns {boolean} - Whether score is valid
+         */
+        function isScoreValid(score, level, multiplier) {
+            if (typeof score !== 'number' || isNaN(score)) return false;
+            if (score < 0) return false;
+            // Max possible score is roughly level * floors * multiplier
+            const maxPossible = level * 100 * multiplier * 2;
+            return score <= maxPossible;
+        }
+
+        // Rate limiting for leaderboard submissions
+        let lastSubmitTime = 0;
+        function canSubmitScore() {
+            const now = Date.now();
+            if (now - lastSubmitTime < CONFIG.LEADERBOARD.SUBMIT_COOLDOWN) {
+                const waitTime = Math.ceil((CONFIG.LEADERBOARD.SUBMIT_COOLDOWN - (now - lastSubmitTime)) / 1000);
+                console.warn(`Rate limited. Please wait ${waitTime} seconds.`);
+                return false;
+            }
+            lastSubmitTime = now;
+            return true;
+        }
 
         // --- SAFETY UTILS ---
         function updateText(id, text) { const el = document.getElementById(id); if (el) el.innerText = text; }
@@ -1334,7 +792,22 @@
         }
 
         async function saveToLeaderboard(playerName, playerScore) {
-            if (!playerName || playerScore === undefined) return;
+            // Sanitize and validate inputs
+            const sanitizedName = sanitizeName(playerName);
+            
+            if (!sanitizedName || playerScore === undefined) return;
+            
+            // Rate limiting check
+            if (!canSubmitScore()) {
+                console.warn('Score submission rate limited. Please wait before trying again.');
+                throw new Error('Please wait before submitting again');
+            }
+            
+            // Score validation
+            if (!isScoreValid(playerScore, 5, 2.0)) {
+                console.warn('Invalid score detected');
+                throw new Error('Invalid score');
+            }
 
             try {
                 // CHANGED: We send JSON string, but tell browser it is text/plain
@@ -1346,7 +819,7 @@
                         'Content-Type': 'text/plain;charset=utf-8',
                     },
                     body: JSON.stringify({
-                        name: playerName,
+                        name: sanitizedName,
                         score: playerScore
                     })
                 });
@@ -1459,6 +932,12 @@
                 this.timeUpEffect = false; // Time up effect flag
                 this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0, cockroach: 0 };
                 this.totalItems = 0; this.levelCollected = 0; this.previousLevelsScore = 0; this.currentLevelMaxDepth = 0;
+                this.levelTotalFruits = 0;  // Total apples + bananas spawned in current level
+                
+                // Total game counters (persist across levels)
+                this.totalFloorsCleared = 0;  // Total floors cleared across all levels
+                this.totalFruits = 0;         // Total fruits (apples + bananas) collected
+                this.pacmanBonus = 0;         // Bonus score from pacman mini-game
 
                 if (typeof THREE !== 'undefined') this.raycaster = new THREE.Raycaster();
                 this.floors = []; this.interactables = []; this.physicsMeshes = [];
@@ -1518,7 +997,7 @@
 
                     try {
                         // Ensure the save completes before proceeding
-                        await saveToLeaderboard(name, score, level);
+                        await saveToLeaderboard(name, score);
 
                         // Only update UI after successful save
                         btn.innerText = 'SAVED!';
@@ -1592,6 +1071,29 @@
                 };
                 document.getElementById('audio-btn').onclick = () => this.audio.toggleMute();
                 document.getElementById('music-btn').onclick = () => this.audio.toggleMusic();
+
+                // Pause functionality
+                this.isPaused = false;
+                document.getElementById('pause-btn').onclick = () => this.togglePause();
+                document.getElementById('btn-resume').onclick = () => this.togglePause();
+                document.getElementById('btn-pause-restart').onclick = () => {
+                    this.isPaused = false;
+                    document.getElementById('pause-screen').classList.add('hidden');
+                    this.restart(true);
+                };
+                document.getElementById('btn-pause-menu').onclick = () => {
+                    this.isPaused = false;
+                    document.getElementById('pause-screen').classList.add('hidden');
+                    this.isPlaying = false;
+                    document.getElementById('start-screen').classList.remove('hidden');
+                };
+
+                // ESC key to pause
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.isPlaying) {
+                        this.togglePause();
+                    }
+                });
 
                 // Difficulty selection buttons
                 const difficultyButtons = document.querySelectorAll('.difficulty-btn');
@@ -1795,6 +1297,7 @@
                 this.tower = new THREE.Group(); this.scene.add(this.tower);
                 this.floors = []; this.interactables = []; this.physicsMeshes = [];
                 this.totalItems = 0; this.levelCollected = 0;
+                this.levelTotalFruits = 0;  // Reset level fruit counter
                 this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0, cockroach: 0 };
                 this.lastFloorY = -9999;
                 this.highestY = 0;
@@ -2035,6 +1538,8 @@
                 shadowCaster.visible = false; // Invisible but casts shadow
                 grp.add(sprite, shadowCaster); grp.userData = { type: type }; parent.add(grp); this.interactables.push(grp);
                 if (type !== 'rotten' && type !== 'cockroach') this.totalItems++;
+                // Count apples and bananas for level total fruits
+                if (type === 'apple' || type === 'banana') this.levelTotalFruits++;
             }
 
             // --- UPGRADE: MONSTER HANDS + FACING + NO SPIN ---
@@ -2290,11 +1795,18 @@
                     this.collected = { apple: 0, banana: 0, diamond: 0, choco: 0, rotten: 0, cockroach: 0 };
                     this.previousLevelsScore = 0;
                     this.currentLevelMaxDepth = 0;
+                    // Reset total game counters on full restart
+                    this.totalFloorsCleared = 0;
+                    this.totalFruits = 0;
+                    this.pacmanBonus = 0;
                     // No start screen music
                 }
                 else {
                     this.lives = Math.max(1, this.lives);
-                    if (this.floors) this.previousLevelsScore += 50;
+                    // Add current level's floors to total before reset
+                    this.totalFloorsCleared += this.currentLevelMaxDepth;
+                    // Don't reset totalFruits - collected items persist in this.collected
+                    this.previousLevelsScore += 50;
                     this.currentLevelMaxDepth = 0;
                 }
 
@@ -2331,12 +1843,12 @@
                         if (this.timeLeft <= 0) { this.timeLeft = 0; this.handleTimeout(); }
                     }
 
-                    // Play stress music in last 10 seconds
-                    if (this.timeLeft <= 10 && !this.stressMusicPlaying) {
+                    // Play stress music in last seconds (configurable threshold)
+                    if (this.timeLeft <= CONFIG.TIMING.STRESS_MUSIC_THRESHOLD && !this.stressMusicPlaying) {
                         this.audio.playTrack('stress');
                         this.stressMusicPlaying = true;
-                    } else if (this.timeLeft > 10 && this.stressMusicPlaying) {
-                        // Switch back to level music if time goes above 10 seconds (e.g., chocolate collected)
+                    } else if (this.timeLeft > CONFIG.TIMING.STRESS_MUSIC_THRESHOLD && this.stressMusicPlaying) {
+                        // Switch back to level music if time goes above threshold (e.g., chocolate collected)
                         let trackName = 'level_' + this.level;
                         this.audio.playTrack(trackName);
                         this.stressMusicPlaying = false;
@@ -2357,16 +1869,16 @@
 
                 let b = "";
                 if (this.drillFloors > 0) {
-                    const drillPct = Math.max(0, Math.min(100, (this.drillTimer / 300) * 100));
-                    b += "<span class='buff-drill'>💎DRILL</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-drill' style='width:" + drillPct + "%'></span></span> ";
+                    const drillPct = Math.max(0, Math.min(100, (this.drillTimer / CONFIG.TIMING.DRILL_DURATION) * 100));
+                    b += `<span class='buff-drill'>💎DRILL x${this.drillFloors}</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-drill' style='width:${drillPct}%'></span></span> `;
                 }
                 else if (this.fastTimer > 0) {
-                    const fastPct = Math.max(0, Math.min(100, (this.fastTimer / 300) * 100));
-                    b += "<span class='buff-fast'>⚡FAST</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-fast' style='width:" + fastPct + "%'></span></span> ";
+                    const fastPct = Math.max(0, Math.min(100, (this.fastTimer / CONFIG.TIMING.FAST_BUFF_DURATION) * 100));
+                    b += `<span class='buff-fast'>🍌⚡TURBO!</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-fast' style='width:${fastPct}%'></span></span> `;
                 }
                 else if (this.slowTimer > 0) {
                     const slowPct = Math.max(0, Math.min(100, (this.slowTimer / 150) * 100));
-                    b += "<span class='buff-slow'>Ninja Turtle!</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-slow' style='width:" + slowPct + "%'></span></span>";
+                    b += `<span class='buff-slow'>🐢Ninja Turtle!</span><span class='effect-bar-container'><span class='effect-bar-fill effect-bar-slow' style='width:${slowPct}%'></span></span>`;
                 }
                 updateHTML('buffs-display', b);
 
@@ -2374,22 +1886,30 @@
                 updateText('c-apple', this.collected.apple);
                 updateText('c-banana', this.collected.banana);
                 updateText('c-choco', this.collected.choco);
-                updateText('c-floors', this.currentLevelMaxDepth || 0);
+                // Show total floors cleared across all levels
+                updateText('c-floors', this.totalFloorsCleared + this.currentLevelMaxDepth);
 
-                // Real-time emoji score calculation
-                const total = this.totalItems || 1;
-                const fruitPct = Math.min(100, Math.floor(this.levelCollected / total * 100));
-                const timePct = Math.min(100, Math.floor((this.timeLeft / this.maxTime) * 100));
-                const maxFloors = this.floors.length || 1;
-                const floorsPct = Math.min(100, Math.floor((this.currentLevelMaxDepth / maxFloors) * 100));
+                // Calculate and display total game score
+                const totalFruitsNow = this.collected.apple + this.collected.banana;
+                const totalScore = Math.floor((totalFruitsNow + this.totalFloorsCleared + this.currentLevelMaxDepth + this.pacmanBonus) * this.difficultyMultiplier);
+                this.score = totalScore;
+                updateText('total-score', totalScore.toLocaleString());
 
-                // Weighted scoring: easier to get perfect score (90%+ = 10)
-                const rawScore = (fruitPct * 0.4) + (timePct * 0.3) + (floorsPct * 0.3);
-                const score1to10 = Math.max(1, Math.min(10, Math.floor(rawScore / 9) + 1));
-
-                // Emoji mapping
-                const emojiMap = { 10: '🐉', 9: '🦕', 8: '🐊', 7: '🦖', 6: '🐍', 5: '🦎', 4: '🐸', 3: '🐢', 2: '🐛', 1: '🐜' };
-                const currentEmoji = emojiMap[score1to10] || '🐜';
+                // Per-level emoji based on PERCENTAGE of apples + bananas collected
+                // Emojis: 🐛 (0-19%) → 🐸 (20-39%) → 🦎 (40-59%) → 🦕 (60-79%) → 🦖 (80-99%) → 🐉 (100%)
+                const fruitCount = this.collected.apple + this.collected.banana;
+                const totalFruitsInLevel = this.levelTotalFruits || 1;  // Avoid division by zero
+                const fruitPercent = Math.floor((fruitCount / totalFruitsInLevel) * 100);
+                const thresholds = CONFIG.EMOJI_SYSTEM.thresholds;
+                const emojis = CONFIG.EMOJI_SYSTEM.emojis;
+                
+                let currentEmoji = emojis[0]; // Default to first emoji
+                for (let i = thresholds.length - 1; i >= 0; i--) {
+                    if (fruitPercent >= thresholds[i]) {
+                        currentEmoji = emojis[i];
+                        break;
+                    }
+                }
                 updateText('current-emoji', currentEmoji);
             }
 
@@ -2408,6 +1928,32 @@
                 this.updateUI(); // Update UI to reflect changes
             }
 
+            togglePause() {
+                if (!this.isPlaying) return;
+                
+                this.isPaused = !this.isPaused;
+                
+                if (this.isPaused) {
+                    // Pause the game
+                    document.getElementById('pause-screen').classList.remove('hidden');
+                    document.getElementById('pause-btn').textContent = '▶️';
+                    // Pause music if playing
+                    if (this.audio.player && this.audio.player.context) {
+                        this.audio.player.context.suspend();
+                    }
+                } else {
+                    // Resume the game
+                    document.getElementById('pause-screen').classList.add('hidden');
+                    document.getElementById('pause-btn').textContent = '⏸️';
+                    // Resume music if not muted
+                    if (this.audio.player && this.audio.player.context && !this.audio.isMusicMuted) {
+                        this.audio.player.context.resume();
+                    }
+                    // Reset lastTime to prevent time jump
+                    this.lastTime = Date.now();
+                }
+            }
+
             loop() {
                 try {
                     requestAnimationFrame(() => this.loop());
@@ -2417,6 +1963,12 @@
                         return; // Keep showing level complete screen
                     }
                     if (!this.isPlaying) return;
+                    
+                    // Check for pause state
+                    if (this.isPaused) {
+                        this.renderer.render(this.scene, this.camera);
+                        return;
+                    }
 
                     this.particles.update();
 
@@ -2453,15 +2005,15 @@
                     let grav = this.gravity; let jump = this.jumpForce;
                     // Apply cockroach debuff if active - much slower
                     if (this.hasCockroachDebuff) {
-                        grav *= 0.2;
-                        jump *= 0.2;
+                        grav *= CONFIG.PHYSICS.COCKROACH_MULT;
+                        jump *= CONFIG.PHYSICS.COCKROACH_MULT;
                     }
-                    if (this.drillFloors > 0) { grav = 0.03; } else {
-                        if (this.fastTimer > 0) { grav *= 2.0; jump *= 1.4; }
-                        if (this.slowTimer > 0) { grav = 0.005; jump = 0.25; }
+                    if (this.drillFloors > 0) { grav = CONFIG.PHYSICS.DRILL_GRAVITY; } else {
+                        if (this.fastTimer > 0) { grav *= CONFIG.PHYSICS.FAST_GRAVITY_MULT; jump *= CONFIG.PHYSICS.FAST_JUMP_MULT; }
+                        if (this.slowTimer > 0) { grav = CONFIG.PHYSICS.SLOW_GRAVITY; jump = CONFIG.PHYSICS.SLOW_JUMP; }
                     }
 
-                    this.velocity -= grav; if (this.velocity < -0.8) this.velocity = -0.8; this.ballWrap.position.y += this.velocity;
+                    this.velocity -= grav; if (this.velocity < CONFIG.PHYSICS.MAX_VELOCITY) this.velocity = CONFIG.PHYSICS.MAX_VELOCITY; this.ballWrap.position.y += this.velocity;
 
                     if (this.ballWrap.position.y > this.highestY) this.highestY = this.ballWrap.position.y;
 
@@ -2644,7 +2196,7 @@
                             }
                             else if (t === 'apple') { this.lives = Math.min(5, this.lives + 1); this.collected.apple++; this.levelCollected++; this.audio.playSFX('collect'); o.parent.remove(o); this.interactables.splice(i, 1); }
                             else if (t === 'banana') {
-                                this.fastTimer += 300;
+                                this.fastTimer += CONFIG.TIMING.FAST_BUFF_DURATION;
                                 this.hasCockroachDebuff = false; // Clear cockroach debuff when eating banana
                                 this.collected.banana++;
                                 this.levelCollected++;
@@ -2660,7 +2212,14 @@
                                 o.parent.remove(o);
                                 this.interactables.splice(i, 1);
                             }
-                            else if (t === 'diamond') { this.drillFloors = 3; this.drillTimer = 300; this.audio.playSFX('buff'); this.collected.diamond++; o.parent.remove(o); this.interactables.splice(i, 1); }
+                            else if (t === 'diamond') { 
+                                this.drillFloors = CONFIG.BALANCE.DRILL_FLOORS; 
+                                this.drillTimer = CONFIG.TIMING.DRILL_DURATION; 
+                                this.audio.playSFX('buff'); 
+                                this.collected.diamond++; 
+                                o.parent.remove(o); 
+                                this.interactables.splice(i, 1); 
+                            }
                             else if (t === 'chocolate') { this.timeLeft += 5; this.collected.choco++; this.audio.playSFX('collect'); o.parent.remove(o); this.interactables.splice(i, 1); }
                             else if (t === 'ghost' || t === 'white-ghost' || t === 'bat') { if (this.drillFloors <= 0) { this.takeDamage(); } else { o.parent.remove(o); this.interactables.splice(i, 1); } }
                         }
@@ -2668,8 +2227,7 @@
 
                     const currentDepth = Math.floor(Math.abs((pos.y - 2) / 4));
                     if (currentDepth > this.currentLevelMaxDepth) { this.currentLevelMaxDepth = currentDepth; }
-                    // Apply difficulty multiplier to score
-                    this.score = Math.floor((this.previousLevelsScore + this.currentLevelMaxDepth) * this.difficultyMultiplier);
+                    // Score is now calculated in updateUI based on total fruits + floors + pacman bonus
                     this.updateUI();
 
                     const ty = pos.y + 8;
@@ -2770,38 +2328,45 @@
                 const m = Math.floor(timeTaken / 60); const s = Math.floor(timeTaken % 60).toString().padStart(2, '0');
                 updateText('win-time', `${m}:${s}`);
 
-                // Calculate performance score (1-10)
-                const total = this.totalItems || 1;
-                const fruitPct = Math.min(100, Math.floor(this.levelCollected / total * 100));
-                const timePct = Math.min(100, Math.floor((this.timeLeft / this.maxTime) * 100));
-                const maxFloors = this.floors.length || 1;
-                const floorsPct = Math.min(100, Math.floor((floorsPassed / maxFloors) * 100));
+                // New emoji system based on PERCENTAGE of apples + bananas collected
+                const fruitCount = this.collected.apple + this.collected.banana;
+                const totalFruitsInLevel = this.levelTotalFruits || 1;  // Avoid division by zero
+                const fruitPercent = Math.floor((fruitCount / totalFruitsInLevel) * 100);
+                const thresholds = CONFIG.EMOJI_SYSTEM.thresholds;
+                const emojis = CONFIG.EMOJI_SYSTEM.emojis;
+                
+                let scoreEmoji = emojis[0]; // Default to first emoji
+                let emojiIndex = 0;
+                for (let i = thresholds.length - 1; i >= 0; i--) {
+                    if (fruitPercent >= thresholds[i]) {
+                        scoreEmoji = emojis[i];
+                        emojiIndex = i;
+                        break;
+                    }
+                }
 
-                // Weighted scoring: fruits 40%, time 30%, floors 30% (easier perfect: 90%+ = 10)
-                const rawScore = (fruitPct * 0.4) + (timePct * 0.3) + (floorsPct * 0.3);
-                const score1to10 = Math.max(1, Math.min(10, Math.floor(rawScore / 9) + 1));
-
-                // Emoji mapping: 10=🐉, 9=🦕, 8=🐊, 7=🦖, 6=🐍, 5=🦎, 4=🐸, 3=🐢, 2=🐛, 1=🐜
-                const emojiMap = { 10: '🐉', 9: '🦕', 8: '🐊', 7: '🦖', 6: '🐍', 5: '🦎', 4: '🐸', 3: '🐢', 2: '🐛', 1: '🐜' };
-                const scoreEmoji = emojiMap[score1to10] || '🐜';
-
-                // Rating text
-                let rating = "Good";
-                let ratingVal = 50;
-                if (score1to10 >= 9) { rating = "Perfect!"; ratingVal = 100; }
-                else if (score1to10 >= 7) { rating = "Great"; ratingVal = 75; }
-                else if (score1to10 >= 5) { rating = "Good"; ratingVal = 50; }
-                else { rating = "OK"; ratingVal = 25; }
+                // Rating based on emoji level
+                let rating = "OK";
+                let ratingVal = 20;
+                if (emojiIndex >= 5) { rating = "LEGENDARY!"; ratingVal = 100; }
+                else if (emojiIndex >= 4) { rating = "Amazing!"; ratingVal = 85; }
+                else if (emojiIndex >= 3) { rating = "Great!"; ratingVal = 70; }
+                else if (emojiIndex >= 2) { rating = "Good"; ratingVal = 50; }
+                else if (emojiIndex >= 1) { rating = "Nice"; ratingVal = 35; }
 
                 updateText('win-rating', rating);
                 updateText('win-score-emoji', scoreEmoji);
-                updateText('win-score', `${score1to10}/10`);
+                // Show collected/total format
+                updateText('win-score', `${fruitCount}/${totalFruitsInLevel} fruits (${fruitPercent}%)`);
                 updateText('win-emoji', scoreEmoji);
+
+                // Calculate time percentage for progress bar
+                const timePct = Math.min(100, Math.floor((this.timeLeft / this.maxTime) * 100));
 
                 setTimeout(() => {
                     updateBar('bar-time', timePct);
                     updateBar('bar-rating', ratingVal);
-                    updateBar('bar-score', score1to10 * 10); // Score bar 0-100%
+                    updateBar('bar-score', fruitPercent); // Score bar based on fruit percentage
                 }, 100);
             }
 
@@ -3059,8 +2624,8 @@
                     if (gameState.timeLeft <= 0 || gameState.score >= 20) {
                         document.getElementById('pacman-result').style.display = 'block';
                         updateText('pacman-final-score', gameState.score);
-                        // Add score to main game
-                        this.score += gameState.score * 10;
+                        // Store pacman score as bonus (total score is calculated in updateUI)
+                        this.pacmanBonus = gameState.score * 10;  // 10 points per apple in pacman
 
                         // Cleanup
                         window.removeEventListener('keydown', handleKeyDown);
