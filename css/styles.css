@@ -427,6 +427,20 @@ h1 {
     min-height: 200px;
 }
 
+/* Level Complete Screen */
+#level-complete-screen {
+    justify-content: flex-start !important;
+    padding-top: max(20px, env(safe-area-inset-top)) !important;
+}
+
+#level-complete-screen .stat-box {
+    margin-top: 10px;
+}
+
+#level-complete-screen .big-emoji {
+    margin: 10px 0 5px 0;
+}
+
 /* Pause Screen */
 #pause-screen {
     background-color: rgba(0, 0, 0, 0.8) !important;
