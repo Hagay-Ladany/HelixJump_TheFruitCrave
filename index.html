@@ -1822,7 +1822,9 @@
                 
                 // Store crystals as interactables for collision detection
                 crystals.forEach(crystal => {
-                    this.interactables.push(crystal.children[0]); // Add the actual crystal mesh
+                    if (crystal.children && crystal.children.length > 0) {
+                        this.interactables.push(crystal.children[0]); // Add the actual crystal mesh
+                    }
                 });
             }
 
@@ -2081,7 +2083,8 @@
 
                     this.particles.update(dt);
 
-                    // Timer decrements use TARGET_FPS to maintain consistent duration feel
+                    // Convert frame-based timers to time-based: multiply dt by TARGET_FPS to match original frame counts
+                    // This ensures timers like invincibility (120 frames) and fastTimer (450 frames) last the same real-time duration
                     const timerDecrement = dt * CONFIG.PHYSICS.TARGET_FPS;
                     if (this.invincible > 0) {
                         this.invincible -= timerDecrement;
@@ -2340,9 +2343,11 @@
                                             this.finalBoss.userData.isDefeated = true;
                                             this.audio.playSFX('collect');
                                             
-                                            // Victory explosion
+                                            // Victory explosion (use world position for correct particle placement)
+                                            const bossWorldPos = new THREE.Vector3();
+                                            this.finalBoss.getWorldPosition(bossWorldPos);
                                             for (let p = 0; p < 10; p++) {
-                                                this.particles.spawn(this.finalBoss.position, 0x00ff00);
+                                                this.particles.spawn(bossWorldPos, 0x00ff00);
                                             }
                                             
                                             // Make boss fade out
