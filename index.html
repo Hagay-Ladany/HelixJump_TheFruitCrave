@@ -338,7 +338,7 @@
         // GAME CONSTANTS & CONFIGURATION
         // ==========================================================================
         const CONFIG = {
-            // Physics constants
+            // Physics constants (values are per-frame at 60fps, scaled by deltaTime in loop)
             PHYSICS: {
                 BASE_GRAVITY: 0.012,
                 JUMP_FORCE: 0.2268,
@@ -348,7 +348,9 @@
                 SLOW_GRAVITY: 0.005,
                 SLOW_JUMP: 0.25,
                 DRILL_GRAVITY: 0.03,
-                COCKROACH_MULT: 0.2
+                COCKROACH_MULT: 0.2,
+                TARGET_FPS: 60,              // Reference frame rate for physics scaling
+                TARGET_FRAME_TIME: 1000 / 60 // ~16.67ms per frame at 60fps
             },
             // Game timing
             TIMING: {
@@ -377,7 +379,8 @@
                 2: { floors: 40, maxTime: 60, name: 'LEVEL 2' },
                 3: { floors: 40, maxTime: 60, name: 'LEVEL 3' },
                 4: { floors: 20, maxTime: 90, name: 'LAVA HELL' },
-                5: { floors: 30, maxTime: 120, name: 'LEVEL 5' }
+                5: { floors: 30, maxTime: 120, name: 'LEVEL 5' },
+                6: { floors: 30, maxTime: 150, name: 'THE FINALE' }
             },
             // Leaderboard
             LEADERBOARD: {
@@ -1043,15 +1046,15 @@
                     };
                 };
 
-                // Level logic: goto next or end at level 4
+                // Level logic: goto next or end at level 6
                 document.getElementById('btn-next').onclick = () => {
                     // Smooth music transition
                     if (this.audio.player) {
                         this.audio.player.stop();
                     }
                     setTimeout(() => {
-                        if (this.level >= 4) {
-                            // Level 4 complete - show ending screen
+                        if (this.level >= 6) {
+                            // Level 6 complete - show ending screen (game complete)
                             document.getElementById('level-complete-screen').classList.add('hidden');
                             document.getElementById('ending-screen').classList.remove('hidden');
                         }
@@ -1310,6 +1313,7 @@
                 else if (this.level === 3) grad = "linear-gradient(to bottom, #134E5E, #71B280)";
                 else if (this.level === 4) grad = "linear-gradient(to bottom, #cc4444, #400044)";
                 else if (this.level === 5) grad = "linear-gradient(to bottom, #1a0033, #4a00e0, #8e2de2)"; // Level 5: Dark purple to bright purple
+                else if (this.level === 6) grad = "linear-gradient(to bottom, #0a0a0a, #1a1a2e, #16213e)"; // Level 6: Dark ghostly theme
                 else grad = "linear-gradient(to bottom, #ECE9E6, #FFFFFF)";
                 // Dramatically reduce black overlay - much lighter
                 const overlayGradient = (this.level === 4) ? "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%)" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 29%, rgba(0, 0, 0, 0.1) 100%)";
@@ -1369,6 +1373,10 @@
                     fogCol = 0x2d1b4e; // Dark purple fog for level 5
                     fogDensity = 0.01; // Much lower density so floors don't disappear at depth
                 }
+                else if (this.level === 6) {
+                    fogCol = 0x0a1628; // Dark blue-black ghostly fog for finale
+                    fogDensity = 0.015; // Slightly higher density for ominous feel
+                }
                 this.scene.fog.color.setHex(fogCol);
                 this.scene.fog.density = fogDensity;
 
@@ -1377,7 +1385,8 @@
                 this.stressMusicPlaying = false; // Reset stress music flag for new level
 
                 // Set maxTime based on level
-                if (this.level === 5) this.maxTime = 120;
+                if (this.level === 6) this.maxTime = 150; // Level 6: The Finale - more time
+                else if (this.level === 5) this.maxTime = 120;
                 else if (this.level === 4) this.maxTime = 90;
                 else this.maxTime = 60;
 
@@ -1385,10 +1394,12 @@
 
                 const isBoss = this.level === 4;
                 const isFinal = this.level === 5;
+                const isFinale = this.level === 6; // THE FINALE - Level 6 with ghosts and boss
 
                 // Level 5: Completely rebuilt - 30 floors with boss at the end
-                const floors = isFinal ? 30 : (isBoss ? 20 : (this.level === 1 ? 25 : 40));
-                const hidePole = (this.level === 5 || this.level === 4); // Hide pole for level 4 and 5
+                // Level 6: THE FINALE - 30 floors with ghosts and final boss "The Blender"
+                const floors = isFinale ? 30 : (isFinal ? 30 : (isBoss ? 20 : (this.level === 1 ? 25 : 40)));
+                const hidePole = (this.level >= 4); // Hide pole for level 4, 5, and 6
 
                 let palette;
                 // Improved color palettes with better contrast and visual appeal
@@ -1397,19 +1408,22 @@
                 else if (this.level === 3) palette = [0xc8e858, 0x7ec850, 0xffd93d, 0x6abf69]; // Vibrant greens and yellow
                 else if (this.level === 5) palette = [0x6c2bd9, 0xa855f7, 0x7c3aed, 0x8b5cf6]; // Vibrant purples for Level 5
                 else if (this.level === 4) palette = [0xe86a6a, 0xcc5555, 0xf08080, 0xd47979]; // Warmer reds for lava level
+                else if (this.level === 6) palette = [0x1e3a5f, 0x2c5282, 0x3182ce, 0x63b3ed]; // Deep blues for ghostly finale
                 else palette = [0x6b7280, 0x4b5563, 0x9ca3af]; // Gray fallback
 
-                // Preload ending GIF asynchronously for level 5
-                if (isFinal && !this.endingGifPreloaded) {
+                // Preload ending GIF asynchronously for level 5 or 6 (game ending)
+                if ((isFinal || isFinale) && !this.endingGifPreloaded) {
                     this.endingGifPreloaded = true;
                     const endingGif = new Image();
                     endingGif.onload = () => {
                         console.log("Ending GIF preloaded successfully");
-                        document.getElementById('ending-gif').src = 'images/ending_victory.gif';
+                        const endingGifEl = document.getElementById('ending-gif');
+                        if (endingGifEl) endingGifEl.src = 'images/ending_victory.gif';
                     };
                     endingGif.onerror = () => {
                         console.warn("Ending GIF not found, using placeholder");
-                        document.getElementById('ending-gif').src = '';
+                        const endingGifEl = document.getElementById('ending-gif');
+                        if (endingGifEl) endingGifEl.src = '';
                     };
                     endingGif.src = 'images/ending_victory.gif';
                 }
@@ -1427,12 +1441,12 @@
                     let gap = Math.floor(Math.random() * 12); if (i === 0) gap = 0;
                     if (this.level === 3 && i >= 10 && i <= 18) gap = alignedGapIndex;
                     let danger = (i > 0 && i < floors - 1 && Math.random() < 0.1) ? Math.floor(Math.random() * 12) : -1;
-                    if (isBoss || isFinal) danger = Math.floor(Math.random() * 12);
+                    if (isBoss || isFinal || isFinale) danger = Math.floor(Math.random() * 12);
                     if (this.level === 3 && i >= 10 && i <= 18 && danger === gap) danger = -1;
 
                     const col = palette[i % palette.length];
                     // Improved danger colors with better contrast
-                    const dangerColor = (isBoss || isFinal) ? 0xff3333 : 0xff4040; // Brighter red for visibility
+                    const dangerColor = (isBoss || isFinal || isFinale) ? 0xff3333 : 0xff4040; // Brighter red for visibility
 
                     for (let j = 0; j < 12; j++) {
                         if (j === gap || j === (gap + 1) % 12) continue;
@@ -1441,7 +1455,7 @@
                         shape.absarc(0, 0, 1.6, j * a, (j + 1) * a, false); shape.absarc(0, 0, 2.5, (j + 1) * a, j * a, true);
                         const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.28, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 3 });
                         geo.rotateX(-Math.PI / 2);
-                        // Level 5: Use fully opaque material (no transparency) to prevent floors from disappearing with white fog
+                        // Level 5/6: Use fully opaque material (no transparency) to prevent floors from disappearing with white fog
                         // Other levels: normal opaque material
                         // Use MeshLambertMaterial for proper shadow rendering with subtle emissive glow
                         const mat = new THREE.MeshLambertMaterial({
@@ -1455,17 +1469,26 @@
                         m.castShadow = true;
                         m.userData = { type: isDanger ? 'danger' : 'safe', color: isDanger ? dangerColor : new THREE.Color(col).getHex() };
                         this.physicsMeshes.push(m); grp.add(m);
+                        // Spawn items on Level 6 too (but not on boss levels 4)
                         if (!isDanger && !isBoss && i > 0 && i < floors - 1 && Math.random() < 0.1) this.spawnItem(grp, Math.cos(j * a + a / 2) * 2, Math.sin(j * a + a / 2) * 2);
                     }
 
-                    // Enemy spawning based on difficulty
+                    // Enemy spawning based on difficulty and level
                     let ghostChance = isBoss ? 0.6 : 0.2; // Default (medium)
                     let batChance = 0.3; // Default (medium)
+                    let flyingGhostChance = 0; // Level 6 specific: flying ghosts 👻
 
-                    if (this.difficulty === 'easy') {
+                    if (isFinale) {
+                        // Level 6: THE FINALE - ghosts instead of monsters/bats
+                        ghostChance = 0; // No regular monsters
+                        batChance = 0; // No bats
+                        flyingGhostChance = 0.5; // High chance of flying ghosts
+                        if (this.difficulty === 'easy') flyingGhostChance = 0.3;
+                        else if (this.difficulty === 'hard') flyingGhostChance = 0.7;
+                    } else if (this.difficulty === 'easy') {
                         // Easy mode: spawn ghosts only up to max limit per level
                         // Max enemies per level: 1, 4, 6, 8 for levels 1-4
-                        const maxEnemiesEasy = { 1: 1, 2: 4, 3: 6, 4: 8, 5: 10 };
+                        const maxEnemiesEasy = { 1: 1, 2: 4, 3: 6, 4: 8, 5: 10, 6: 12 };
                         const maxEnemies = maxEnemiesEasy[this.level] || 4;
                         if (!this.easyModeEnemyCount) this.easyModeEnemyCount = 0;
                         ghostChance = (this.easyModeEnemyCount < maxEnemies) ? (isBoss ? 0.4 : 0.15) : 0;
@@ -1475,14 +1498,21 @@
                         batChance = 0.5;
                     }
 
-                    if (i > 0 && Math.random() < ghostChance) {
+                    // Spawn regular monsters (not on Level 6)
+                    if (!isFinale && i > 0 && Math.random() < ghostChance) {
                         this.spawnMonster(grp, isBoss);
                         if (this.difficulty === 'easy') this.easyModeEnemyCount++;
                     }
 
-                    // Add bats flying at upper part of floor (all levels except level 1)
-                    if (this.level > 1 && i > 0 && Math.random() < batChance) {
+                    // Add bats flying at upper part of floor (all levels except level 1 and level 6)
+                    if (!isFinale && this.level > 1 && i > 0 && Math.random() < batChance) {
                         this.spawnBat(grp);
+                    }
+
+                    // Level 6: Spawn flying ghosts 👻 instead of monsters and bats
+                    if (isFinale && i > 0 && Math.random() < flyingGhostChance) {
+                        this.spawnFlyingGhost(grp);
+                        if (this.difficulty === 'easy') this.easyModeEnemyCount++;
                     }
 
                     if (this.level === 3 && i >= 10 && i <= 18) grp.rotation.y = 0; else grp.rotation.y = Math.random() * 6;
@@ -1491,10 +1521,16 @@
 
 
                 const lastY = -floors * 4; this.lastFloorY = lastY;
-                const fin = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 1, 32), new THREE.MeshLambertMaterial({ color: 0x00ff00, emissive: 0x005500 }));
-                fin.position.y = lastY; fin.userData = { type: 'finish' };
-                fin.receiveShadow = true; fin.castShadow = true;
-                this.tower.add(fin); this.physicsMeshes.push(fin);
+                
+                // Level 6: Spawn "The Blender" boss instead of normal finish platform
+                if (isFinale) {
+                    this.spawnBlenderBoss(lastY);
+                } else {
+                    const fin = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 1, 32), new THREE.MeshLambertMaterial({ color: 0x00ff00, emissive: 0x005500 }));
+                    fin.position.y = lastY; fin.userData = { type: 'finish' };
+                    fin.receiveShadow = true; fin.castShadow = true;
+                    this.tower.add(fin); this.physicsMeshes.push(fin);
+                }
                 this.updateUI();
             }
 
@@ -1727,6 +1763,159 @@
                 this.finalBoss = boss; // Store reference
             }
 
+            // THE BLENDER BOSS - Final boss for Level 6
+            // A rotating boss platform with 4 glowing crystals that must be hit
+            spawnBlenderBoss(yPosition) {
+                const bossGroup = new THREE.Group();
+                bossGroup.position.y = yPosition;
+
+                // Main rotating platform - "The Blender Blade"
+                const bladeGeo = new THREE.CylinderGeometry(3.5, 3.5, 0.5, 32);
+                const bladeMat = new THREE.MeshLambertMaterial({ 
+                    color: 0x444466,
+                    emissive: 0x222233,
+                    transparent: false
+                });
+                const blade = new THREE.Mesh(bladeGeo, bladeMat);
+                blade.receiveShadow = true;
+                blade.castShadow = true;
+                blade.userData = { type: 'boss-platform' };
+                bossGroup.add(blade);
+                this.physicsMeshes.push(blade);
+
+                // Central boss "mouth" - menacing center
+                const mouthGeo = new THREE.TorusGeometry(1.5, 0.3, 16, 32);
+                const mouthMat = new THREE.MeshLambertMaterial({
+                    color: 0x330000,
+                    emissive: 0xff0000,
+                    emissiveIntensity: 0.3
+                });
+                const mouth = new THREE.Mesh(mouthGeo, mouthMat);
+                mouth.rotation.x = Math.PI / 2;
+                mouth.position.y = 0.3;
+                mouth.castShadow = true;
+                bossGroup.add(mouth);
+
+                // Create 4 glowing crystals (weak points) around the platform
+                const crystals = [];
+                const crystalColors = [0x00ffff, 0xff00ff, 0xffff00, 0x00ff00]; // Cyan, Magenta, Yellow, Green
+                
+                for (let i = 0; i < 4; i++) {
+                    const angle = (i / 4) * Math.PI * 2;
+                    const crystalGeo = new THREE.OctahedronGeometry(0.4, 0);
+                    const crystalMat = new THREE.MeshLambertMaterial({
+                        color: crystalColors[i],
+                        emissive: crystalColors[i],
+                        emissiveIntensity: 0.8,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+                    const crystal = new THREE.Mesh(crystalGeo, crystalMat);
+                    crystal.position.set(Math.cos(angle) * 2.5, 0.6, Math.sin(angle) * 2.5);
+                    crystal.castShadow = true;
+                    crystal.userData = { 
+                        type: 'boss-crystal', 
+                        index: i, 
+                        cracked: false,
+                        color: crystalColors[i]
+                    };
+                    bossGroup.add(crystal);
+                    crystals.push(crystal);
+                    this.physicsMeshes.push(crystal);
+                }
+
+                // Add spinning blade rings for visual effect
+                for (let ring = 0; ring < 2; ring++) {
+                    const ringGeo = new THREE.TorusGeometry(2 + ring * 0.8, 0.1, 8, 32);
+                    const ringMat = new THREE.MeshLambertMaterial({
+                        color: 0x666688,
+                        emissive: 0x333344
+                    });
+                    const bladeRing = new THREE.Mesh(ringGeo, ringMat);
+                    bladeRing.rotation.x = Math.PI / 2;
+                    bladeRing.position.y = 0.35;
+                    bladeRing.userData.ringIndex = ring;
+                    bladeRing.userData.ringSpeed = 0.02 + ring * 0.01;
+                    bladeRing.castShadow = true;
+                    bossGroup.add(bladeRing);
+                }
+
+                // Store boss data
+                bossGroup.userData = {
+                    type: 'blender-boss',
+                    health: 4, // 4 crystals to crack
+                    crystalsCracked: 0,
+                    crystals: crystals,
+                    isDefeated: false,
+                    rotationSpeed: 0.015, // Rotates against player input
+                    rotationDirection: 1
+                };
+
+                this.tower.add(bossGroup);
+                this.interactables.push(bossGroup);
+                this.finalBoss = bossGroup;
+                this.blenderBoss = bossGroup;
+            }
+
+            // Crack a boss crystal when player lands on it
+            crackBossCrystal(crystalMesh, userData) {
+                if (!this.blenderBoss || userData.cracked) return;
+                
+                // Mark crystal as cracked
+                userData.cracked = true;
+                this.blenderBoss.userData.crystalsCracked++;
+                
+                // Visual feedback - crack the crystal
+                crystalMesh.material.color.setHex(0x333333);
+                crystalMesh.material.emissive.setHex(0x111111);
+                crystalMesh.material.emissiveIntensity = 0.2;
+                crystalMesh.material.opacity = 0.5;
+                
+                // Play sound and spawn massive fruit particles (confetti)
+                this.audio.playSFX('buff');
+                const crystalPos = new THREE.Vector3();
+                crystalMesh.getWorldPosition(crystalPos);
+                
+                // Spawn confetti explosion with the crystal's original color
+                for (let j = 0; j < 8; j++) {
+                    this.particles.spawn(crystalPos, userData.color);
+                }
+                
+                // Check if all crystals are cracked - boss defeated!
+                if (this.blenderBoss.userData.crystalsCracked >= this.blenderBoss.userData.health) {
+                    this.defeatBlenderBoss();
+                }
+            }
+
+            // Defeat the Blender Boss and trigger victory
+            defeatBlenderBoss() {
+                if (!this.blenderBoss || this.blenderBoss.userData.isDefeated) return;
+                
+                this.blenderBoss.userData.isDefeated = true;
+                this.audio.playSFX('win');
+                
+                // Massive confetti explosion
+                const bossPos = new THREE.Vector3();
+                this.blenderBoss.getWorldPosition(bossPos);
+                for (let j = 0; j < 20; j++) {
+                    const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff];
+                    this.particles.spawn(bossPos, colors[j % colors.length]);
+                }
+                
+                // Fade out boss
+                this.blenderBoss.children.forEach(child => {
+                    if (child.material) {
+                        child.material.transparent = true;
+                        child.material.opacity = 0.3;
+                    }
+                });
+                
+                // Trigger level complete with game complete flag
+                setTimeout(() => {
+                    this.levelComplete(true); // true = game complete
+                }, 1500);
+            }
+
             spawnFlyingGhost(parent) {
                 const g = new THREE.Group();
                 const body = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 }));
@@ -1816,6 +2005,8 @@
                 this.hasCockroachDebuff = false; // Reset cockroach debuff
                 this.drillColorTime = 0; // Reset drill color animation
                 this.lastTime = Date.now();
+                this.blenderBoss = null; // Reset Blender Boss reference
+                this.finalBoss = null; // Reset final boss reference
 
                 this.ballMat.color.setHex(0xFF9966);
                 if (this.mouthMesh) this.mouthMesh.rotation.z = 3.14;
@@ -1861,6 +2052,7 @@
 
                 let levelTxt = "LEVEL " + this.level;
                 if (this.level === 4) levelTxt = "LAVA HELL";
+                else if (this.level === 6) levelTxt = "THE FINALE 👻";
                 updateText('level-indicator', levelTxt);
 
                 let h = "";
@@ -1970,27 +2162,34 @@
                         return;
                     }
 
+                    // Calculate deltaTime for frame-rate independent movement
+                    const now = Date.now();
+                    const dt = Math.min((now - this.lastTime) / CONFIG.PHYSICS.TARGET_FRAME_TIME, 3); // Cap at 3x to prevent large jumps
+                    this.lastTime = now;
+
                     this.particles.update();
 
+                    // Scale frame-based timers by dt for consistency across frame rates
                     if (this.invincible > 0) {
-                        this.invincible--;
+                        this.invincible -= dt;
                         // Blink effect during invincibility
-                        if (this.invincible % 10 < 5) {
+                        if (Math.floor(this.invincible) % 10 < 5) {
                             this.ballMat.color.setHex(0xFF9966);
                         } else {
                             this.ballMat.color.setHex(0xFF4444);
                         }
-                        if (this.invincible === 0) {
+                        if (this.invincible <= 0) {
+                            this.invincible = 0;
                             this.ballMat.color.setHex(0xFF9966);
                             if (this.mouthMesh) this.mouthMesh.rotation.z = 3.14;
                         }
                     }
-                    if (this.fastTimer > 0) this.fastTimer--; if (this.slowTimer > 0) this.slowTimer--;
-                    if (this.drillTimer > 0) { this.drillTimer--; if (this.drillTimer <= 0) { this.drillFloors = 0; this.drillColorTime = 0; this.ballMat.color.setHex(0xFF9966); } }
+                    if (this.fastTimer > 0) this.fastTimer -= dt; if (this.slowTimer > 0) this.slowTimer -= dt;
+                    if (this.drillTimer > 0) { this.drillTimer -= dt; if (this.drillTimer <= 0) { this.drillFloors = 0; this.drillColorTime = 0; this.ballMat.color.setHex(0xFF9966); } }
 
-                    // Colorful drill effect - blink and glow with rainbow colors
+                    // Colorful drill effect - blink and glow with rainbow colors (scaled by dt)
                     if (this.drillFloors > 0) {
-                        this.drillColorTime += 0.15;
+                        this.drillColorTime += 0.15 * dt;
                         const hue = (this.drillColorTime * 50) % 360;
                         const saturation = 0.8 + Math.sin(this.drillColorTime * 2) * 0.2; // Pulsing saturation
                         const lightness = 0.5 + Math.sin(this.drillColorTime * 3) * 0.3; // Blinking effect
@@ -2013,15 +2212,19 @@
                         if (this.slowTimer > 0) { grav = CONFIG.PHYSICS.SLOW_GRAVITY; jump = CONFIG.PHYSICS.SLOW_JUMP; }
                     }
 
-                    this.velocity -= grav; if (this.velocity < CONFIG.PHYSICS.MAX_VELOCITY) this.velocity = CONFIG.PHYSICS.MAX_VELOCITY; this.ballWrap.position.y += this.velocity;
+                    // Apply gravity and velocity with deltaTime scaling for frame-rate independence
+                    this.velocity -= grav * dt; 
+                    if (this.velocity < CONFIG.PHYSICS.MAX_VELOCITY) this.velocity = CONFIG.PHYSICS.MAX_VELOCITY; 
+                    this.ballWrap.position.y += this.velocity * dt;
 
                     if (this.ballWrap.position.y > this.highestY) this.highestY = this.ballWrap.position.y;
 
                     const speed = Math.abs(this.velocity);
                     if (this.velocity < 0) this.targetScale.set(1 - speed * 0.3, 1 + speed * 0.5, 1 - speed * 0.3); else this.targetScale.set(1, 1, 1);
-                    this.currentScale.lerp(this.targetScale, 0.2); this.ballBody.scale.copy(this.currentScale);
+                    this.currentScale.lerp(this.targetScale, 0.2 * dt); this.ballBody.scale.copy(this.currentScale);
 
-                    this.ballBody.rotation.x -= 0.04; this.ballFace.rotation.copy(this.ballWrap.rotation); this.ballFace.rotation.z = Math.sin(Date.now() * 0.01) * 0.1;
+                    // Scale rotation speeds by dt for frame-rate independence
+                    this.ballBody.rotation.x -= 0.04 * dt; this.ballFace.rotation.copy(this.ballWrap.rotation); this.ballFace.rotation.z = Math.sin(Date.now() * 0.01) * 0.1;
 
                     // --- FIX: PHYSICS RAYCAST START POINT (SKY RAY) ---
                     if (this.velocity < 0) {
@@ -2039,7 +2242,7 @@
                             // 1.5 (offset) + 0.4 (radius) = 1.9 approx distance to center
                             if (dist < 1.9 + Math.abs(this.velocity) && dist > 0) {
                                 const u = hitsMain[0].object.userData.type ? hitsMain[0].object.userData : (hitsMain[0].object.parent ? hitsMain[0].object.parent.userData : {});
-                                if (!['apple', 'banana', 'rotten', 'diamond', 'ghost', 'chocolate', 'white-ghost', 'bat', 'cockroach', 'final-boss'].includes(u.type)) {
+                                if (!['apple', 'banana', 'rotten', 'diamond', 'ghost', 'chocolate', 'white-ghost', 'bat', 'cockroach', 'final-boss', 'blender-boss'].includes(u.type)) {
                                     this.ballWrap.position.y = hitsMain[0].point.y + 0.4;
                                     if (u.type === 'safe') {
                                         this.velocity = jump; this.audio.playSFX('bounce'); this.currentScale.set(1.4, 0.6, 1.4);
@@ -2048,6 +2251,20 @@
                                         this.takeDamage();
                                     } else if (u.type === 'finish') {
                                         this.levelComplete();
+                                    } else if (u.type === 'boss-platform') {
+                                        // Landing on Blender Boss platform - bounce but rotate platform against player
+                                        this.velocity = jump; this.audio.playSFX('bounce'); this.currentScale.set(1.4, 0.6, 1.4);
+                                        this.particles.spawn(this.ballWrap.position, 0x666688);
+                                        // Change boss rotation direction randomly
+                                        if (this.blenderBoss && !this.blenderBoss.userData.isDefeated) {
+                                            this.blenderBoss.userData.rotationDirection = Math.random() > 0.5 ? 1 : -1;
+                                        }
+                                    } else if (u.type === 'boss-crystal') {
+                                        // Landing on a boss crystal - crack it!
+                                        if (!u.cracked && this.blenderBoss && !this.blenderBoss.userData.isDefeated) {
+                                            this.crackBossCrystal(hitsMain[0].object, u);
+                                        }
+                                        this.velocity = jump; this.audio.playSFX('bounce'); this.currentScale.set(1.4, 0.6, 1.4);
                                     }
                                 }
                             }
@@ -2063,7 +2280,7 @@
                         }
                     }
 
-                    // --- INTERACTIONS (UPDATED MONSTER FACING LOGIC) ---
+                    // --- INTERACTIONS (UPDATED MONSTER FACING LOGIC) - Scale by dt for frame-rate independence ---
                     const pos = this.ballWrap.position;
                     for (let i = this.interactables.length - 1; i >= 0; i--) {
                         const o = this.interactables[i];
@@ -2073,7 +2290,7 @@
                             if (!o.userData.isStatic) {
                                 let dir = o.userData.dir || 1;
                                 const prevAngle = o.userData.angle || 0;
-                                o.userData.angle += o.userData.speed * dir;
+                                o.userData.angle += o.userData.speed * dir * dt;
                                 const r = 2;
                                 o.position.x = Math.cos(o.userData.angle) * r;
                                 o.position.z = Math.sin(o.userData.angle) * r;
@@ -2101,20 +2318,39 @@
                             }
                         }
                         else if (o.userData.type === 'final-boss') {
-                            // Boss slowly rotates and energy rings spin
+                            // Boss slowly rotates and energy rings spin (scaled by dt)
                             if (!o.userData.isDefeated) {
-                                o.rotation.y += o.userData.rotationSpeed;
+                                o.rotation.y += o.userData.rotationSpeed * dt;
                                 // Animate energy rings
                                 o.children.forEach(child => {
                                     if (child.userData && child.userData.ringIndex !== undefined) {
-                                        child.rotation.y += child.userData.rotationSpeed;
+                                        child.rotation.y += child.userData.rotationSpeed * dt;
+                                    }
+                                });
+                            }
+                        }
+                        else if (o.userData.type === 'blender-boss') {
+                            // THE BLENDER BOSS - Level 6 final boss
+                            if (!o.userData.isDefeated) {
+                                // Rotate against player input (counter-clockwise)
+                                o.rotation.y += o.userData.rotationSpeed * o.userData.rotationDirection * dt;
+                                
+                                // Animate blade rings
+                                o.children.forEach(child => {
+                                    if (child.userData && child.userData.ringIndex !== undefined) {
+                                        child.rotation.z += child.userData.ringSpeed * dt;
+                                    }
+                                    // Pulse crystals that aren't cracked
+                                    if (child.userData && child.userData.type === 'boss-crystal' && !child.userData.cracked) {
+                                        const pulse = 0.8 + Math.sin(Date.now() * 0.005 + child.userData.index) * 0.2;
+                                        child.material.emissiveIntensity = pulse;
                                     }
                                 });
                             }
                         }
                         else if (o.userData.type === 'white-ghost') {
                             let dir = o.userData.dir || 1;
-                            o.userData.angle += o.userData.speed * dir;
+                            o.userData.angle += o.userData.speed * dir * dt;
                             const rad = 2.5 + Math.sin(Date.now() * 0.002 + o.userData.offset) * 1.5;
                             o.position.x = Math.cos(o.userData.angle) * rad;
                             o.position.z = Math.sin(o.userData.angle) * rad;
@@ -2124,7 +2360,7 @@
                         }
                         else if (o.userData.type === 'bat') {
                             let dir = o.userData.dir || 1;
-                            o.userData.angle += o.userData.speed * dir;
+                            o.userData.angle += o.userData.speed * dir * dt;
                             // Bats fly in circular pattern at upper part of floor
                             const rad = 2.2 + Math.sin(Date.now() * 0.003 + o.userData.offset) * 0.8;
                             o.position.x = Math.cos(o.userData.angle) * rad;
@@ -2132,8 +2368,8 @@
                             // Keep bats at upper part (Y around 3-4)
                             o.position.y = 2.5 + Math.sin(Date.now() * 0.004 + o.userData.offset) * 0.5;
                             o.lookAt(pos);
-                            // Animate wing flapping
-                            o.userData.wingFlap += 0.3;
+                            // Animate wing flapping (scaled by dt)
+                            o.userData.wingFlap += 0.3 * dt;
                             o.children.forEach(child => {
                                 if (child.geometry && child.geometry.type === 'ConeGeometry') {
                                     child.rotation.x = Math.sin(o.userData.wingFlap) * 0.5;
@@ -2230,8 +2466,10 @@
                     // Score is now calculated in updateUI based on total fruits + floors + pacman bonus
                     this.updateUI();
 
+                    // Camera follow with dt-scaled interpolation for frame-rate independence
                     const ty = pos.y + 8;
-                    this.camera.position.y += (ty - this.camera.position.y) * 0.1;
+                    const cameraLerpFactor = 1 - Math.pow(0.9, dt); // Exponential smoothing scaled by dt
+                    this.camera.position.y += (ty - this.camera.position.y) * cameraLerpFactor;
                     this.camera.lookAt(0, this.camera.position.y - 8, 0);
 
                     // Update directional light position to follow camera for consistent shadows
@@ -2284,11 +2522,12 @@
                 }
             }
 
-            levelComplete() {
+            levelComplete(forceGameComplete = false) {
                 this.isPlaying = false;
-                const isGameComplete = this.level === 4;
+                // Game is complete when finishing Level 6 (THE FINALE) or if forced (boss defeated)
+                const isGameComplete = this.level === 6 || forceGameComplete;
                 if (isGameComplete) {
-                    // Level 4: Show ending screen with video
+                    // Level 6 (THE FINALE): Show ending screen with video
                     if (this.audio.player) this.audio.player.stop(); // Stop game music
                     document.getElementById('level-complete-screen').classList.add('hidden');
                     document.getElementById('ending-screen').classList.remove('hidden');
