@@ -1510,10 +1510,16 @@
 
 
                 const lastY = -floors * 4; this.lastFloorY = lastY;
-                const fin = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 1, 32), new THREE.MeshLambertMaterial({ color: 0x00ff00, emissive: 0x005500 }));
-                fin.position.y = lastY; fin.userData = { type: 'finish' };
-                fin.receiveShadow = true; fin.castShadow = true;
-                this.tower.add(fin); this.physicsMeshes.push(fin);
+                
+                // For Level 5 (final level), spawn "The Blender" boss instead of finish platform
+                if (isFinal) {
+                    this.spawnFinalBoss(lastY + 2); // Position boss slightly above where finish would be
+                } else {
+                    const fin = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 1, 32), new THREE.MeshLambertMaterial({ color: 0x00ff00, emissive: 0x005500 }));
+                    fin.position.y = lastY; fin.userData = { type: 'finish' };
+                    fin.receiveShadow = true; fin.castShadow = true;
+                    this.tower.add(fin); this.physicsMeshes.push(fin);
+                }
                 this.updateUI();
             }
 
@@ -1658,92 +1664,166 @@
             }
 
             spawnFinalBoss(yPosition) {
-                // Create massive final boss enemy
+                // Create "The Blender" - the tower itself becomes the boss
+                // A rotating Boss Platform with 4 glowing crystals as weak points
                 const boss = new THREE.Group();
                 boss.position.y = yPosition;
                 boss.position.x = 0;
                 boss.position.z = 0;
 
-                // Main body - large and menacing
-                const bodyScale = 2.5;
-                const bodyGeo = new THREE.BoxGeometry(1.2 * bodyScale, 1.2 * bodyScale, 1.2 * bodyScale);
-                const bodyMat = new THREE.MeshBasicMaterial({ color: 0x8B0000, emissive: 0xff0000, emissiveIntensity: 0.3 });
-                const body = new THREE.Mesh(bodyGeo, bodyMat);
-                body.castShadow = true;
-                body.receiveShadow = false;
-                boss.add(body);
+                // Main body - the Boss Platform (a large rotating disk)
+                const platformGeo = new THREE.CylinderGeometry(3.5, 3.5, 0.5, 32);
+                const platformMat = new THREE.MeshLambertMaterial({ 
+                    color: 0x444444, 
+                    emissive: 0x222222,
+                    emissiveIntensity: 0.3 
+                });
+                const platform = new THREE.Mesh(platformGeo, platformMat);
+                platform.castShadow = true;
+                platform.receiveShadow = true;
+                platform.userData.type = 'boss-platform';
+                boss.add(platform);
 
-                // Multiple glowing eyes
-                const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffff00, emissive: 0xffff00, emissiveIntensity: 1.0 });
-                for (let i = 0; i < 6; i++) {
-                    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), eyeMat);
-                    const angle = (i / 6) * Math.PI * 2;
-                    eye.position.set(Math.cos(angle) * 0.8, Math.sin(i * 0.5) * 0.4, 0.7);
-                    eye.castShadow = true;
-                    boss.add(eye);
+                // Central blender blade mechanism
+                const bladeGroup = new THREE.Group();
+                bladeGroup.position.y = 0.3;
+                
+                // Main blade shaft
+                const shaftGeo = new THREE.CylinderGeometry(0.3, 0.3, 1.5, 16);
+                const shaftMat = new THREE.MeshBasicMaterial({ color: 0x888888 });
+                const shaft = new THREE.Mesh(shaftGeo, shaftMat);
+                shaft.castShadow = true;
+                bladeGroup.add(shaft);
+
+                // Rotating blades
+                for (let i = 0; i < 4; i++) {
+                    const bladeGeo = new THREE.BoxGeometry(2.5, 0.1, 0.3);
+                    const bladeMat = new THREE.MeshBasicMaterial({ color: 0xcccccc, emissive: 0x333333 });
+                    const blade = new THREE.Mesh(bladeGeo, bladeMat);
+                    blade.rotation.y = (i / 4) * Math.PI * 2;
+                    blade.position.y = 0.5;
+                    blade.castShadow = true;
+                    blade.userData.bladeIndex = i;
+                    bladeGroup.add(blade);
+                }
+                bladeGroup.userData.isBladeGroup = true;
+                boss.add(bladeGroup);
+
+                // 4 Glowing Crystals (Weak Points) positioned at cardinal directions
+                const crystalColors = [0x00ffff, 0xff00ff, 0xffff00, 0x00ff00]; // Cyan, Magenta, Yellow, Green
+                const crystals = [];
+                for (let i = 0; i < 4; i++) {
+                    const crystalGroup = new THREE.Group();
+                    const angle = (i / 4) * Math.PI * 2;
+                    crystalGroup.position.set(Math.cos(angle) * 2.8, 0.5, Math.sin(angle) * 2.8);
+
+                    // Crystal core (the weak point)
+                    const crystalGeo = new THREE.OctahedronGeometry(0.4, 0);
+                    const crystalMat = new THREE.MeshBasicMaterial({ 
+                        color: crystalColors[i], 
+                        transparent: true, 
+                        opacity: 0.9 
+                    });
+                    const crystal = new THREE.Mesh(crystalGeo, crystalMat);
+                    crystal.castShadow = true;
+                    crystal.userData = {
+                        type: 'boss-crystal',
+                        crystalIndex: i,
+                        isCracked: false,
+                        color: crystalColors[i]
+                    };
+                    crystalGroup.add(crystal);
+
+                    // Glowing aura around crystal
+                    const auraGeo = new THREE.SphereGeometry(0.6, 16, 16);
+                    const auraMat = new THREE.MeshBasicMaterial({ 
+                        color: crystalColors[i], 
+                        transparent: true, 
+                        opacity: 0.3 
+                    });
+                    const aura = new THREE.Mesh(auraGeo, auraMat);
+                    aura.userData.isAura = true;
+                    crystalGroup.add(aura);
+
+                    crystalGroup.userData = {
+                        crystalIndex: i,
+                        baseAngle: angle,
+                        isCracked: false
+                    };
+                    boss.add(crystalGroup);
+                    crystals.push(crystalGroup);
                 }
 
-                // Massive horns/spikes
-                for (let i = 0; i < 8; i++) {
-                    const hornGeo = new THREE.ConeGeometry(0.15, 0.8, 8);
-                    const hornMat = new THREE.MeshBasicMaterial({ color: 0x4a0000 });
-                    const horn = new THREE.Mesh(hornGeo, hornMat);
-                    const angle = (i / 8) * Math.PI * 2;
-                    horn.position.set(Math.cos(angle) * 0.6, 0.8, Math.sin(angle) * 0.6);
-                    horn.rotation.z = Math.PI / 4;
-                    horn.castShadow = true;
-                    boss.add(horn);
-                }
-
-                // Rotating energy rings
-                for (let ring = 0; ring < 3; ring++) {
-                    const ringGeo = new THREE.TorusGeometry(0.8 + ring * 0.3, 0.1, 8, 16);
-                    const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 0.5, transparent: true, opacity: 0.7 });
+                // Rotating energy rings (visual effect)
+                for (let ring = 0; ring < 2; ring++) {
+                    const ringGeo = new THREE.TorusGeometry(2.0 + ring * 0.5, 0.05, 8, 32);
+                    const ringMat = new THREE.MeshBasicMaterial({ 
+                        color: 0xff4400, 
+                        transparent: true, 
+                        opacity: 0.5 
+                    });
                     const energyRing = new THREE.Mesh(ringGeo, ringMat);
                     energyRing.rotation.x = Math.PI / 2;
-                    energyRing.position.y = -0.5 + ring * 0.3;
+                    energyRing.position.y = 0.3 + ring * 0.2;
                     energyRing.userData.ringIndex = ring;
-                    energyRing.userData.rotationSpeed = 0.02 + ring * 0.01;
+                    energyRing.userData.rotationSpeed = 0.03 + ring * 0.02;
                     boss.add(energyRing);
                 }
 
-                // Arms with claws
-                const armGeo = new THREE.BoxGeometry(0.3, 0.3, 1.2);
-                const armMat = new THREE.MeshBasicMaterial({ color: 0x660000 });
-                const armL = new THREE.Mesh(armGeo, armMat);
-                armL.position.set(-1.5, 0, 0.8);
-                armL.rotation.z = 0.3;
-                armL.castShadow = true;
-                const armR = new THREE.Mesh(armGeo, armMat);
-                armR.position.set(1.5, 0, 0.8);
-                armR.rotation.z = -0.3;
-                armR.castShadow = true;
-                boss.add(armL, armR);
+                // Rising "Blender Blade" from below (The Chase visual)
+                const risingBladeGroup = new THREE.Group();
+                risingBladeGroup.position.y = -5; // Start below the platform
+                
+                // Giant mouth/blade mesh
+                const mouthGeo = new THREE.ConeGeometry(2.5, 3, 32, 1, true);
+                const mouthMat = new THREE.MeshBasicMaterial({ 
+                    color: 0xff2200, 
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const mouth = new THREE.Mesh(mouthGeo, mouthMat);
+                mouth.rotation.x = Math.PI; // Point upward
+                risingBladeGroup.add(mouth);
 
-                // Claws
-                for (let side = 0; side < 2; side++) {
-                    for (let i = 0; i < 3; i++) {
-                        const clawGeo = new THREE.ConeGeometry(0.08, 0.3, 6);
-                        const clawMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-                        const claw = new THREE.Mesh(clawGeo, clawMat);
-                        claw.position.set((side === 0 ? -1.5 : 1.5) + (i - 1) * 0.15, -0.3, 1.4);
-                        claw.rotation.x = Math.PI;
-                        claw.castShadow = true;
-                        boss.add(claw);
-                    }
+                // Teeth around the mouth
+                for (let i = 0; i < 8; i++) {
+                    const toothGeo = new THREE.ConeGeometry(0.15, 0.6, 6);
+                    const toothMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                    const tooth = new THREE.Mesh(toothGeo, toothMat);
+                    const toothAngle = (i / 8) * Math.PI * 2;
+                    tooth.position.set(Math.cos(toothAngle) * 2.3, 1.5, Math.sin(toothAngle) * 2.3);
+                    tooth.rotation.x = -0.3;
+                    tooth.rotation.z = -toothAngle;
+                    risingBladeGroup.add(tooth);
                 }
+
+                risingBladeGroup.userData.isRisingBlade = true;
+                risingBladeGroup.userData.riseSpeed = 0.02; // Speed of rising
+                risingBladeGroup.userData.maxRiseY = -1; // Max position
+                boss.add(risingBladeGroup);
 
                 boss.userData = {
                     type: 'final-boss',
-                    health: 3, // Boss takes 3 hits to defeat
+                    health: 4, // 4 crystals to destroy
                     hitCount: 0,
+                    crystalsCracked: 0,
+                    crystals: crystals,
                     isDefeated: false,
-                    rotationSpeed: 0.005
+                    rotationSpeed: -0.008, // Rotate against player input direction
+                    bladeRotationSpeed: 0.05, // Blade rotation speed
+                    risingBlade: risingBladeGroup,
+                    phase: 1 // Phase 1: The Chase
                 };
 
                 this.tower.add(boss);
                 this.interactables.push(boss);
                 this.finalBoss = boss; // Store reference
+                
+                // Store crystals as interactables for collision detection
+                crystals.forEach(crystal => {
+                    this.interactables.push(crystal.children[0]); // Add the actual crystal mesh
+                });
             }
 
             spawnFlyingGhost(parent) {
@@ -2078,7 +2158,7 @@
                             // 1.5 (offset) + 0.4 (radius) = 1.9 approx distance to center
                             if (dist < 1.9 + Math.abs(this.velocity) && dist > 0) {
                                 const u = hitsMain[0].object.userData.type ? hitsMain[0].object.userData : (hitsMain[0].object.parent ? hitsMain[0].object.parent.userData : {});
-                                if (!['apple', 'banana', 'rotten', 'diamond', 'ghost', 'chocolate', 'white-ghost', 'bat', 'cockroach', 'final-boss'].includes(u.type)) {
+                                if (!['apple', 'banana', 'rotten', 'diamond', 'ghost', 'chocolate', 'white-ghost', 'bat', 'cockroach', 'final-boss', 'boss-crystal', 'boss-platform'].includes(u.type)) {
                                     this.ballWrap.position.y = hitsMain[0].point.y + 0.4;
                                     if (u.type === 'safe') {
                                         this.velocity = jump; this.audio.playSFX('bounce'); this.currentScale.set(1.4, 0.6, 1.4);
@@ -2141,15 +2221,43 @@
                             }
                         }
                         else if (o.userData.type === 'final-boss') {
-                            // Boss slowly rotates and energy rings spin (scaled by dt)
+                            // "The Blender" Boss animation (scaled by dt)
                             if (!o.userData.isDefeated) {
+                                // Phase 1: The Chase - Boss platform rotates against player direction
                                 o.rotation.y += o.userData.rotationSpeed * CONFIG.PHYSICS.TARGET_FPS * dt;
-                                // Animate energy rings
+                                
+                                // Animate blender blades (faster rotation)
                                 o.children.forEach(child => {
+                                    if (child.userData && child.userData.isBladeGroup) {
+                                        child.rotation.y += o.userData.bladeRotationSpeed * CONFIG.PHYSICS.TARGET_FPS * dt;
+                                    }
+                                    // Animate energy rings
                                     if (child.userData && child.userData.ringIndex !== undefined) {
                                         child.rotation.y += child.userData.rotationSpeed * CONFIG.PHYSICS.TARGET_FPS * dt;
                                     }
+                                    // Animate rising blade (The Chase effect)
+                                    if (child.userData && child.userData.isRisingBlade) {
+                                        if (child.position.y < child.userData.maxRiseY) {
+                                            child.position.y += child.userData.riseSpeed * CONFIG.PHYSICS.TARGET_FPS * dt;
+                                        }
+                                        // Make the rising blade rotate menacingly
+                                        child.rotation.y += 0.05 * CONFIG.PHYSICS.TARGET_FPS * dt;
+                                    }
                                 });
+                                
+                                // Pulse crystal auras
+                                const pulseIntensity = 0.3 + Math.sin(Date.now() * 0.005) * 0.2;
+                                if (o.userData.crystals) {
+                                    o.userData.crystals.forEach(crystalGroup => {
+                                        if (!crystalGroup.userData.isCracked) {
+                                            crystalGroup.children.forEach(child => {
+                                                if (child.userData && child.userData.isAura) {
+                                                    child.material.opacity = pulseIntensity;
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
                             }
                         }
                         else if (o.userData.type === 'white-ghost') {
@@ -2190,7 +2298,7 @@
                         }
 
                         const wPos = new THREE.Vector3(); o.getWorldPosition(wPos);
-                        const dist = o.userData.type === 'white-ghost' ? 1.0 : (o.userData.type === 'bat' ? 0.9 : (o.userData.type === 'final-boss' ? 2.5 : 0.8));
+                        const dist = o.userData.type === 'white-ghost' ? 1.0 : (o.userData.type === 'bat' ? 0.9 : (o.userData.type === 'final-boss' ? 3.5 : (o.userData.type === 'boss-crystal' ? 0.6 : 0.8)));
 
                         // Check if ghost/bat is within floor area (radius ~2.5) before collision
                         const floorRadius = 2.5;
@@ -2200,40 +2308,77 @@
                         // For bats, also check if character is at similar height (upper part)
                         const heightDiff = Math.abs(wPos.y - pos.y);
                         const isBatCollision = o.userData.type === 'bat' ? (heightDiff < 1.5 && isWithinFloor) : isWithinFloor;
-                        const isBossCollision = o.userData.type === 'final-boss' ? (heightDiff < 3.0 && distanceFromCenter < 3.0) : isBatCollision;
+                        const isBossCollision = o.userData.type === 'final-boss' ? (heightDiff < 3.0 && distanceFromCenter < 4.0) : isBatCollision;
+                        const isCrystalCollision = o.userData.type === 'boss-crystal' ? (heightDiff < 1.5) : isBossCollision;
 
-                        if (wPos.distanceTo(pos) < dist && isBossCollision) {
+                        if (wPos.distanceTo(pos) < dist && isCrystalCollision) {
                             const t = o.userData.type;
-                            if (t === 'final-boss') {
-                                // Boss collision - takes multiple hits to defeat
-                                if (this.drillFloors > 0 && !o.userData.isDefeated) {
-                                    // Using drill - damage boss
-                                    o.userData.hitCount = (o.userData.hitCount || 0) + 1;
+                            if (t === 'boss-crystal') {
+                                // Crystal collision - land on it to crack it
+                                if (!o.userData.isCracked && this.velocity < 0) {
+                                    // Crack the crystal!
+                                    o.userData.isCracked = true;
                                     this.audio.playSFX('buff');
-                                    this.particles.spawn(wPos, 0xff0000);
-
-                                    if (o.userData.hitCount >= o.userData.health) {
-                                        // Boss defeated!
-                                        o.userData.isDefeated = true;
-                                        this.audio.playSFX('collect');
-                                        this.particles.spawn(wPos, 0x00ff00);
-                                        // Make boss fade out
-                                        o.children.forEach(child => {
-                                            if (child.material) {
-                                                child.material.transparent = true;
-                                                child.material.opacity = 0.3;
-                                            }
-                                        });
-                                        // Remove boss after delay
-                                        setTimeout(() => {
-                                            if (o.parent) o.parent.remove(o);
-                                            const idx = this.interactables.indexOf(o);
-                                            if (idx >= 0) this.interactables.splice(idx, 1);
-                                        }, 1000);
+                                    
+                                    // Massive explosion of fruit particles (confetti)
+                                    const crystalColor = o.userData.color || 0xffffff;
+                                    for (let p = 0; p < 5; p++) {
+                                        this.particles.spawn(wPos, crystalColor);
                                     }
-                                } else if (!o.userData.isDefeated) {
-                                    // No drill - take damage
-                                    this.takeDamage();
+                                    
+                                    // Visual feedback - crystal cracks and fades
+                                    o.material.opacity = 0.3;
+                                    o.scale.setScalar(0.5);
+                                    
+                                    // Update boss health
+                                    if (this.finalBoss && this.finalBoss.userData) {
+                                        this.finalBoss.userData.crystalsCracked++;
+                                        
+                                        // Check if all crystals are cracked
+                                        if (this.finalBoss.userData.crystalsCracked >= this.finalBoss.userData.health) {
+                                            // Boss defeated!
+                                            this.finalBoss.userData.isDefeated = true;
+                                            this.audio.playSFX('collect');
+                                            
+                                            // Victory explosion
+                                            for (let p = 0; p < 10; p++) {
+                                                this.particles.spawn(this.finalBoss.position, 0x00ff00);
+                                            }
+                                            
+                                            // Make boss fade out
+                                            this.finalBoss.children.forEach(child => {
+                                                if (child.material) {
+                                                    child.material.transparent = true;
+                                                    child.material.opacity = 0.3;
+                                                }
+                                            });
+                                            
+                                            // Trigger level complete with game complete flag
+                                            setTimeout(() => {
+                                                this.levelComplete(true); // Pass isGameComplete = true
+                                            }, 1500);
+                                        }
+                                    }
+                                    
+                                    // Bounce off the crystal
+                                    this.velocity = jump;
+                                    this.currentScale.set(1.4, 0.6, 1.4);
+                                }
+                            }
+                            else if (t === 'final-boss') {
+                                // Boss platform collision - bounce on safe areas, take damage on blades
+                                if (!o.userData.isDefeated) {
+                                    // Check if landing on the platform (from above, falling)
+                                    if (this.velocity < 0 && heightDiff < 1.5) {
+                                        // Bounce on the platform
+                                        this.velocity = jump;
+                                        this.audio.playSFX('bounce');
+                                        this.currentScale.set(1.4, 0.6, 1.4);
+                                        this.particles.spawn(pos, 0x888888);
+                                    } else if (this.drillFloors <= 0) {
+                                        // Hit by blades or collision from side - take damage
+                                        this.takeDamage();
+                                    }
                                 }
                             }
                             else if (t === 'apple') { this.lives = Math.min(5, this.lives + 1); this.collected.apple++; this.levelCollected++; this.audio.playSFX('collect'); o.parent.remove(o); this.interactables.splice(i, 1); }
@@ -2328,11 +2473,11 @@
                 }
             }
 
-            levelComplete() {
+            levelComplete(forceGameComplete = false) {
                 this.isPlaying = false;
-                const isGameComplete = this.level === 4;
+                const isGameComplete = forceGameComplete || this.level === 4;
                 if (isGameComplete) {
-                    // Level 4: Show ending screen with video
+                    // Final level or boss defeated: Show ending screen with video
                     if (this.audio.player) this.audio.player.stop(); // Stop game music
                     document.getElementById('level-complete-screen').classList.add('hidden');
                     document.getElementById('ending-screen').classList.remove('hidden');
