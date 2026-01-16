@@ -338,17 +338,20 @@
         // GAME CONSTANTS & CONFIGURATION
         // ==========================================================================
         const CONFIG = {
-            // Physics constants
+            // Physics constants (gravity values are per-second, scaled by deltaTime; jump values are instantaneous velocities)
             PHYSICS: {
-                BASE_GRAVITY: 0.012,
-                JUMP_FORCE: 0.2268,
+                BASE_GRAVITY: 0.72,          // 0.012 * 60 (gravity acceleration per second)
+                JUMP_FORCE: 0.2268,          // Instantaneous upward velocity (not scaled by dt)
                 MAX_VELOCITY: -0.8,
                 FAST_GRAVITY_MULT: 2.5,      // Increased from 2.0 for more noticeable banana effect
                 FAST_JUMP_MULT: 1.6,         // Increased from 1.4 for more noticeable banana effect
-                SLOW_GRAVITY: 0.005,
-                SLOW_JUMP: 0.25,
-                DRILL_GRAVITY: 0.03,
-                COCKROACH_MULT: 0.2
+                SLOW_GRAVITY: 0.3,           // 0.005 * 60 (gravity acceleration per second)
+                SLOW_JUMP: 0.25,             // Instantaneous upward velocity (not scaled by dt)
+                DRILL_GRAVITY: 1.8,          // 0.03 * 60 (gravity acceleration per second)
+                COCKROACH_MULT: 0.2,
+                ROTATION_SPEED: 2.4,         // 0.04 * 60 (ball rotation speed per second)
+                FACE_WOBBLE_SPEED: 0.6,      // Face wobble animation speed
+                TARGET_FPS: 60               // Reference frame rate for timing
             },
             // Game timing
             TIMING: {
@@ -724,16 +727,23 @@
                     const m = this.pool.find(p => !p.visible); if (!m) return;
                     m.visible = true; m.position.copy(pos); m.position.y += 0.1;
                     m.material.color.setHex(color); m.material.opacity = 1.0; m.scale.setScalar(1);
-                    const ang = Math.random() * 6.28; const spd = 0.05 + Math.random() * 0.05;
-                    m.userData = { vx: Math.cos(ang) * spd, vy: 0.1 + Math.random() * 0.1, vz: Math.sin(ang) * spd, life: 1.0 };
+                    const ang = Math.random() * 6.28; const spd = 3.0 + Math.random() * 3.0; // 0.05 * 60 = 3, velocity per second
+                    m.userData = { vx: Math.cos(ang) * spd, vy: 6.0 + Math.random() * 6.0, vz: Math.sin(ang) * spd, life: 1.0 }; // 0.1 * 60 = 6
                 }
             }
-            update() {
+            update(dt = 1/60) {
                 for (let m of this.pool) {
                     if (!m.visible) continue;
-                    const d = m.userData; m.position.x += d.vx; m.position.y += d.vy; m.position.z += d.vz;
-                    d.vy -= 0.01; d.life -= 0.03; m.scale.setScalar(d.life);
-                    if (d.life <= 0) m.visible = false; m.lookAt(this.scene.position); m.rotation.z += 0.1;
+                    const d = m.userData; 
+                    m.position.x += d.vx * dt; 
+                    m.position.y += d.vy * dt; 
+                    m.position.z += d.vz * dt;
+                    d.vy -= 0.6 * dt; // 0.01 * 60 = 0.6 gravity per second
+                    d.life -= 1.8 * dt; // 0.03 * 60 = 1.8 decay per second
+                    m.scale.setScalar(Math.max(0, d.life));
+                    if (d.life <= 0) m.visible = false; 
+                    m.lookAt(this.scene.position); 
+                    m.rotation.z += 6 * dt; // 0.1 * 60 = 6 rotation per second
                 }
             }
         }
@@ -924,7 +934,8 @@
                 this.difficulty = 'medium'; // Default difficulty
                 this.difficultyMultiplier = 1.5; // Score multiplier based on difficulty
                 this.stressMusicPlaying = false; // Track if stress music is currently playing
-                this.baseGravity = 0.012; this.jumpForce = 0.2268; this.gravity = this.baseGravity; this.velocity = 0;
+                this.baseGravity = CONFIG.PHYSICS.BASE_GRAVITY; this.jumpForce = CONFIG.PHYSICS.JUMP_FORCE; this.gravity = this.baseGravity; this.velocity = 0;
+                this.lastFrameTime = 0; // For deltaTime calculations in game loop
                 this.currentScale = new THREE.Vector3(1, 1, 1); this.targetScale = new THREE.Vector3(1, 1, 1);
                 this.fastTimer = 0; this.slowTimer = 0; this.invincible = 0; this.drillFloors = 0;
                 this.hasCockroachDebuff = false; // Track cockroach debuff
@@ -1237,18 +1248,26 @@
                     }
                 });
 
-                // Apply arrow key rotation in game loop
+                // Apply arrow key rotation in game loop (scaled by dt for frame-rate independence)
                 const originalLoop = this.loop.bind(this);
                 this.loop = () => {
                     if (this.isPlaying && this.tower) {
-                        if (arrowLeftPressed) this.tower.rotation.y -= 0.05;
-                        if (arrowRightPressed) this.tower.rotation.y += 0.05;
+                        // Calculate dt for arrow key rotation (using same timing)
+                        const arrowRotationSpeed = 3.0; // 0.05 * 60 = 3 radians per second
+                        const now = Date.now();
+                        let arrowDt = (now - (this._lastArrowTime || now)) / 1000;
+                        this._lastArrowTime = now;
+                        if (arrowDt > 0.1) arrowDt = 0.1;
+                        if (arrowDt <= 0) arrowDt = 1 / CONFIG.PHYSICS.TARGET_FPS;
+                        
+                        if (arrowLeftPressed) this.tower.rotation.y -= arrowRotationSpeed * arrowDt;
+                        if (arrowRightPressed) this.tower.rotation.y += arrowRotationSpeed * arrowDt;
                     }
                     originalLoop();
                 };
 
                 window.addEventListener('resize', () => { this.camera.aspect = window.innerWidth / window.innerHeight; this.camera.updateProjectionMatrix(); this.renderer.setSize(window.innerWidth, window.innerHeight); });
-                this.isPlaying = true; this.lastTime = Date.now(); this.loop();
+                this.isPlaying = true; this.lastTime = Date.now(); this.lastFrameTime = Date.now(); this.loop();
             }
 
             createCharacter() {
@@ -1816,6 +1835,7 @@
                 this.hasCockroachDebuff = false; // Reset cockroach debuff
                 this.drillColorTime = 0; // Reset drill color animation
                 this.lastTime = Date.now();
+                this.lastFrameTime = Date.now();
 
                 this.ballMat.color.setHex(0xFF9966);
                 if (this.mouthMesh) this.mouthMesh.rotation.z = 3.14;
@@ -1951,6 +1971,7 @@
                     }
                     // Reset lastTime to prevent time jump
                     this.lastTime = Date.now();
+                    this.lastFrameTime = Date.now();
                 }
             }
 
@@ -1970,27 +1991,38 @@
                         return;
                     }
 
-                    this.particles.update();
+                    // Calculate deltaTime (dt) for frame-rate independent movement
+                    const now = Date.now();
+                    let dt = (now - this.lastFrameTime) / 1000; // Convert to seconds
+                    this.lastFrameTime = now;
+                    // Clamp dt to prevent physics issues on slow frames or tab switches
+                    if (dt > 0.1) dt = 0.1; // Max 100ms per frame
+                    if (dt <= 0) dt = 1 / CONFIG.PHYSICS.TARGET_FPS; // Fallback to 60fps
 
+                    this.particles.update(dt);
+
+                    // Timer decrements use TARGET_FPS to maintain consistent duration feel
+                    const timerDecrement = dt * CONFIG.PHYSICS.TARGET_FPS;
                     if (this.invincible > 0) {
-                        this.invincible--;
+                        this.invincible -= timerDecrement;
                         // Blink effect during invincibility
-                        if (this.invincible % 10 < 5) {
+                        if (Math.floor(this.invincible) % 10 < 5) {
                             this.ballMat.color.setHex(0xFF9966);
                         } else {
                             this.ballMat.color.setHex(0xFF4444);
                         }
-                        if (this.invincible === 0) {
+                        if (this.invincible <= 0) {
+                            this.invincible = 0;
                             this.ballMat.color.setHex(0xFF9966);
                             if (this.mouthMesh) this.mouthMesh.rotation.z = 3.14;
                         }
                     }
-                    if (this.fastTimer > 0) this.fastTimer--; if (this.slowTimer > 0) this.slowTimer--;
-                    if (this.drillTimer > 0) { this.drillTimer--; if (this.drillTimer <= 0) { this.drillFloors = 0; this.drillColorTime = 0; this.ballMat.color.setHex(0xFF9966); } }
+                    if (this.fastTimer > 0) this.fastTimer -= timerDecrement; if (this.slowTimer > 0) this.slowTimer -= timerDecrement;
+                    if (this.drillTimer > 0) { this.drillTimer -= timerDecrement; if (this.drillTimer <= 0) { this.drillFloors = 0; this.drillColorTime = 0; this.ballMat.color.setHex(0xFF9966); } }
 
-                    // Colorful drill effect - blink and glow with rainbow colors
+                    // Colorful drill effect - blink and glow with rainbow colors (scaled by dt)
                     if (this.drillFloors > 0) {
-                        this.drillColorTime += 0.15;
+                        this.drillColorTime += 9 * dt; // 0.15 * 60 = 9 per second
                         const hue = (this.drillColorTime * 50) % 360;
                         const saturation = 0.8 + Math.sin(this.drillColorTime * 2) * 0.2; // Pulsing saturation
                         const lightness = 0.5 + Math.sin(this.drillColorTime * 3) * 0.3; // Blinking effect
@@ -2013,15 +2045,22 @@
                         if (this.slowTimer > 0) { grav = CONFIG.PHYSICS.SLOW_GRAVITY; jump = CONFIG.PHYSICS.SLOW_JUMP; }
                     }
 
-                    this.velocity -= grav; if (this.velocity < CONFIG.PHYSICS.MAX_VELOCITY) this.velocity = CONFIG.PHYSICS.MAX_VELOCITY; this.ballWrap.position.y += this.velocity;
+                    // Apply gravity and velocity using deltaTime for frame-rate independence
+                    this.velocity -= grav * dt; 
+                    if (this.velocity < CONFIG.PHYSICS.MAX_VELOCITY) this.velocity = CONFIG.PHYSICS.MAX_VELOCITY; 
+                    this.ballWrap.position.y += this.velocity;
 
                     if (this.ballWrap.position.y > this.highestY) this.highestY = this.ballWrap.position.y;
 
                     const speed = Math.abs(this.velocity);
                     if (this.velocity < 0) this.targetScale.set(1 - speed * 0.3, 1 + speed * 0.5, 1 - speed * 0.3); else this.targetScale.set(1, 1, 1);
-                    this.currentScale.lerp(this.targetScale, 0.2); this.ballBody.scale.copy(this.currentScale);
+                    this.currentScale.lerp(this.targetScale, Math.min(1, 12 * dt)); // 0.2 * 60 = 12 per second, clamped
+                    this.ballBody.scale.copy(this.currentScale);
 
-                    this.ballBody.rotation.x -= 0.04; this.ballFace.rotation.copy(this.ballWrap.rotation); this.ballFace.rotation.z = Math.sin(Date.now() * 0.01) * 0.1;
+                    // Apply rotation speeds using deltaTime
+                    this.ballBody.rotation.x -= CONFIG.PHYSICS.ROTATION_SPEED * dt; 
+                    this.ballFace.rotation.copy(this.ballWrap.rotation); 
+                    this.ballFace.rotation.z = Math.sin(Date.now() * 0.01) * 0.1;
 
                     // --- FIX: PHYSICS RAYCAST START POINT (SKY RAY) ---
                     if (this.velocity < 0) {
@@ -2073,7 +2112,8 @@
                             if (!o.userData.isStatic) {
                                 let dir = o.userData.dir || 1;
                                 const prevAngle = o.userData.angle || 0;
-                                o.userData.angle += o.userData.speed * dir;
+                                // Scale animation speed by dt (original speed * 60 for per-second rate)
+                                o.userData.angle += o.userData.speed * dir * CONFIG.PHYSICS.TARGET_FPS * dt;
                                 const r = 2;
                                 o.position.x = Math.cos(o.userData.angle) * r;
                                 o.position.z = Math.sin(o.userData.angle) * r;
@@ -2101,20 +2141,21 @@
                             }
                         }
                         else if (o.userData.type === 'final-boss') {
-                            // Boss slowly rotates and energy rings spin
+                            // Boss slowly rotates and energy rings spin (scaled by dt)
                             if (!o.userData.isDefeated) {
-                                o.rotation.y += o.userData.rotationSpeed;
+                                o.rotation.y += o.userData.rotationSpeed * CONFIG.PHYSICS.TARGET_FPS * dt;
                                 // Animate energy rings
                                 o.children.forEach(child => {
                                     if (child.userData && child.userData.ringIndex !== undefined) {
-                                        child.rotation.y += child.userData.rotationSpeed;
+                                        child.rotation.y += child.userData.rotationSpeed * CONFIG.PHYSICS.TARGET_FPS * dt;
                                     }
                                 });
                             }
                         }
                         else if (o.userData.type === 'white-ghost') {
                             let dir = o.userData.dir || 1;
-                            o.userData.angle += o.userData.speed * dir;
+                            // Scale animation speed by dt
+                            o.userData.angle += o.userData.speed * dir * CONFIG.PHYSICS.TARGET_FPS * dt;
                             const rad = 2.5 + Math.sin(Date.now() * 0.002 + o.userData.offset) * 1.5;
                             o.position.x = Math.cos(o.userData.angle) * rad;
                             o.position.z = Math.sin(o.userData.angle) * rad;
@@ -2124,7 +2165,8 @@
                         }
                         else if (o.userData.type === 'bat') {
                             let dir = o.userData.dir || 1;
-                            o.userData.angle += o.userData.speed * dir;
+                            // Scale animation speed by dt
+                            o.userData.angle += o.userData.speed * dir * CONFIG.PHYSICS.TARGET_FPS * dt;
                             // Bats fly in circular pattern at upper part of floor
                             const rad = 2.2 + Math.sin(Date.now() * 0.003 + o.userData.offset) * 0.8;
                             o.position.x = Math.cos(o.userData.angle) * rad;
@@ -2132,8 +2174,8 @@
                             // Keep bats at upper part (Y around 3-4)
                             o.position.y = 2.5 + Math.sin(Date.now() * 0.004 + o.userData.offset) * 0.5;
                             o.lookAt(pos);
-                            // Animate wing flapping
-                            o.userData.wingFlap += 0.3;
+                            // Animate wing flapping (scaled by dt)
+                            o.userData.wingFlap += 18 * dt; // 0.3 * 60 = 18 per second
                             o.children.forEach(child => {
                                 if (child.geometry && child.geometry.type === 'ConeGeometry') {
                                     child.rotation.x = Math.sin(o.userData.wingFlap) * 0.5;
@@ -2230,8 +2272,10 @@
                     // Score is now calculated in updateUI based on total fruits + floors + pacman bonus
                     this.updateUI();
 
+                    // Camera follow with frame-rate independent smoothing
                     const ty = pos.y + 8;
-                    this.camera.position.y += (ty - this.camera.position.y) * 0.1;
+                    const cameraLerpFactor = Math.min(1, 6 * dt); // 0.1 * 60 = 6 per second, clamped to max 1
+                    this.camera.position.y += (ty - this.camera.position.y) * cameraLerpFactor;
                     this.camera.lookAt(0, this.camera.position.y - 8, 0);
 
                     // Update directional light position to follow camera for consistent shadows
