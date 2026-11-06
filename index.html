@@ -3,8 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Helix Jump: Arcade Final</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helix Jump: The Fruit Crave</title>
     <link rel="icon" type="image/x-icon" href="images/favicons/favicon.ico">
     <link rel="icon" type="image/png" sizes="96x96" href="images/favicons/favicon-96x96.png">
     <link rel="icon" type="image/svg+xml" href="images/favicons/favicon.svg">
@@ -41,7 +41,7 @@
     <div id="difficulty-badge">MEDIUM ×1.5</div>
 
     <div id="canvas-container"></div>
-    <div id="ui-layer">
+    <div id="ui-layer" class="hidden">
         <div id="top-bar">
             <div id="level-info">
                 <h2 id="level-indicator">LEVEL 1</h2>
@@ -67,11 +67,11 @@
         <div id="score-board">0</div>
 
         <div class="audio-controls">
-            <button id="music-btn" class="audio-icon">🎵</button>
-            <button id="audio-btn" class="audio-icon">🔊</button>
+            <button id="music-btn" class="audio-icon" aria-label="Mute music" aria-pressed="false">🎵</button>
+            <button id="audio-btn" class="audio-icon" aria-label="Mute all sound" aria-pressed="false">🔊</button>
         </div>
 
-        <button id="pause-btn" class="pause-btn">⏸️</button>
+        <button id="pause-btn" class="pause-btn" aria-label="Pause game">⏸️</button>
     </div>
 
     <div id="pause-screen" class="overlay hidden">
@@ -85,44 +85,43 @@
         <button class="btn" id="btn-pause-menu" style="background: rgba(83, 82, 237, 0.8);">🏠 MAIN MENU</button>
     </div>
 
-    <div id="start-screen" class="overlay">
-        <div
-            style="position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: monospace; z-index: 100;">
-            v.2.7</div>
-        <div id="loading-container" style="display: none;">
-            <h2 style="color: white; margin-bottom: 20px;">LOADING...</h2>
-            <div
-                style="width: 300px; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
-                <div id="loading-bar"
-                    style="width: 0%; height: 100%; background: linear-gradient(90deg, #2ed573, #00ffff); transition: width 0.3s ease;">
-                </div>
-            </div>
-            <p id="loading-text" style="color: white; margin-top: 10px; font-size: 0.9rem;">Preparing game assets...</p>
-        </div>
+    <main id="start-screen" class="overlay" aria-labelledby="game-title">
+        <picture class="start-art" aria-hidden="true">
+            <source media="(orientation: portrait)" srcset="images/start_screen.webp" type="image/webp">
+            <source media="(orientation: portrait)" srcset="images/archived/start_screen.jpg">
+            <img src="images/start_screen_Landscape.jpg" alt="">
+        </picture>
         <div id="start-content">
-            <h2 style="color: white; font-size: 1.8rem; margin: 10px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                SELECT DIFFICULTY</h2>
-            <div class="difficulty-container">
-                <button class="btn difficulty-btn difficulty-easy" data-difficulty="easy" data-multiplier="×1.0">
-                    🍎 EASY
-                    <div class="difficulty-desc">Many fruits & diamonds, few enemies</div>
+            <p class="start-kicker">Fruit Crave Arcade</p>
+            <h1 id="game-title">Helix Jump</h1>
+            <p class="start-intro">Rotate the tower, drop through gaps, and grab fruit on the way down.</p>
+            <h2 id="difficulty-label">Difficulty</h2>
+            <div class="difficulty-container" role="group" aria-labelledby="difficulty-label">
+                <button class="difficulty-btn difficulty-easy" data-difficulty="easy" aria-pressed="false">
+                    <span class="difficulty-icon" aria-hidden="true">🍎</span>
+                    <span>Easy <small>More fruit, fewer enemies</small></span>
+                    <span class="difficulty-multiplier">×1.0</span>
                 </button>
-                <button class="btn difficulty-btn difficulty-medium selected" data-difficulty="medium"
-                    data-multiplier="×1.5">
-                    ⚖️ MEDIUM
-                    <div class="difficulty-desc">Balanced challenge</div>
+                <button class="difficulty-btn difficulty-medium" data-difficulty="medium" aria-pressed="true">
+                    <span class="difficulty-icon" aria-hidden="true">⚡</span>
+                    <span>Medium <small>Balanced challenge</small></span>
+                    <span class="difficulty-multiplier">×1.5</span>
                 </button>
-                <button class="btn difficulty-btn difficulty-hard" data-difficulty="hard" data-multiplier="×2.0">
-                    🔥 HARD
-                    <div class="difficulty-desc">Fewer fruits, more enemies, 2x score!</div>
+                <button class="difficulty-btn difficulty-hard" data-difficulty="hard" aria-pressed="false">
+                    <span class="difficulty-icon" aria-hidden="true">🔥</span>
+                    <span>Hard <small>Fewer fruit, more enemies</small></span>
+                    <span class="difficulty-multiplier">×2.0</span>
                 </button>
             </div>
-            <button class="btn btn-start" id="btn-start">TAP TO START</button>
-            <button class="btn" id="btn-start-leaderboard" style="background: rgba(83, 82, 237, 0.8);">🏆
-                LEADERBOARD</button>
-            <button class="btn" id="btn-help" style="background: rgba(83, 82, 237, 0.8);">❓ HELP</button>
+            <p id="start-error" role="alert" hidden></p>
+            <button id="btn-start">Play <span aria-hidden="true">▶</span></button>
+            <p class="start-controls">Drag or swipe to turn · <kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd></p>
+            <div class="start-actions">
+                <button id="btn-help">How to play</button>
+                <button id="btn-start-leaderboard">Leaderboard</button>
+            </div>
         </div>
-    </div>
+    </main>
 
     <div id="game-over-screen" class="overlay hidden">
         <h1>GAME OVER</h1>
@@ -221,7 +220,7 @@
                 🏆 VICTORY! 🏆</h1>
             <div id="ending-gif-container"
                 style="margin: 20px auto; max-width: 600px; max-height: 400px; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
-                <video id="ending-video" src="images/ending_screen.mp4" playsinline preload="auto"
+                <video id="ending-video" src="images/ending_screen.mp4" playsinline preload="none"
                     style="width: 100%; height: auto; display: block; min-height: 200px;"></video>
             </div>
             <p style="font-size: clamp(1.2rem, 4vw, 2rem); margin: 30px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
@@ -283,12 +282,14 @@
         <button class="btn" id="btn-skip-name" style="margin-top: 10px; background: #5352ed;">SKIP</button>
     </div>
 
-    <div id="help-screen" class="overlay hidden">
-        <h1>❓ HELP</h1>
+    <div id="help-screen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <h1 id="help-title">How to play</h1>
         <div class="stat-box"
             style="max-height: 70vh; overflow-y: auto; -webkit-overflow-scrolling: touch; width: clamp(300px, 90vw, 500px);">
             <div style="text-align: left; font-size: 0.9rem; line-height: 1.8;">
-                <h3 style="margin-top: 0; margin-bottom: 10px; text-align: center;">GAME ELEMENTS</h3>
+                <h3>Controls</h3>
+                <p>Drag or swipe left and right, or hold the arrow keys or A/D, to rotate the tower. Line up a gap under your bouncing character to drop to the next floor. Press Esc or tap the pause button to take a break.</p>
+                <h3>Power-ups</h3>
                 <p><strong>🍎 Apple</strong> - Restores 1 life (max 5)</p>
                 <p><strong>🍌 Banana</strong> - Increases speed and jump height</p>
                 <p><strong>🍫 Chocolate</strong> - Adds 5 seconds to timer</p>
@@ -485,35 +486,34 @@
                 this.isMusicMuted = false;
                 this.currentTrack = "";
                 this.lastTrack = ""; // Track what was playing before muting
+                this.trackRequest = 0;
 
                 // SFX Context
                 const AC = window.AudioContext || window.webkitAudioContext;
-                this.ctx = new AC();
-                this.masterGain = this.ctx.createGain();
-                this.masterGain.connect(this.ctx.destination);
-                this.masterGain.gain.value = 0.9; // Stronger SFX volume (90%)
+                if (AC) {
+                    this.ctx = new AC();
+                    this.masterGain = this.ctx.createGain();
+                    this.masterGain.connect(this.ctx.destination);
+                    this.masterGain.gain.value = 0.9;
+                }
             }
 
             init() {
-                if (typeof ChiptuneJsPlayer === 'undefined') {
-                    console.warn("ChiptuneJsPlayer not loaded.");
-                    return;
-                }
+                this.ctx?.resume().catch(console.warn);
+                if (this.player || typeof ChiptuneJsPlayer === 'undefined') return;
                 try {
-                    var config = new ChiptuneJsConfig(0);
-                    this.player = new ChiptuneJsPlayer(config);
-                    // Resume context on first click
-                    document.addEventListener('click', () => {
-                        if (this.player.context && this.player.context.state === 'suspended') {
-                            this.player.context.resume();
-                        }
-                        if (this.ctx && this.ctx.state === 'suspended') {
-                            this.ctx.resume();
-                        }
-                    }, { once: true });
+                    this.player = new ChiptuneJsPlayer(new ChiptuneJsConfig(0));
+                    this.syncMusicContext();
                 } catch (e) {
                     console.error("Audio Init Failed:", e);
                 }
+            }
+
+            syncMusicContext(paused = false) {
+                const context = this.player?.context;
+                if (!context) return;
+                const operation = paused || this.isMuted ? context.suspend() : context.resume();
+                operation.catch(console.warn);
             }
 
             playTrack(baseName) {
@@ -535,10 +535,11 @@
                 const url = `sound/${trackInfo.file}.${trackInfo.ext}`;
                 this.currentTrack = baseName;
                 this.lastTrack = baseName; // Save as last track for resume
+                const request = ++this.trackRequest;
 
                 // Small delay for smooth transition
                 setTimeout(() => {
-                    if (this.player && !this.isMusicMuted) {
+                    if (request === this.trackRequest) {
                         // Increase volume for level 1
                         if (baseName === 'level_1' && this.player.musicGain) {
                             this.player.musicGain.gain.value = 0.25; // 25% for level 1 (increased from 15%)
@@ -546,13 +547,14 @@
                             this.player.musicGain.gain.value = 0.15; // Default 15% for other levels
                         }
                         this.player.load(url, (buffer) => {
-                            this.player.play(buffer);
+                            if (request === this.trackRequest) this.player.play(buffer);
                         });
                     }
                 }, 50);
             }
 
             stopMusic() {
+                this.trackRequest++;
                 if (this.player) {
                     // Save current track before stopping
                     if (this.currentTrack) {
@@ -565,14 +567,13 @@
 
             toggleMute() {
                 this.isMuted = !this.isMuted;
-                if (this.player && this.player.context) {
-                    if (this.isMuted) this.player.context.suspend();
-                    else this.player.context.resume();
-                }
+                this.syncMusicContext();
                 // Mute SFX too
                 if (this.masterGain) this.masterGain.gain.setTargetAtTime(this.isMuted ? 0 : 0.9, this.ctx.currentTime, 0.1);
 
-                document.getElementById('audio-btn').classList.toggle('audio-off', this.isMuted);
+                const button = document.getElementById('audio-btn');
+                button.classList.toggle('audio-off', this.isMuted);
+                button.setAttribute('aria-pressed', this.isMuted);
             }
 
             toggleMusic() {
@@ -585,7 +586,9 @@
                     this.currentTrack = ""; // Reset to allow replay
                     this.playTrack(trackToResume);
                 }
-                document.getElementById('music-btn').classList.toggle('audio-off', this.isMusicMuted);
+                const button = document.getElementById('music-btn');
+                button.classList.toggle('audio-off', this.isMusicMuted);
+                button.setAttribute('aria-pressed', this.isMusicMuted);
             }
 
             // SFX from original logic
@@ -745,8 +748,6 @@
             const webp = new Image();
             webp.onload = webp.onerror = function () {
                 webpSupported = (webp.height === 2);
-                // Update start screen background after detection
-                updateStartScreenBackground();
             };
             webp.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
         })();
@@ -891,30 +892,10 @@
             }
         }
 
-        // Update start screen background based on webp support
-        function updateStartScreenBackground() {
-            const startScreen = document.getElementById('start-screen');
-            if (!startScreen) return;
-
-            const isPortrait = window.matchMedia('(orientation: portrait)').matches;
-            if (isPortrait) {
-                // Use webp if available, otherwise use archived original
-                if (webpSupported) {
-                    const img = new Image();
-                    img.onerror = function () {
-                        startScreen.style.backgroundImage = 'url("images/archived/start_screen_portrait_original_size.jpg")';
-                    };
-                    img.onload = function () {
-                        startScreen.style.backgroundImage = 'url("images/start_screen.webp")';
-                    };
-                    img.src = 'images/start_screen.webp';
-                } else {
-                    startScreen.style.backgroundImage = 'url("images/archived/start_screen_portrait_original_size.jpg")';
-                }
-            } else {
-                // Landscape - use .jpg file that exists
-                startScreen.style.backgroundImage = 'url("images/start_screen_Landscape.jpg")';
-            }
+        function showStartError(message) {
+            const error = document.getElementById('start-error');
+            error.hidden = false;
+            error.textContent = message;
         }
 
         class Game {
@@ -964,18 +945,29 @@
                 };
                 document.getElementById('btn-restart-from-leaderboard').onclick = () => {
                     document.getElementById('leaderboard-screen').classList.add('hidden');
-                    this.restart(true);
+                    this.start();
                 };
                 document.getElementById('btn-start-leaderboard').onclick = async () => {
                     await displayLeaderboard();
                     document.getElementById('leaderboard-screen').classList.remove('hidden');
                 };
-                document.getElementById('btn-help').onclick = () => {
-                    document.getElementById('help-screen').classList.remove('hidden');
+                const helpScreen = document.getElementById('help-screen');
+                const startScreen = document.getElementById('start-screen');
+                const helpButton = document.getElementById('btn-help');
+                const closeHelp = document.getElementById('btn-close-help');
+                helpButton.onclick = () => {
+                    startScreen.inert = true;
+                    helpScreen.classList.remove('hidden');
+                    closeHelp.focus();
                 };
-                document.getElementById('btn-close-help').onclick = () => {
-                    document.getElementById('help-screen').classList.add('hidden');
+                closeHelp.onclick = () => {
+                    helpScreen.classList.add('hidden');
+                    startScreen.inert = false;
+                    helpButton.focus();
                 };
+                helpScreen.addEventListener('keydown', event => {
+                    if (event.key === 'Escape') closeHelp.click();
+                });
                 document.getElementById('btn-save-score').onclick = async () => {
                     const nameInput = document.getElementById('player-name-input');
                     const name = nameInput.value.trim() || 'Anonymous';
@@ -1046,9 +1038,7 @@
                 // Level logic: goto next or end at level 4
                 document.getElementById('btn-next').onclick = () => {
                     // Smooth music transition
-                    if (this.audio.player) {
-                        this.audio.player.stop();
-                    }
+                    this.audio.stopMusic();
                     setTimeout(() => {
                         if (this.level >= 4) {
                             // Level 4 complete - show ending screen
@@ -1065,10 +1055,6 @@
                     }, 100);
                 };
 
-                document.getElementById('btn-pacman-continue').onclick = () => {
-                    this.level = 3;
-                    this.restart(false);
-                };
                 document.getElementById('audio-btn').onclick = () => this.audio.toggleMute();
                 document.getElementById('music-btn').onclick = () => this.audio.toggleMusic();
 
@@ -1076,39 +1062,19 @@
                 this.isPaused = false;
                 document.getElementById('pause-btn').onclick = () => this.togglePause();
                 document.getElementById('btn-resume').onclick = () => this.togglePause();
-                document.getElementById('btn-pause-restart').onclick = () => {
-                    this.isPaused = false;
-                    document.getElementById('pause-screen').classList.add('hidden');
-                    this.restart(true);
-                };
-                document.getElementById('btn-pause-menu').onclick = () => {
-                    this.isPaused = false;
-                    document.getElementById('pause-screen').classList.add('hidden');
-                    this.isPlaying = false;
-                    document.getElementById('start-screen').classList.remove('hidden');
-                };
+                document.getElementById('btn-pause-restart').onclick = () => this.restart(true);
+                document.getElementById('btn-pause-menu').onclick = () => this.showMenu();
 
-                // ESC key to pause
-                window.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && this.isPlaying) {
-                        this.togglePause();
-                    }
+                window.addEventListener('keydown', event => {
+                    if (event.key === 'Escape' && !event.repeat && this.isPlaying) this.togglePause();
                 });
 
-                // Difficulty selection buttons
                 const difficultyButtons = document.querySelectorAll('.difficulty-btn');
-                difficultyButtons.forEach(btn => {
-                    btn.onclick = () => {
-                        // Remove selected class from all buttons
-                        difficultyButtons.forEach(b => b.classList.remove('selected'));
-                        // Add to clicked button
-                        btn.classList.add('selected');
-                        // Set difficulty
-                        this.difficulty = btn.dataset.difficulty;
-                        // Update multiplier
-                        if (this.difficulty === 'easy') this.difficultyMultiplier = 1.0;
-                        else if (this.difficulty === 'medium') this.difficultyMultiplier = 1.5;
-                        else if (this.difficulty === 'hard') this.difficultyMultiplier = 2.0;
+                difficultyButtons.forEach(button => {
+                    button.onclick = () => {
+                        this.difficulty = button.dataset.difficulty;
+                        this.difficultyMultiplier = CONFIG.DIFFICULTY[this.difficulty].multiplier;
+                        difficultyButtons.forEach(option => option.setAttribute('aria-pressed', option === button));
                     };
                 });
 
@@ -1131,7 +1097,7 @@
                 };
                 document.getElementById('btn-post-menu').onclick = () => {
                     document.getElementById('post-game-menu').classList.add('hidden');
-                    document.getElementById('start-screen').classList.remove('hidden');
+                    this.showMenu();
                 };
 
                 // Ending screen buttons
@@ -1161,94 +1127,131 @@
             }
 
             start() {
+                const startScreen = document.getElementById('start-screen');
+                document.getElementById('start-error').hidden = true;
                 try {
-                    document.getElementById('start-screen').classList.add('hidden');
-                    // Show difficulty badge during gameplay
-                    const badge = document.getElementById('difficulty-badge');
-                    badge.className = ''; // Remove all classes
-                    badge.classList.add(this.difficulty);
-                    badge.style.display = 'block';
-                    const mult = this.difficulty === 'easy' ? '×1.0' : this.difficulty === 'medium' ? '×1.5' : '×2.0';
-                    badge.textContent = `${this.difficulty.toUpperCase()} ${mult}`;
-                    // AssetFactory.init() already called in DOMContentLoaded
+                    if (!this.renderer) this.initThreeJS();
+                    if (!this.renderer) {
+                        document.getElementById('btn-start').focus();
+                        return;
+                    }
                     this.audio.init();
-                    // No start screen music
-                    this.initThreeJS();
-                } catch (e) { console.error(e); }
+                    this.restart(true);
+                    startScreen.classList.add('hidden');
+                    this.renderer.domElement.focus();
+                } catch (error) {
+                    console.error("Unable to start game:", error);
+                    this.showMenu();
+                    showStartError('The game could not start. Reload the page and try again.');
+                }
+            }
+
+            showMenu() {
+                this.isPlaying = false;
+                this.clearControls?.();
+                this.audio.stopMusic();
+                this.setPaused(false);
+                document.getElementById('ui-layer').classList.add('hidden');
+                document.getElementById('difficulty-badge').style.display = 'none';
+                document.getElementById('start-screen').classList.remove('hidden');
+                document.getElementById('btn-start').focus();
             }
 
             initThreeJS() {
-                this.scene = new THREE.Scene(); this.scene.fog = new THREE.FogExp2(0x111, 0.03);
+                const canvas = document.createElement('canvas');
+                const options = { alpha: true, antialias: true, stencil: true };
+                const context = canvas.getContext('webgl', options) || canvas.getContext('experimental-webgl', options);
+                if (!context) {
+                    showStartError('3D graphics are unavailable. Enable graphics acceleration or try another browser, then press Play again.');
+                    return;
+                }
+
+                this.scene = new THREE.Scene();
+                this.scene.fog = new THREE.FogExp2(0x111, 0.03);
                 this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-                this.camera.position.set(0, 8, 15); this.camera.lookAt(0, 0, 0);
-                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.renderer.shadowMap.enabled = true;
-                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-                document.getElementById('canvas-container').appendChild(this.renderer.domElement);
+                this.camera.position.set(0, 8, 15);
+                this.camera.lookAt(0, 0, 0);
+                const renderer = new THREE.WebGLRenderer({ canvas, context, ...options });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
                 this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-                // Add directional light for shadows
+
                 const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
                 dirLight.position.set(10, 20, 10);
                 dirLight.castShadow = true;
                 dirLight.shadow.mapSize.width = 2048;
                 dirLight.shadow.mapSize.height = 2048;
                 dirLight.shadow.camera.near = 0.5;
-                dirLight.shadow.camera.far = 150; // Extended for deeper levels
+                dirLight.shadow.camera.far = 150;
                 dirLight.shadow.camera.left = -25;
                 dirLight.shadow.camera.right = 25;
                 dirLight.shadow.camera.top = 50;
-                dirLight.shadow.camera.bottom = -100; // Extended to cover deeper floors
-                this.dirLight = dirLight; // Store reference for dynamic updates
+                dirLight.shadow.camera.bottom = -100;
+                this.dirLight = dirLight;
                 this.scene.add(dirLight);
-                this.scene.add(dirLight.target); // Add target to scene for dynamic updates
+                this.scene.add(dirLight.target);
                 this.particles = new ParticleSystem(this.scene);
-                this.createCharacter(); this.setupLevel();
+                this.createCharacter();
 
-                let dragging = false, lastX = 0;
-                const getX = e => e.clientX || (e.touches && e.touches[0].clientX);
-                window.addEventListener('mousedown', e => { dragging = true; lastX = getX(e); });
-                window.addEventListener('touchstart', e => { dragging = true; lastX = getX(e); });
-                window.addEventListener('mouseup', () => dragging = false);
-                window.addEventListener('touchend', () => dragging = false);
-                const onMove = (e) => { if (dragging && this.isPlaying && this.tower) { const x = getX(e); this.tower.rotation.y += (x - lastX) * 0.008; lastX = x; } }
-                window.addEventListener('mousemove', onMove); window.addEventListener('touchmove', onMove);
-
-                // Arrow key support for rotation
-                let arrowLeftPressed = false;
-                let arrowRightPressed = false;
-                window.addEventListener('keydown', (e) => {
-                    if (!this.isPlaying || !this.tower) return;
-                    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-                        arrowLeftPressed = true;
-                        e.preventDefault();
-                    }
-                    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-                        arrowRightPressed = true;
-                        e.preventDefault();
-                    }
+                this.renderer = renderer;
+                canvas.tabIndex = -1;
+                canvas.setAttribute('aria-label', 'Helix Jump playfield');
+                document.getElementById('canvas-container').appendChild(canvas);
+                this.bindControls(canvas);
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    if (this.isPlaying && this.isPaused) renderer.render(this.scene, this.camera);
                 });
-                window.addEventListener('keyup', (e) => {
-                    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-                        arrowLeftPressed = false;
-                    }
-                    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-                        arrowRightPressed = false;
-                    }
-                });
+            }
 
-                // Apply arrow key rotation in game loop
-                const originalLoop = this.loop.bind(this);
-                this.loop = () => {
-                    if (this.isPlaying && this.tower) {
-                        if (arrowLeftPressed) this.tower.rotation.y -= 0.05;
-                        if (arrowRightPressed) this.tower.rotation.y += 0.05;
+            bindControls(canvas) {
+                const keys = new Set();
+                const left = ['ArrowLeft', 'a'];
+                const right = ['ArrowRight', 'd'];
+                let pointerId = null;
+                let lastX = 0;
+                this.clearControls = () => {
+                    keys.clear();
+                    if (pointerId !== null && canvas.hasPointerCapture(pointerId)) {
+                        canvas.releasePointerCapture(pointerId);
                     }
-                    originalLoop();
+                    pointerId = null;
                 };
+                this.keyboardTurn = () => Number(right.some(key => keys.has(key))) -
+                    Number(left.some(key => keys.has(key)));
 
-                window.addEventListener('resize', () => { this.camera.aspect = window.innerWidth / window.innerHeight; this.camera.updateProjectionMatrix(); this.renderer.setSize(window.innerWidth, window.innerHeight); });
-                this.isPlaying = true; this.lastTime = Date.now(); this.loop();
+                canvas.addEventListener('pointerdown', event => {
+                    if (!this.isPlaying || this.isPaused || pointerId !== null || event.button !== 0) return;
+                    pointerId = event.pointerId;
+                    lastX = event.clientX;
+                    canvas.setPointerCapture(pointerId);
+                });
+                canvas.addEventListener('pointermove', event => {
+                    if (event.pointerId !== pointerId) return;
+                    this.tower.rotation.y += (event.clientX - lastX) * 0.008;
+                    lastX = event.clientX;
+                });
+                const releasePointer = event => {
+                    if (event.pointerId === pointerId) pointerId = null;
+                };
+                canvas.addEventListener('pointerup', releasePointer);
+                canvas.addEventListener('pointercancel', releasePointer);
+                canvas.addEventListener('lostpointercapture', releasePointer);
+                window.addEventListener('keydown', event => {
+                    if (!this.isPlaying || this.isPaused || event.altKey || event.ctrlKey || event.metaKey) return;
+                    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+                    if (!left.includes(key) && !right.includes(key)) return;
+                    event.preventDefault();
+                    keys.add(key);
+                });
+                window.addEventListener('keyup', event => keys.delete(event.key.length === 1 ? event.key.toLowerCase() : event.key));
+                window.addEventListener('blur', this.clearControls);
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.isPlaying && !this.isPaused) this.setPaused(true);
+                });
             }
 
             createCharacter() {
@@ -1789,6 +1792,9 @@
             }
 
             restart(full) {
+                this.isPlaying = false;
+                this.clearControls();
+                clearTimeout(this.gameOverPrompt);
                 if (full) {
                     this.level = 1;
                     this.score = 0; this.lives = 3;
@@ -1805,7 +1811,7 @@
                     this.lives = Math.max(1, this.lives);
                     // Add current level's floors to total before reset
                     this.totalFloorsCleared += this.currentLevelMaxDepth;
-                    // Don't reset totalFruits - collected items persist in this.collected
+                    this.totalFruits += this.collected.apple + this.collected.banana;
                     this.previousLevelsScore += 50;
                     this.currentLevelMaxDepth = 0;
                 }
@@ -1829,8 +1835,13 @@
 
                 this.stressMusicPlaying = false; // Reset stress music flag
                 this.setupLevel();
-                this.updateUI();
+                const badge = document.getElementById('difficulty-badge');
+                badge.className = this.difficulty;
+                badge.textContent = CONFIG.DIFFICULTY[this.difficulty].label;
+                badge.style.display = 'block';
+                document.getElementById('ui-layer').classList.remove('hidden');
                 this.isPlaying = true;
+                this.setPaused(false);
             }
 
             updateUI() {
@@ -1890,7 +1901,7 @@
                 updateText('c-floors', this.totalFloorsCleared + this.currentLevelMaxDepth);
 
                 // Calculate and display total game score
-                const totalFruitsNow = this.collected.apple + this.collected.banana;
+                const totalFruitsNow = this.totalFruits + this.collected.apple + this.collected.banana;
                 const totalScore = Math.floor((totalFruitsNow + this.totalFloorsCleared + this.currentLevelMaxDepth + this.pacmanBonus) * this.difficultyMultiplier);
                 this.score = totalScore;
                 updateText('total-score', totalScore.toLocaleString());
@@ -1929,47 +1940,34 @@
             }
 
             togglePause() {
-                if (!this.isPlaying) return;
-                
-                this.isPaused = !this.isPaused;
-                
-                if (this.isPaused) {
-                    // Pause the game
-                    document.getElementById('pause-screen').classList.remove('hidden');
-                    document.getElementById('pause-btn').textContent = '▶️';
-                    // Pause music if playing
-                    if (this.audio.player && this.audio.player.context) {
-                        this.audio.player.context.suspend();
-                    }
-                } else {
-                    // Resume the game
-                    document.getElementById('pause-screen').classList.add('hidden');
-                    document.getElementById('pause-btn').textContent = '⏸️';
-                    // Resume music if not muted
-                    if (this.audio.player && this.audio.player.context && !this.audio.isMusicMuted) {
-                        this.audio.player.context.resume();
-                    }
-                    // Reset lastTime to prevent time jump
+                if (this.isPlaying) this.setPaused(!this.isPaused);
+            }
+
+            setPaused(paused) {
+                this.isPaused = paused;
+                document.getElementById('pause-screen').classList.toggle('hidden', !paused);
+                document.getElementById('ui-layer').inert = paused;
+                this.audio.syncMusicContext(paused);
+                if (paused) {
+                    this.clearControls();
+                    document.getElementById('btn-resume').focus();
+                } else if (this.isPlaying) {
                     this.lastTime = Date.now();
+                    this.renderer.domElement.focus();
+                    this.queueFrame();
                 }
             }
 
-            loop() {
-                try {
-                    requestAnimationFrame(() => this.loop());
-                    // Don't hide overlays if level complete screen is showing
-                    const levelCompleteScreen = document.getElementById('level-complete-screen');
-                    if (!this.isPlaying && levelCompleteScreen && !levelCompleteScreen.classList.contains('hidden')) {
-                        return; // Keep showing level complete screen
-                    }
-                    if (!this.isPlaying) return;
-                    
-                    // Check for pause state
-                    if (this.isPaused) {
-                        this.renderer.render(this.scene, this.camera);
-                        return;
-                    }
+            queueFrame() {
+                if (this.frameId == null) this.frameId = requestAnimationFrame(() => this.loop());
+            }
 
+            loop() {
+                this.frameId = null;
+                if (!this.isPlaying || this.isPaused) return;
+                try {
+                    this.queueFrame();
+                    this.tower.rotation.y += this.keyboardTurn() * 0.05;
                     this.particles.update();
 
                     if (this.invincible > 0) {
@@ -2261,7 +2259,7 @@
 
                     // Show name input screen after a short delay (only if score > 0)
                     if (this.score > 0) {
-                        setTimeout(() => {
+                        this.gameOverPrompt = setTimeout(() => {
                             document.getElementById('game-over-screen').classList.add('hidden');
                             updateText('name-input-score', this.score.toLocaleString());
                             document.getElementById('name-input-screen').classList.remove('hidden');
@@ -2289,7 +2287,7 @@
                 const isGameComplete = this.level === 4;
                 if (isGameComplete) {
                     // Level 4: Show ending screen with video
-                    if (this.audio.player) this.audio.player.stop(); // Stop game music
+                    this.audio.stopMusic();
                     document.getElementById('level-complete-screen').classList.add('hidden');
                     document.getElementById('ending-screen').classList.remove('hidden');
 
@@ -2728,9 +2726,15 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            // Update start screen background on load
-            updateStartScreenBackground();
-            try { AssetFactory.init(); window.game = new Game(); const startBtn = document.getElementById('btn-start'); if (startBtn) { startBtn.onclick = function () { window.game.start(); }; } } catch (e) { console.error("Initialization failed:", e); }
+            try {
+                AssetFactory.init();
+                window.game = new Game();
+                document.getElementById('btn-start').onclick = () => window.game.start();
+            } catch (error) {
+                console.error("Initialization failed:", error);
+                document.getElementById('btn-start').disabled = true;
+                showStartError('The game could not load. Reload the page and try again.');
+            }
         });
     </script>
 </body>
