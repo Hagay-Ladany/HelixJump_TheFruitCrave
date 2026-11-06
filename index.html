@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="css/styles.css">
 
     <script src="js/three.min.js"></script>
+    <script src="js/arcade-art.js"></script>
 
     <script>
         //leaderboard script url
@@ -86,11 +87,9 @@
     </div>
 
     <main id="start-screen" class="overlay" aria-labelledby="game-title">
-        <picture class="start-art" aria-hidden="true">
-            <source media="(orientation: portrait)" srcset="images/start_screen.webp" type="image/webp">
-            <source media="(orientation: portrait)" srcset="images/archived/start_screen.jpg">
-            <img src="images/start_screen_Landscape.jpg" alt="">
-        </picture>
+        <div class="start-art" aria-hidden="true">
+            <img src="images/start_screen_Landscape.jpg" width="2816" height="1536" alt="">
+        </div>
         <div id="start-content">
             <p class="start-kicker">Fruit Crave Arcade</p>
             <h1 id="game-title">Helix Jump</h1>
@@ -625,16 +624,12 @@
             textures: {},
             init() {
                 try {
-                    this.textures['apple'] = this.createEmojiTexture('🍎');
-                    this.textures['banana'] = this.createEmojiTexture('🍌');
-                    this.textures['choco'] = this.createEmojiTexture('🍫');
                     // Load rotten.gif as texture
                     const loader = new THREE.TextureLoader();
                     this.textures['rotten'] = loader.load('images/rotten.gif', undefined, undefined, (err) => {
                         console.warn('Could not load rotten.gif, using emoji fallback');
                         this.textures['rotten'] = this.createEmojiTexture('🤢');
                     });
-                    this.textures['diamond'] = this.createEmojiTexture('💎');
                     // Try cockroach emoji first, fallback to bug emoji for better browser compatibility
                     this.textures['cockroach'] = this.createEmojiTextureWithFallback('🪳', '🐛');
                     this.texFloor = this.createFloorTexture();
@@ -742,34 +737,6 @@
         }
 
         // --- 4. GAME CONTROLLER ---
-        // WebP support detection
-        let webpSupported = false;
-        (function () {
-            const webp = new Image();
-            webp.onload = webp.onerror = function () {
-                webpSupported = (webp.height === 2);
-            };
-            webp.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
-        })();
-
-        // Helper function to get background image with webp fallback
-        function getBackgroundImage(level) {
-            if (level === 1 || level === 2 || level === 3 || level === 5) {
-                // Levels 1-3 and 5 use GIF
-                return `url("images/bg_level_${level}.gif")`;
-            } else {
-                // For other levels (level 4), try webp if supported, otherwise jpg
-                if (webpSupported) {
-                    // Return webp - the setupLevel function will test if it exists
-                    return `url("images/bg_level_${level}.webp")`;
-                } else {
-                    return `url("images/bg_level_${level}.jpg")`;
-                }
-            }
-        }
-
-        // Leaderboard functions - Google Sheets integration
-
         async function getLeaderboard() {
             try {
                 // TRICK: We add "?t=" + Date.now() to the URL.
@@ -1167,31 +1134,40 @@
                 }
 
                 this.scene = new THREE.Scene();
-                this.scene.fog = new THREE.FogExp2(0x111, 0.03);
-                this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-                this.camera.position.set(0, 8, 15);
-                this.camera.lookAt(0, 0, 0);
+                this.scene.fog = new THREE.FogExp2(0x5e83a6, 0.038);
+                this.camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+                this.camera.position.set(0, 8, 11);
                 const renderer = new THREE.WebGLRenderer({ canvas, context, ...options });
-                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
                 renderer.shadowMap.enabled = true;
                 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-                this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+                this.scene.add(new THREE.HemisphereLight(0xe4f3ff, 0x786487, 0.84));
 
-                const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-                dirLight.position.set(10, 20, 10);
+                const dirLight = new THREE.DirectionalLight(0xffeac7, 1.04);
+                dirLight.position.set(-4, 10, 5);
                 dirLight.castShadow = true;
-                dirLight.shadow.mapSize.width = 2048;
-                dirLight.shadow.mapSize.height = 2048;
+                dirLight.shadow.mapSize.set(1024, 1024);
                 dirLight.shadow.camera.near = 0.5;
-                dirLight.shadow.camera.far = 150;
-                dirLight.shadow.camera.left = -25;
-                dirLight.shadow.camera.right = 25;
-                dirLight.shadow.camera.top = 50;
-                dirLight.shadow.camera.bottom = -100;
+                dirLight.shadow.camera.far = 35;
+                dirLight.shadow.camera.left = -7;
+                dirLight.shadow.camera.right = 7;
+                dirLight.shadow.camera.top = 8;
+                dirLight.shadow.camera.bottom = -11;
+                dirLight.shadow.bias = -0.0005;
                 this.dirLight = dirLight;
-                this.scene.add(dirLight);
-                this.scene.add(dirLight.target);
+                this.scene.add(dirLight, dirLight.target);
+
+                const rimLight = new THREE.DirectionalLight(0xb3adff, 0.48);
+                rimLight.position.set(5, 2, -5);
+                this.scene.add(rimLight);
                 this.particles = new ParticleSystem(this.scene);
+                this.platformGeometry = ArcadeArt.platformGeometry();
+                this.hazardMark = ArcadeArt.hazardMark();
+                this.hazardMaterials = ArcadeArt.platformMaterials(ArcadeArt.hazardColor);
+                this.themeMaterials = new Map();
+                this.hubCylinder = new THREE.CylinderGeometry(1.50, 1.50, 1, 48);
+                this.hubRing = new THREE.TorusGeometry(1.53, 0.09, 10, 48).rotateX(-Math.PI / 2);
+                this.pickupModels = ArcadeArt.pickupModels();
                 this.createCharacter();
 
                 this.renderer = renderer;
@@ -1199,12 +1175,16 @@
                 canvas.setAttribute('aria-label', 'Helix Jump playfield');
                 document.getElementById('canvas-container').appendChild(canvas);
                 this.bindControls(canvas);
-                window.addEventListener('resize', () => {
-                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                const resize = () => {
+                    const { innerWidth, innerHeight } = window;
+                    this.camera.aspect = innerWidth / innerHeight;
+                    this.camera.zoom = Math.min(1.5, this.camera.aspect * 2);
                     this.camera.updateProjectionMatrix();
-                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    renderer.setSize(innerWidth, innerHeight);
                     if (this.isPlaying && this.isPaused) renderer.render(this.scene, this.camera);
-                });
+                };
+                resize();
+                window.addEventListener('resize', resize);
             }
 
             bindControls(canvas) {
@@ -1257,16 +1237,26 @@
             createCharacter() {
                 this.ballWrap = new THREE.Group(); this.ballWrap.position.set(0, 2, 2);
                 const geo = new THREE.SphereGeometry(0.4, 32, 32);
-                this.ballMat = new THREE.MeshBasicMaterial({ color: 0xFF9966 });
+                this.ballMat = new THREE.MeshPhongMaterial({
+                    color: ArcadeArt.playerColor, specular: 0xffebc5, shininess: 55,
+                    emissive: 0x431400, emissiveIntensity: 0.24
+                });
                 this.ballBody = new THREE.Mesh(geo, this.ballMat);
                 this.ballBody.castShadow = true;
                 this.ballBody.receiveShadow = false;
                 this.ballWrap.add(this.ballBody);
-                const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.15, 8), new THREE.MeshBasicMaterial({ color: 0x5D4037 })); stem.position.set(0, 0.4, 0); stem.castShadow = true; this.ballBody.add(stem);
+                const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.045, 0.16, 10), ArcadeArt.enamel(0x733e2c));
+                stem.position.y = 0.41;
+                stem.rotation.z = -0.24;
+                const leaf = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), ArcadeArt.enamel(0x65ce56));
+                leaf.scale.set(0.16, 0.05, 0.065);
+                leaf.position.set(0.14, 0.43, 0);
+                leaf.rotation.z = 0.48;
+                this.ballBody.add(stem, leaf);
 
                 this.ballFace = new THREE.Group();
                 const eyeWhiteGeo = new THREE.SphereGeometry(0.12, 16, 16); const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-                const eyeIrisGeo = new THREE.SphereGeometry(0.07, 16, 16); const eyeIrisMat = new THREE.MeshBasicMaterial({ color: 0x00aaff });
+                const eyeIrisGeo = new THREE.SphereGeometry(0.07, 16, 16); const eyeIrisMat = new THREE.MeshBasicMaterial({ color: 0x237fb6 });
                 const eyePupilGeo = new THREE.SphereGeometry(0.035, 16, 16); const eyePupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
                 const eyeReflectGeo = new THREE.SphereGeometry(0.02, 8, 8);
                 const createEye = (x) => {
@@ -1278,18 +1268,34 @@
                     return g;
                 }
                 this.ballFace.add(createEye(-0.14), createEye(0.14));
-                this.mouthMesh = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.02, 8, 16, 3.14), new THREE.MeshBasicMaterial({ color: 'black' }));
+                this.mouthMesh = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.02, 8, 16, 3.14), new THREE.MeshBasicMaterial({ color: 0x55243b }));
                 this.mouthMesh.position.set(0, -0.12, 0.36); this.mouthMesh.rotation.z = 3.14; this.ballFace.add(this.mouthMesh);
                 this.ballBody.add(this.ballFace);
 
-                const limbGeo = typeof THREE.CapsuleGeometry === 'function' ? new THREE.CapsuleGeometry(0.04, 0.15, 4, 8) : new THREE.CylinderGeometry(0.04, 0.04, 0.23, 8);
-                const limbMat = new THREE.MeshBasicMaterial({ color: 0xFF9966 });
-                const armL = new THREE.Mesh(limbGeo, limbMat); armL.position.set(-0.38, -0.1, 0); armL.rotation.z = 0.5; armL.castShadow = true; this.ballBody.add(armL);
-                const armR = new THREE.Mesh(limbGeo, limbMat); armR.position.set(0.38, -0.1, 0); armR.rotation.z = -0.5; armR.castShadow = true; this.ballBody.add(armR);
-                const legL = new THREE.Mesh(limbGeo, limbMat); legL.position.set(-0.15, -0.4, 0); legL.castShadow = true; this.ballBody.add(legL);
-                const legR = new THREE.Mesh(limbGeo, limbMat); legR.position.set(0.15, -0.4, 0); legR.castShadow = true; this.ballBody.add(legR);
+                const detail = new THREE.SphereGeometry(1, 16, 12);
+                const cheek = new THREE.MeshBasicMaterial({ color: 0xff715e });
+                const armMaterial = ArcadeArt.enamel(0xf6ab66);
+                const shoes = ArcadeArt.enamel(0x9c3b63);
+                const sole = ArcadeArt.enamel(0xffe8ca);
+                for (const side of [-1, 1]) {
+                    const blush = new THREE.Mesh(detail, cheek);
+                    blush.position.set(side * 0.23, -0.10, 0.31);
+                    blush.scale.set(0.067, 0.037, 0.025);
+                    blush.rotation.y = side * 0.55;
+                    this.ballFace.add(blush);
 
-                // Character shadow will be rendered by shadow maps (no flat polygon needed)
+                    const arm = new THREE.Mesh(detail, armMaterial);
+                    arm.position.set(side * 0.37, -0.12, 0.07);
+                    arm.scale.set(0.075, 0.16, 0.073);
+                    arm.rotation.z = side * 0.5;
+                    const shoe = new THREE.Mesh(detail, shoes);
+                    shoe.position.set(side * 0.15, -0.31, 0.08);
+                    shoe.scale.set(0.112, 0.09, 0.17);
+                    const outsole = new THREE.Mesh(detail, sole);
+                    outsole.position.set(side * 0.15, -0.37, 0.10);
+                    outsole.scale.set(0.115, 0.035, 0.172);
+                    this.ballBody.add(arm, shoe, outsole);
+                }
 
                 this.scene.add(this.ballWrap);
             }
@@ -1307,73 +1313,10 @@
                 // Reset floor counter for new level
                 this.currentLevelMaxDepth = 0;
 
-                let grad = "";
-                if (this.level === 1) grad = "linear-gradient(to bottom, #87CEEB, #E0F7FA)";
-                else if (this.level === 2) grad = "linear-gradient(to bottom, #4a5568, #2d3748)";
-                else if (this.level === 3) grad = "linear-gradient(to bottom, #134E5E, #71B280)";
-                else if (this.level === 4) grad = "linear-gradient(to bottom, #cc4444, #400044)";
-                else if (this.level === 5) grad = "linear-gradient(to bottom, #1a0033, #4a00e0, #8e2de2)"; // Level 5: Dark purple to bright purple
-                else grad = "linear-gradient(to bottom, #ECE9E6, #FFFFFF)";
-                // Dramatically reduce black overlay - much lighter
-                const overlayGradient = (this.level === 4) ? "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%)" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 29%, rgba(0, 0, 0, 0.1) 100%)";
-                // Preload background image before setting it
-                const preloadBackground = (callback) => {
-                    let texture = getBackgroundImage(this.level);
-                    const levelNum = this.level;
-
-                    // For level 4, test if webp exists and fallback to jpg if not (levels 1-3 and 5 use GIF)
-                    if (this.level === 4 && webpSupported) {
-                        const testImg = new Image();
-                        testImg.onerror = function () {
-                            // Webp doesn't exist, use jpg
-                            texture = `url("images/bg_level_${levelNum}.jpg")`;
-                            const bgImg = new Image();
-                            bgImg.onload = () => callback(texture);
-                            bgImg.onerror = () => callback(texture); // Use anyway if load fails
-                            bgImg.src = `images/bg_level_${levelNum}.jpg`;
-                        };
-                        testImg.onload = function () {
-                            // Webp exists, use it
-                            texture = `url("images/bg_level_${levelNum}.webp")`;
-                            const bgImg = new Image();
-                            bgImg.onload = () => callback(texture);
-                            bgImg.onerror = () => callback(texture);
-                            bgImg.src = `images/bg_level_${levelNum}.webp`;
-                        };
-                        testImg.src = `images/bg_level_${this.level}.webp`;
-                    } else {
-                        // For other levels, preload the image
-                        const bgImg = new Image();
-                        bgImg.onload = () => callback(texture);
-                        bgImg.onerror = () => callback(texture);
-                        if (this.level === 1 || this.level === 2 || this.level === 3 || this.level === 5) {
-                            bgImg.src = `images/bg_level_${levelNum}.gif`;
-                        } else {
-                            bgImg.src = `images/bg_level_${levelNum}.jpg`;
-                        }
-                    }
-                };
-
-                // Preload background, then set it and properties
-                preloadBackground((texture) => {
-                    document.body.style.backgroundImage = `${overlayGradient}, ${grad}, ${texture}`;
-                    document.body.style.backgroundRepeat = "no-repeat, no-repeat, repeat";
-                    // Level 5: reduce background pattern size by 50%
-                    const patternSize = (this.level === 5) ? "15%" : "30%";
-                    document.body.style.backgroundSize = `cover, cover, ${patternSize}`;
-                    document.body.style.backgroundBlendMode = "normal, multiply, normal";
-                    document.body.style.height = "100%";
-                });
-
-                let fogCol = 0x000000;
-                let fogDensity = 0.03; // Default fog density
-                if (this.level === 1) fogCol = 0x88CCFF;
-                else if (this.level === 5) {
-                    fogCol = 0x2d1b4e; // Dark purple fog for level 5
-                    fogDensity = 0.01; // Much lower density so floors don't disappear at depth
-                }
-                this.scene.fog.color.setHex(fogCol);
-                this.scene.fog.density = fogDensity;
+                const theme = ArcadeArt.themes[this.level] || ArcadeArt.themes[1];
+                document.getElementById('canvas-container').dataset.theme = theme.name;
+                this.scene.fog.color.setHex(theme.sky);
+                this.dirLight.color.setHex(theme.light);
 
                 let trackName = 'level_' + this.level;
                 this.audio.playTrack(trackName);
@@ -1393,14 +1336,17 @@
                 const floors = isFinal ? 30 : (isBoss ? 20 : (this.level === 1 ? 25 : 40));
                 const hidePole = (this.level === 5 || this.level === 4); // Hide pole for level 4 and 5
 
-                let palette;
-                // Improved color palettes with better contrast and visual appeal
-                if (this.level === 1) palette = [0x00e5e5, 0x5cb8ff, 0x7c4dff, 0x00d4aa]; // Cyan, Sky Blue, Purple, Teal
-                else if (this.level === 2) palette = [0x7b8794, 0x5a6a7a, 0x94a3b8]; // Slate grays with better distinction
-                else if (this.level === 3) palette = [0xc8e858, 0x7ec850, 0xffd93d, 0x6abf69]; // Vibrant greens and yellow
-                else if (this.level === 5) palette = [0x6c2bd9, 0xa855f7, 0x7c3aed, 0x8b5cf6]; // Vibrant purples for Level 5
-                else if (this.level === 4) palette = [0xe86a6a, 0xcc5555, 0xf08080, 0xd47979]; // Warmer reds for lava level
-                else palette = [0x6b7280, 0x4b5563, 0x9ca3af]; // Gray fallback
+                if (!this.themeMaterials.has(theme)) {
+                    this.themeMaterials.set(theme, {
+                        tiles: theme.tiles.map(color => [
+                            ArcadeArt.platformMaterials(color),
+                            ArcadeArt.platformMaterials(new THREE.Color(color).multiplyScalar(0.87))
+                        ]),
+                        hub: ArcadeArt.enamel(theme.hub),
+                        trim: ArcadeArt.enamel(new THREE.Color(theme.hub).lerp(new THREE.Color(0xe8d5ff), 0.37))
+                    });
+                }
+                const materials = this.themeMaterials.get(theme);
 
                 // Preload ending GIF asynchronously for level 5
                 if (isFinal && !this.endingGifPreloaded) {
@@ -1417,12 +1363,16 @@
                     endingGif.src = 'images/ending_victory.gif';
                 }
 
-                const core = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 200, 32), new THREE.MeshLambertMaterial({ color: isBoss ? 0x888888 : 0xdddddd }));
-                core.receiveShadow = true;
-                core.castShadow = true;
-                core.position.y = -80; if (hidePole) core.visible = false;
-                this.tower.add(core);
+                if (!hidePole) {
+                    const height = floors * 4 + 1;
+                    const core = new THREE.Mesh(this.hubCylinder, materials.hub);
+                    core.scale.y = height;
+                    core.position.y = 0.45 - height / 2;
+                    core.receiveShadow = true;
+                    this.tower.add(core);
+                }
 
+                const angle = Math.PI / 6;
                 const alignedGapIndex = Math.floor(Math.random() * 12);
 
                 for (let i = 0; i < floors; i++) {
@@ -1433,32 +1383,36 @@
                     if (isBoss || isFinal) danger = Math.floor(Math.random() * 12);
                     if (this.level === 3 && i >= 10 && i <= 18 && danger === gap) danger = -1;
 
-                    const col = palette[i % palette.length];
-                    // Improved danger colors with better contrast
-                    const dangerColor = (isBoss || isFinal) ? 0xff3333 : 0xff4040; // Brighter red for visibility
+                    const colorIndex = i % theme.tiles.length;
+                    if (!hidePole) {
+                        const trim = new THREE.Mesh(this.hubRing, materials.trim);
+                        trim.position.y = 0.08;
+                        grp.add(trim);
+                    }
 
                     for (let j = 0; j < 12; j++) {
                         if (j === gap || j === (gap + 1) % 12) continue;
-                        const isDanger = (j === danger);
-                        const shape = new THREE.Shape(); const a = Math.PI * 2 / 12;
-                        shape.absarc(0, 0, 1.6, j * a, (j + 1) * a, false); shape.absarc(0, 0, 2.5, (j + 1) * a, j * a, true);
-                        const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.28, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 3 });
-                        geo.rotateX(-Math.PI / 2);
-                        // Level 5: Use fully opaque material (no transparency) to prevent floors from disappearing with white fog
-                        // Other levels: normal opaque material
-                        // Use MeshLambertMaterial for proper shadow rendering with subtle emissive glow
-                        const mat = new THREE.MeshLambertMaterial({
-                            color: isDanger ? dangerColor : col,
-                            emissive: isDanger ? 0x330000 : new THREE.Color(col).multiplyScalar(0.15).getHex(), // Subtle glow
-                            transparent: false,
-                            opacity: 1.0
-                        });
-                        const m = new THREE.Mesh(geo, mat);
-                        m.receiveShadow = true;
-                        m.castShadow = true;
-                        m.userData = { type: isDanger ? 'danger' : 'safe', color: isDanger ? dangerColor : new THREE.Color(col).getHex() };
-                        this.physicsMeshes.push(m); grp.add(m);
-                        if (!isDanger && !isBoss && i > 0 && i < floors - 1 && Math.random() < 0.1) this.spawnItem(grp, Math.cos(j * a + a / 2) * 2, Math.sin(j * a + a / 2) * 2);
+                        const isDanger = j === danger;
+                        const tileMaterial = isDanger ? this.hazardMaterials : materials.tiles[colorIndex][j % 2];
+                        const tile = new THREE.Mesh(this.platformGeometry, tileMaterial);
+                        tile.rotation.y = j * angle;
+                        tile.receiveShadow = true;
+                        tile.castShadow = true;
+                        tile.userData = {
+                            type: isDanger ? 'danger' : 'safe',
+                            color: isDanger ? ArcadeArt.hazardColor : theme.tiles[colorIndex]
+                        };
+                        if (isDanger) {
+                            const marker = this.hazardMark.clone();
+                            marker.position.y = 0.334;
+                            tile.add(marker);
+                        }
+                        this.physicsMeshes.push(tile);
+                        grp.add(tile);
+                        if (!isDanger && !isBoss && i > 0 && i < floors - 1 && Math.random() < 0.1) {
+                            const center = (j + 0.5) * angle;
+                            this.spawnItem(grp, Math.cos(center) * 2, Math.sin(center) * 2);
+                        }
                     }
 
                     // Enemy spawning based on difficulty
@@ -1494,52 +1448,66 @@
 
 
                 const lastY = -floors * 4; this.lastFloorY = lastY;
-                const fin = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 1, 32), new THREE.MeshLambertMaterial({ color: 0x00ff00, emissive: 0x005500 }));
-                fin.position.y = lastY; fin.userData = { type: 'finish' };
-                fin.receiveShadow = true; fin.castShadow = true;
-                this.tower.add(fin); this.physicsMeshes.push(fin);
+                const fin = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 1, 48), ArcadeArt.enamel(0x158e76));
+                fin.position.y = lastY;
+                fin.userData = { type: 'finish' };
+                fin.receiveShadow = true;
+                const finishTrim = new THREE.MeshBasicMaterial({ color: 0xffe482 });
+                for (const radius of [1.85, 2.8]) {
+                    const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, 0.055, 8, 48), finishTrim);
+                    ring.rotation.x = -Math.PI / 2;
+                    ring.position.y = 0.52;
+                    fin.add(ring);
+                }
+                this.tower.add(fin);
+                this.physicsMeshes.push(fin);
+                this.scene.updateMatrixWorld();
                 this.updateUI();
             }
 
             spawnItem(parent, x, z) {
                 const r = Math.random();
-                let type = 'apple', tex = AssetFactory.textures['apple'];
+                let type = 'apple';
 
                 // Difficulty-based spawn rates
                 if (this.difficulty === 'easy') {
                     // Easy: 70% apples, 15% bananas, 10% chocolate, 4% diamond, 1% rotten
-                    if (r > 0.7) { type = 'banana'; tex = AssetFactory.textures['banana']; }
-                    if (r > 0.85) { type = 'chocolate'; tex = AssetFactory.textures['choco']; }
-                    if (r > 0.95) { type = 'diamond'; tex = AssetFactory.textures['diamond']; }
-                    if (r > 0.99) { type = 'rotten'; tex = AssetFactory.textures['rotten']; }
+                    if (r > 0.7) { type = 'banana'; }
+                    if (r > 0.85) { type = 'chocolate'; }
+                    if (r > 0.95) { type = 'diamond'; }
+                    if (r > 0.99) { type = 'rotten'; }
                 } else if (this.difficulty === 'hard') {
                     // Hard: 25% apples, 25% bananas, 20% chocolate, 3% diamond, 25% rotten, 2% cockroach
-                    if (r > 0.25) { type = 'banana'; tex = AssetFactory.textures['banana']; }
-                    if (r > 0.5) { type = 'chocolate'; tex = AssetFactory.textures['choco']; }
-                    if (r > 0.7) { type = 'rotten'; tex = AssetFactory.textures['rotten']; }
-                    if (r > 0.95) { type = 'cockroach'; tex = AssetFactory.textures['cockroach']; }
-                    if (r > 0.97) { type = 'diamond'; tex = AssetFactory.textures['diamond']; }
+                    if (r > 0.25) { type = 'banana'; }
+                    if (r > 0.5) { type = 'chocolate'; }
+                    if (r > 0.7) { type = 'rotten'; }
+                    if (r > 0.95) { type = 'cockroach'; }
+                    if (r > 0.97) { type = 'diamond'; }
                 } else {
                     // Medium: Keep original rates
-                    if (r > 0.6) { type = 'banana'; tex = AssetFactory.textures['banana']; }
-                    if (r > 0.75) { type = 'chocolate'; tex = AssetFactory.textures['choco']; }
-                    if (r > 0.88) { type = 'rotten'; tex = AssetFactory.textures['rotten']; }
-                    if (r > 0.92) { type = 'cockroach'; tex = AssetFactory.textures['cockroach']; }
-                    if (r > 0.96) { type = 'diamond'; tex = AssetFactory.textures['diamond']; }
+                    if (r > 0.6) { type = 'banana'; }
+                    if (r > 0.75) { type = 'chocolate'; }
+                    if (r > 0.88) { type = 'rotten'; }
+                    if (r > 0.92) { type = 'cockroach'; }
+                    if (r > 0.96) { type = 'diamond'; }
                 }
 
-                const grp = new THREE.Group(); grp.position.set(x, 1.2, z);
-                const mat = new THREE.SpriteMaterial({ map: tex || null, color: tex ? 0xffffff : 0xff0000 });
-                const sprite = new THREE.Sprite(mat); sprite.scale.set(0.6, 0.6, 1);
-                if (type === 'banana') sprite.scale.set(0.7, 0.7, 1); if (type === 'chocolate') sprite.scale.set(0.7, 0.7, 1);
-                // Add shadow-casting mesh for fruits (sprites don't cast shadows in Three.js)
-                const shadowCasterGeo = new THREE.SphereGeometry(0.25, 8, 8);
-                const shadowCasterMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.01 });
-                const shadowCaster = new THREE.Mesh(shadowCasterGeo, shadowCasterMat);
-                shadowCaster.castShadow = true;
-                shadowCaster.receiveShadow = false;
-                shadowCaster.visible = false; // Invisible but casts shadow
-                grp.add(sprite, shadowCaster); grp.userData = { type: type }; parent.add(grp); this.interactables.push(grp);
+                const grp = new THREE.Group();
+                grp.position.set(x, 1.2, z);
+                grp.userData.type = type;
+                const model = this.pickupModels[type];
+                if (model) {
+                    const visual = model.clone();
+                    visual.rotation.y = 0.4;
+                    grp.add(visual);
+                } else {
+                    const tex = AssetFactory.textures[type];
+                    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex || null, color: tex ? 0xffffff : 0xff6255 }));
+                    sprite.scale.set(0.68, 0.68, 1);
+                    grp.add(sprite);
+                }
+                parent.add(grp);
+                this.interactables.push(grp);
                 if (type !== 'rotten' && type !== 'cockroach') this.totalItems++;
                 // Count apples and bananas for level total fruits
                 if (type === 'apple' || type === 'banana') this.levelTotalFruits++;
@@ -1553,7 +1521,7 @@
                 const col = (isFire || isFinalLevel) ? 0xff4500 : (isLevel4 ? 0xff8c00 : (this.level === 3 ? 0x8A2BE2 : 0x32CD32));
                 const scale = isFinalLevel ? 1.2 : 1.0;
                 const g = new THREE.Group();
-                const body = new THREE.Mesh(new THREE.BoxGeometry(0.6 * scale, 0.6 * scale, 0.6 * scale), new THREE.MeshBasicMaterial({ color: col }));
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.6 * scale, 0.6 * scale, 0.6 * scale), ArcadeArt.enamel(col));
                 g.add(body);
                 if (isFinalLevel) g.scale.set(scale, scale, scale);
                 const eyeMat = new THREE.MeshBasicMaterial({ color: 'yellow' }); const pupilMat = new THREE.MeshBasicMaterial({ color: 'black' });
@@ -1817,13 +1785,15 @@
                 }
 
                 this.ballWrap.position.y = 2; this.velocity = 0;
+                this.camera.position.y = this.ballWrap.position.y + 6;
+                this.camera.lookAt(0, this.camera.position.y - 8.7, 0);
                 this.fastTimer = 0; this.slowTimer = 0; this.invincible = 0; this.drillFloors = 0; this.drillTimer = 0;
                 this.timeUpEffect = false; // Reset time up effect
                 this.hasCockroachDebuff = false; // Reset cockroach debuff
                 this.drillColorTime = 0; // Reset drill color animation
                 this.lastTime = Date.now();
 
-                this.ballMat.color.setHex(0xFF9966);
+                this.ballMat.color.setHex(ArcadeArt.playerColor);
                 if (this.mouthMesh) this.mouthMesh.rotation.z = 3.14;
 
                 document.getElementById('game-over-screen').classList.add('hidden');
@@ -1974,17 +1944,17 @@
                         this.invincible--;
                         // Blink effect during invincibility
                         if (this.invincible % 10 < 5) {
-                            this.ballMat.color.setHex(0xFF9966);
+                            this.ballMat.color.setHex(ArcadeArt.playerColor);
                         } else {
                             this.ballMat.color.setHex(0xFF4444);
                         }
                         if (this.invincible === 0) {
-                            this.ballMat.color.setHex(0xFF9966);
+                            this.ballMat.color.setHex(ArcadeArt.playerColor);
                             if (this.mouthMesh) this.mouthMesh.rotation.z = 3.14;
                         }
                     }
                     if (this.fastTimer > 0) this.fastTimer--; if (this.slowTimer > 0) this.slowTimer--;
-                    if (this.drillTimer > 0) { this.drillTimer--; if (this.drillTimer <= 0) { this.drillFloors = 0; this.drillColorTime = 0; this.ballMat.color.setHex(0xFF9966); } }
+                    if (this.drillTimer > 0) { this.drillTimer--; if (this.drillTimer <= 0) { this.drillFloors = 0; this.drillColorTime = 0; this.ballMat.color.setHex(ArcadeArt.playerColor); } }
 
                     // Colorful drill effect - blink and glow with rainbow colors
                     if (this.drillFloors > 0) {
@@ -1996,7 +1966,7 @@
                         this.ballMat.color.setRGB(rgb[0], rgb[1], rgb[2]);
                     } else if (this.drillColorTime > 0) {
                         // Reset color when drill ends (if not already reset)
-                        this.ballMat.color.setHex(0xFF9966);
+                        this.ballMat.color.setHex(ArcadeArt.playerColor);
                         this.drillColorTime = 0;
                     }
 
@@ -2019,7 +1989,8 @@
                     if (this.velocity < 0) this.targetScale.set(1 - speed * 0.3, 1 + speed * 0.5, 1 - speed * 0.3); else this.targetScale.set(1, 1, 1);
                     this.currentScale.lerp(this.targetScale, 0.2); this.ballBody.scale.copy(this.currentScale);
 
-                    this.ballBody.rotation.x -= 0.04; this.ballFace.rotation.copy(this.ballWrap.rotation); this.ballFace.rotation.z = Math.sin(Date.now() * 0.01) * 0.1;
+                    this.ballBody.rotation.z = Math.sin(Date.now() * 0.006) * 0.11;
+                    this.ballBody.rotation.x = THREE.Math.clamp(this.velocity * 0.38, -0.24, 0.14);
 
                     // --- FIX: PHYSICS RAYCAST START POINT (SKY RAY) ---
                     if (this.velocity < 0) {
@@ -2063,11 +2034,18 @@
 
                     // --- INTERACTIONS (UPDATED MONSTER FACING LOGIC) ---
                     const pos = this.ballWrap.position;
+                    const pickupTime = Date.now() * 0.004;
                     for (let i = this.interactables.length - 1; i >= 0; i--) {
                         const o = this.interactables[i];
                         if (!o || !o.parent) { this.interactables.splice(i, 1); continue; }
 
-                        if (o.userData.type === 'ghost') {
+                        if (this.pickupModels[o.userData.type]) {
+                            const visual = o.children[0];
+                            if (o.userData.type === 'diamond') visual.rotation.y += 0.035;
+                            else visual.rotation.y = Math.sin(pickupTime * 0.65 + i) * 0.48;
+                            visual.position.y = Math.sin(pickupTime + i) * 0.09;
+                        }
+                        else if (o.userData.type === 'ghost') {
                             if (!o.userData.isStatic) {
                                 let dir = o.userData.dir || 1;
                                 const prevAngle = o.userData.angle || 0;
@@ -2160,6 +2138,7 @@
 
                         if (wPos.distanceTo(pos) < dist && isBossCollision) {
                             const t = o.userData.type;
+                            if (ArcadeArt.pickupColors[t]) this.particles.spawn(wPos, ArcadeArt.pickupColors[t]);
                             if (t === 'final-boss') {
                                 // Boss collision - takes multiple hits to defeat
                                 if (this.drillFloors > 0 && !o.userData.isDefeated) {
@@ -2228,18 +2207,13 @@
                     // Score is now calculated in updateUI based on total fruits + floors + pacman bonus
                     this.updateUI();
 
-                    const ty = pos.y + 8;
-                    this.camera.position.y += (ty - this.camera.position.y) * 0.1;
-                    this.camera.lookAt(0, this.camera.position.y - 8, 0);
+                    const ty = pos.y + 6;
+                    this.camera.position.y += (ty - this.camera.position.y) * 0.15;
+                    this.camera.lookAt(0, this.camera.position.y - 8.7, 0);
 
-                    // Update directional light position to follow camera for consistent shadows
-                    if (this.dirLight) {
-                        this.dirLight.position.y = this.camera.position.y + 20;
-                        this.dirLight.target.position.y = pos.y;
-                        this.dirLight.target.updateMatrixWorld();
-                    }
-
-                    // Character shadow is now rendered by Three.js shadow maps (no manual update needed)
+                    this.dirLight.position.y = pos.y + 10;
+                    this.dirLight.target.position.y = pos.y;
+                    this.dirLight.target.updateMatrixWorld();
 
                     this.renderer.render(this.scene, this.camera);
                 } catch (e) { console.error("Loop Error:", e); }

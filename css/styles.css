@@ -9,20 +9,74 @@
 body {
     margin: 0;
     overflow: hidden;
-    background-color: #222;
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat;
+    background-color: #19152a;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     user-select: none;
     -webkit-user-select: none;
-    transition: background-image 0.5s ease-in-out;
 }
 
 #canvas-container {
+    position: relative;
+    isolation: isolate;
     width: 100%;
     height: 100dvh;
     display: block;
+}
+
+#canvas-container[data-theme] {
+    background:
+        radial-gradient(ellipse at 77% 15%, var(--scene-glow), transparent 45%),
+        radial-gradient(ellipse at 20% 65%, var(--scene-haze), transparent 58%),
+        linear-gradient(158deg, var(--scene-top), var(--scene-bottom));
+}
+
+#canvas-container[data-theme]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle at 25% 32%, #ffffffa0 1px, transparent 2px),
+        radial-gradient(circle at 61% 72%, #ffffff70 1px, transparent 2px),
+        radial-gradient(circle at 80% 11%, #ffffffb0 1px, transparent 2px);
+    background-size: 151px 211px, 233px 173px, 349px 257px;
+    mask-image: linear-gradient(#000, #0003 76%, transparent);
+}
+
+#canvas-container[data-theme="orchard"] {
+    --scene-top: #302b62;
+    --scene-bottom: #669db0;
+    --scene-haze: #746cbe;
+    --scene-glow: #b0d4df;
+}
+
+#canvas-container[data-theme="night"] {
+    --scene-top: #191735;
+    --scene-bottom: #363568;
+    --scene-haze: #4e376d;
+    --scene-glow: #6174b6;
+}
+
+#canvas-container[data-theme="jungle"] {
+    --scene-top: #183b54;
+    --scene-bottom: #417869;
+    --scene-haze: #345f8a;
+    --scene-glow: #96b68a;
+}
+
+#canvas-container[data-theme="lava"] {
+    --scene-top: #251736;
+    --scene-bottom: #503046;
+    --scene-haze: #713854;
+    --scene-glow: #b86b65;
+}
+
+#canvas-container[data-theme="cosmic"] {
+    --scene-top: #211644;
+    --scene-bottom: #453370;
+    --scene-haze: #5c3b91;
+    --scene-glow: #a66da4;
 }
 
 .hidden {
@@ -405,32 +459,36 @@ h1 {
 /* Start Screen */
 #start-screen:not(.hidden) {
     display: grid !important;
-    grid-template-columns: minmax(0, 1.4fr) minmax(340px, 1fr);
-    align-items: stretch;
+    grid-template-columns: minmax(0, 1.55fr) minmax(290px, 0.85fr);
+    align-items: center;
+    gap: clamp(18px, 4vw, 72px);
+    justify-content: normal;
     box-sizing: border-box;
-    padding: 0;
-    background: #181425;
+    padding: clamp(16px, 4vw, 64px);
+    background: radial-gradient(ellipse at 19% 26%, #3a3762, transparent 62%), #181425;
     color: #fff5e9;
 }
 
 .start-art {
-    position: relative;
-    min-height: 0;
+    width: 100%;
+    max-width: 1100px;
+    justify-self: center;
 }
 
 .start-art img {
-    position: absolute;
-    inset: 0;
+    display: block;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    border-radius: clamp(12px, 2vw, 26px);
+    outline: 1px solid #ffffff30;
+    box-shadow: 0 20px 65px #0c081c80;
 }
 
 #start-content {
     width: min(100%, 440px);
     box-sizing: border-box;
-    margin: auto;
-    padding: clamp(24px, 4vw, 48px);
+    margin: 0 auto;
+    padding: 8px 0;
 }
 
 .start-kicker {
@@ -613,20 +671,20 @@ h1 {
     box-sizing: border-box;
 }
 
-@media (orientation: portrait), (max-width: 600px) {
+@media (orientation: portrait), (max-width: 559px) {
     #start-screen:not(.hidden) {
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: clamp(132px, 28dvh, 255px) auto;
         align-content: start;
+        gap: 16px;
+        padding: clamp(14px, 4vw, 30px);
     }
 
-    .start-art img {
-        object-position: center top;
+    .start-art {
+        max-width: min(600px, 62dvh);
     }
 
     #start-content {
-        margin: 0 auto;
-        padding: 18px clamp(16px, 5vw, 24px);
+        padding: 0;
     }
 
     .start-intro {
@@ -634,13 +692,42 @@ h1 {
     }
 }
 
-@media (orientation: landscape) and (max-height: 540px) {
-    #start-content {
-        padding: 16px 24px;
+@media (orientation: landscape) and (max-height: 540px) and (min-width: 560px) {
+    #start-screen:not(.hidden) {
+        padding: 14px clamp(16px, 4vw, 48px);
+    }
+
+    .start-art {
+        max-width: 140dvh;
+    }
+
+}
+
+@media (max-height: 650px) {
+    #game-title {
+        font-size: clamp(1.8rem, 5vw, 2.35rem);
     }
 
     .start-intro {
-        margin-bottom: 14px;
+        margin: 6px 0 10px;
+        font-size: 0.9rem;
+    }
+
+    #difficulty-label {
+        margin-bottom: 6px;
+    }
+
+    .difficulty-container {
+        gap: 5px;
+    }
+
+    .difficulty-btn {
+        padding-block: 4px;
+    }
+
+    #start-content #btn-start {
+        min-height: 44px;
+        margin-top: 10px;
     }
 }
 
